@@ -1,6 +1,6 @@
 #set working directory
 setwd("~/PU Fall 2022/POL573/project")
-setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")
+setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/CC Exposure/")
 #packages
 library(tidyr)
 library(data.table)
@@ -10,23 +10,22 @@ library(dplyr)
 #######import and merge data
 
 #import quarterly data 
-ccexposure_q <- fread("CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
+ccexposure_q <- fread("cc_firmquarter_2021Q4_03082021_OSF (1).csv")
 
 #import yearly data 
-ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
-test <- paste(sort(unique(ccexposure_q$gvkey)), collapse = " \n")
-write_lines(test, file = "/Users/christianbaehr/Desktop/test.txt")
+ccexposure_y <- fread("cc_firmyear_2021Q4_03082021_OSF (1).csv")
+
 
 #import WSJ news data 
 library(readxl)
+#wsj <- read_excel("EGLKS_dataupdated.xlsx")
+wsj <- read_excel("../Misc/WSJ/EGLKS_dataupdated.xlsx")
 
 #import compustat financial data 
-compustat <- fread("Misc/compustat_102422.csv")
-compustat <- compustat[order(compustat[, c("gvkey", "fyear")]), ] # ensure if we drop duplicates, we drop the LATER observations from a given year
-compustat <- compustat[!duplicated(compustat[, c("gvkey", "fyear")])] # drop duplicate year-firm observations
+compustat <- fread("../Misc/compustat.csv")
 
 #import refinitive esg data 
-esg <- fread("Misc/refinitiveesg.csv")
+esg <- fread("../Misc/refinitiveesg.csv")
 
 #add country codes
 #install.packages("countrycode")
@@ -36,35 +35,70 @@ ccexposure_q <- ccexposure_q %>%
   mutate(country_name = countrycode(ccexposure_q$hqcountrycode, origin = 'iso2c', destination = 'country.name'))
 
 ccexposure_y <- ccexposure_y %>%
-  mutate(country_name = countrycode(ccexposure_y$hqcountrycode, origin = 'iso2c', destination = 'country.name'))
+  mutate(country_name = countrycode(ccexposure_q$hqcountrycode, origin = 'iso2c', destination = 'country.name'))
 
 #add industry description to SIC codes
-sic <- fread("Misc/sic_codes.csv")
+sic <- fread("../Misc/sic_codes.csv")
 
-names(sic)[names(sic)=="SIC Code"] <- "sic"
 compustat <- compustat |> 
   left_join(sic, by = "sic")
 
 #merge compustat with exposure dataset
 ccexposure_qfull <- left_join(ccexposure_q, compustat, by = c("year" = "fyear", "isin"))
 
+###
+
+ccexposure_y <- read.csv("cc_firmyear_2021Q4_03082021_OSF (1).csv", stringsAsFactors = F)
+#ccexposure_q <- read.csv("cc_firmquarter_2021Q4_03082021_OSF (1).csv", stringsAsFactors = F)
+
+compustat1 <- read.csv("/Users/christianbaehr/Downloads/ty6epfvcbujj2u5q.csv", stringsAsFactors = F) # better when using the north america specific data
+compustat2 <- read.csv("../Misc/compustat_102422.csv", stringsAsFactors = F)
+#compustat$sic <- substr(compustat$sic, 1, 2)
+
+compustat1 <- compustat1[, c("gvkey", "fyear")]
+compustat2 <- compustat2[, c("gvkey", "fyear")]
+
+compustat <- rbind(compustat1, compustat2)
+
+#sum(duplicated(compustat[, c("fyear", "isin")]))
+#compustat <- compustat[!duplicated(compustat[, c("fyear", "isin")]), ]
+compustat <- compustat[!duplicated(compustat[, c("fyear", "gvkey")]), ]
+
+length(unique(ccexposure_y$isin))
+sum(unique(ccexposure_y$gvkey) %in% compustat$gvkey) # dont have complete compustat data
+sum(unique(ccexposure_y$gvkey) %in% compustat$gvkey) /length(unique(ccexposure_y$gvkey)) # this is where we lose 70% of the data
+
+ccexposure_yfull <- merge(ccexposure_y, compustat, by.x = c("year", "isin"), by.y = c("fyear", "isin")) #losing a ton of data
+
+ccexposure_yfull_top10opp <- ccexposure_yfull[(ccexposure_yfull$sic %in% as.character(c(49, 16, 17, 37, 36, 12, 35, 29, 55, 75))), ]
+ccexposure_yfull_top10reg <- ccexposure_yfull[(ccexposure_yfull$sic %in% as.character(c(49, 12, 29, 32, 10, 37, 33, 35, 41, 24))), ]
+ccexposure_yfull_top10phy <- ccexposure_yfull[(ccexposure_yfull$sic %in% as.character(c(26, 24, 14, 49, 12, 64, 15, 10, 22, 35))), ]
+
+annual_mean_opp <- aggregate(ccexposure_yfull_top10opp[, c("op_expo_ew")],by=list(ccexposure_yfull_top10opp$year),FUN=function(x) mean(x)*1000)
+annual_mean_opp <- annual_mean_opp[annual_mean_opp$Group.1<2021, ]
+
+annual_mean_reg <- aggregate(ccexposure_yfull_top10reg[, c("rg_expo_ew")],by=list(ccexposure_yfull_top10reg$year),FUN=function(x) mean(x)*1000)
+annual_mean_reg <- annual_mean_reg[annual_mean_reg$Group.1<2021, ]
+
+annual_mean_phy <- aggregate(ccexposure_yfull_top10phy[, c("ph_expo_ew")],by=list(ccexposure_yfull_top10phy$year),FUN=function(x) mean(x)*1000)
+annual_mean_phy <- annual_mean_phy[annual_mean_phy$Group.1<2021, ]
+
+plot(annual_mean_opp$Group.1, annual_mean_opp$x, type = "l", ylab=parse(text="CCexposure^Opp")) # looks pretty similar to Fig 3a
+plot(annual_mean_reg$Group.1, annual_mean_reg$x, type = "l", ylab=parse(text="CCexposure^Reg")) # looks pretty similar to Fig 3a
+plot(annual_mean_phy$Group.1, annual_mean_phy$x, type = "l", ylab=parse(text="CCexposure^Phy"), ylim=c(0.01, 0.05)) # looks pretty similar to Fig 3a
+
+
+
+
+###
+
 #include additional environmental ESG variables
-company_en <- fread("Misc/company_en.csv")
+company_en <- fread("../Misc/company_en.csv")
 
 esg <- left_join(esg, company_en, by = c("OrgID", "FisYear"))
 
 #merge esg data 
 ccexposure_qfull <- left_join(ccexposure_qfull, esg, by = c("isin" = "Isin", "year" = "FisYear"))
-
-
-wsj <- read_excel("Misc/WSJ/EGLKS_dataupdated.xlsx")
-wsj$quarter <- ifelse(wsj$month %in% seq(1,3), 1, 
-                      ifelse(wsj$month %in% seq(4,6), 2,
-                             ifelse(wsj$month %in% seq(7,9), 3, 4)))
-wsj <- aggregate(wsj[, c("wsj")], by=list(wsj$year, wsj$month), FUN=function(x) mean(x, na.rm=T))
-wsj$Group.1 <- as.numeric(wsj$Group.1)
-wsj$Group.2 <- as.numeric(wsj$Group.2)
-ccexposure_qfull <- left_join(ccexposure_qfull, wsj, by=c("year"="Group.1", "quarter"="Group.2"))
 
 #transform climate change exposure variables x1000
 ccexposure_qfull <- ccexposure_qfull |>
@@ -121,8 +155,6 @@ datasummary((`WSJ CC News Index` = wsj) ~ Mean + SD + P25 + Median + P75 + N,
             output = 'latex')
 
 ##########analysis by industry 
-names(ccexposure_qfull)[names(ccexposure_qfull)=="Industry Title"] <- "industry"
-
 exp_ind <- ccexposure_qfull |>
   select(year, quarter, sic, industry, ccexp, opexpo, rgexpo, phexpo)
 
@@ -191,95 +223,3 @@ exp_ind4_avg <- exp_ind4[ ,list(mean=mean(phexpo)), by=year]
 
 ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
   geom_line()
-
-###
-
-ccexposure_qfull$logasset <- log(ccexposure_qfull$at)
-ccexposure_qfull$debt_asset <- ccexposure_qfull$dltt/ccexposure_qfull$at
-ccexposure_qfull$cash_asset <- ccexposure_qfull$che/ccexposure_qfull$at
-ccexposure_qfull$ppe_asset <- ccexposure_qfull$ppent/ccexposure_qfull$at
-ccexposure_qfull$ebit_asset <- ccexposure_qfull$ebit/ccexposure_qfull$at
-ccexposure_qfull$capex_asset <- ccexposure_qfull$capx/ccexposure_qfull$at
-ccexposure_qfull$rnd_asset <- ccexposure_qfull$xrd/ccexposure_qfull$at
-
-meanvars <- c("ccexp", "opexpo", "rgexpo", "phexpo", "En_En_ER_DP023", "logasset",
-              "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset",
-              "rnd_asset", "wsj")
-#meanvars[!(meanvars %in% names(ccexposure_qfull))]
-
-ccexposure_yfull <- aggregate(ccexposure_qfull[, ..meanvars],
-                              by=list(ccexposure_qfull$year, ccexposure_qfull$isin, ccexposure_qfull$sic, ccexposure_qfull$hqcountrycode),
-                              FUN = function(x) mean(x, na.rm=T)) # IGNORING MISSING DATA
-
-ccexposure_yfull <- ccexposure_yfull[order(ccexposure_yfull$Group.2, ccexposure_yfull$Group.1), ]
-
-for(i in meanvars) {
-  test <- tapply(ccexposure_yfull[,i], INDEX=list(ccexposure_yfull$Group.2), FUN=function(x) lag(x))
-  test <- list(test)
-  ccexposure_yfull[, paste0(i, "_l1")] <- unlist(test[[1]])
-}
-
-###
-
-ccexposure_yfull$logemissions <- log(ccexposure_yfull$En_En_ER_DP023 + 1)
-
-test <- tapply(ccexposure_yfull$logemissions, INDEX=list(ccexposure_yfull$Group.2), FUN=function(x) lag(x))
-ccexposure_yfull$logemissions_l1 <- unlist(test)
-
-ccexposure_yfull$industry_year_fe <- paste(ccexposure_yfull$Group.1, ccexposure_yfull$Group.3)
-
-controls <- paste0(c("logasset", "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset", "rnd_asset"), "_l1")
-
-form1 <- paste0("ccexp ~ ",
-                paste(c("logemissions_l1", controls, "factor(industry_year_fe)", "factor(Group.4)"), collapse=" + "))
-form2 <- paste0("opexpo ~ ",
-                paste(c("logemissions_l1", controls, "factor(industry_year_fe)", "factor(Group.4)"), collapse=" + "))
-form3 <- paste0("rgexpo ~ ",
-                paste(c("logemissions_l1", controls, "factor(industry_year_fe)", "factor(Group.4)"), collapse=" + "))
-form4 <- paste0("phexpo ~ ",
-                paste(c("logemissions_l1", controls, "factor(industry_year_fe)", "factor(Group.4)"), collapse=" + "))
-
-table1 <- list("Main" = lm(form1, data=ccexposure_yfull),
-               "Opp" = lm(form2, data=ccexposure_yfull),
-               "Reg" = lm(form3, data=ccexposure_yfull),
-               "Phy" = lm(form4, data=ccexposure_yfull)
-)
-
-modelsummary(table1,
-             output="../results/table_4a.tex", 
-             stars=T,
-             coef_omit= "Intercept|factor",
-             gof_omit="Std",
-             add_rows=data.frame(matrix(c(
-               "Industry x Year FE", "X", "X", "X", "X",
-               "Country FE", "X", "X", "X", "X"), ncol=5, byrow=T)),
-             vcov= ~ Group.1 + Group.3)
-
-form5 <- paste0("ccexp ~ ",
-                paste(c("wsj", controls, "factor(Group.3)", "factor(Group.4)"), collapse=" + "))
-form6 <- paste0("opexpo ~ ",
-                paste(c("wsj", controls, "factor(Group.3)", "factor(Group.4)"), collapse=" + "))
-form7 <- paste0("rgexpo ~ ",
-                paste(c("wsj", controls, "factor(Group.3)", "factor(Group.4)"), collapse=" + "))
-form8 <- paste0("phexpo ~ ",
-                paste(c("wsj", controls, "factor(Group.3)", "factor(Group.4)"), collapse=" + "))
-
-table2 <- list("Main" = lm(form5, data=ccexposure_yfull),
-               "Opp" = lm(form6, data=ccexposure_yfull),
-               "Reg" = lm(form7, data=ccexposure_yfull),
-               "Phy" = lm(form8, data=ccexposure_yfull)
-)
-
-
-modelsummary(table2,
-             output="../results/table_4b.tex", 
-             stars=T,
-             coef_omit= "Intercept|factor",
-             gof_omit="Std",
-             add_rows=data.frame(matrix(c(
-               "Industry FE", "X", "X", "X", "X",
-               "Country FE", "X", "X", "X", "X"), ncol=5, byrow=T)),
-             vcov= ~ Group.1 + Group.3)
-
-
-
