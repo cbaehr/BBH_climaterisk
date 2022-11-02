@@ -14,14 +14,20 @@ ccexposure_q <- fread("CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
 
 #import yearly data 
 ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
-test <- paste(sort(unique(ccexposure_q$gvkey)), collapse = " \n")
-write_lines(test, file = "/Users/christianbaehr/Desktop/test.txt")
+#test <- paste(sort(unique(ccexposure_q$gvkey)), collapse = " \n")
+#write_lines(test, file = "/Users/christianbaehr/Desktop/test.txt")
 
 #import WSJ news data 
 library(readxl)
 
 #import compustat financial data 
 compustat <- fread("Misc/compustat_102422.csv")
+compustatna <- fread("Misc/compustat_northamerica.csv")
+vars <- names(compustat)[names(compustat) %in% names(compustatna)]
+compustat <- compustat[, ..vars]
+compustatna <- compustatna[, ..vars]
+compustat <- rbind(compustat, compustatna)
+
 compustat <- compustat[order(compustat[, c("gvkey", "fyear")]), ] # ensure if we drop duplicates, we drop the LATER observations from a given year
 compustat <- compustat[!duplicated(compustat[, c("gvkey", "fyear")])] # drop duplicate year-firm observations
 
@@ -46,7 +52,9 @@ compustat <- compustat |>
   left_join(sic, by = "sic")
 
 #merge compustat with exposure dataset
-ccexposure_qfull <- left_join(ccexposure_q, compustat, by = c("year" = "fyear", "isin"))
+#ccexposure_qfull <- left_join(ccexposure_q, compustat, by = c("year" = "fyear", "isin"))
+ccexposure_qfull <- left_join(ccexposure_q, compustat, by = c("year" = "fyear", "gvkey"))
+ccexposure_yfull <- left_join(ccexposure_y, compustat, by = c("year" = "fyear", "gvkey"))
 
 #include additional environmental ESG variables
 company_en <- fread("Misc/company_en.csv")
@@ -55,6 +63,8 @@ esg <- left_join(esg, company_en, by = c("OrgID", "FisYear"))
 
 #merge esg data 
 ccexposure_qfull <- left_join(ccexposure_qfull, esg, by = c("isin" = "Isin", "year" = "FisYear"))
+
+ccexposure_yfull <- left_join(ccexposure_yfull, esg, by = c("isin" = "Isin", "year" = "FisYear"))
 
 
 wsj <- read_excel("Misc/WSJ/EGLKS_dataupdated.xlsx")
@@ -97,7 +107,7 @@ library(modelsummary)
 
 #summary statistics for climate change exposure measures
 datasummary((`CC Exposure` = ccexp) + (`CC Opportunity` = opexpo) + (`CC Regulatory` = rgexpo) + (`CC Physical` = phexpo) + (`CC Positive Sentiment` = ccpos) + (`CC Negative Sentiment` = ccneg) + (`CC Risk` = ccrisk) ~ Mean + SD + P25 + Median + P75 + N, 
-            data = ccexposure_qfull, 
+            data = ccexposure_qfull, # replication is tighter if we omit 2021 
             title = 'Climate Change Exposure Variables - Summary Statistics',
             note = 'This table reports summary statistics of different measures of climate change exposure, using quarterly earnings call data. The sample includes 10,673 unique firms from 34 countries over the period 2002 to 2020.',
             align = 'lcccccc',
@@ -122,9 +132,9 @@ datasummary((`WSJ CC News Index` = wsj) ~ Mean + SD + P25 + Median + P75 + N,
 
 ##########analysis by industry 
 names(ccexposure_qfull)[names(ccexposure_qfull)=="Industry Title"] <- "industry"
-
 exp_ind <- ccexposure_qfull |>
   select(year, quarter, sic, industry, ccexp, opexpo, rgexpo, phexpo)
+exp_ind$sic <- substr(exp_ind$sic, 1, 2)
 
 #top overall exposure 
 exp_ind1 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 29, 41, 55, 33),]
@@ -170,6 +180,8 @@ datasummary(industry ~
 
 #overall 
 exp_ind1_avg <- exp_ind1[ ,list(mean=mean(ccexp)), by=year]
+
+exp_ind1_avg <- exp_ind1_avg[which(exp_ind1_avg$year<2021), ]
 
 ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
   geom_line()
@@ -246,7 +258,7 @@ table1 <- list("Main" = lm(form1, data=ccexposure_yfull),
 )
 
 modelsummary(table1,
-             output="../results/table_4a.tex", 
+             #output="../results/table_4a.tex", 
              stars=T,
              coef_omit= "Intercept|factor",
              gof_omit="Std",
