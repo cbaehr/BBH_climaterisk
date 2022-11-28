@@ -136,45 +136,67 @@ exp_ind <- ccexposure_qfull |>
   select(year, quarter, sic, industry, ccexp, opexpo, rgexpo, phexpo)
 exp_ind$sic <- substr(exp_ind$sic, 1, 2)
 
+exp_ind$Industry <- NA
+exp_ind$Industry[exp_ind$sic==49] <- "Electric, Gas, and Sanitary Services"
+exp_ind$Industry[exp_ind$sic==16] <- "Heavy Construction, Except Building"
+exp_ind$Industry[exp_ind$sic==17] <- "Construction"
+exp_ind$Industry[exp_ind$sic==37] <- "Transportation Equipment"
+exp_ind$Industry[exp_ind$sic==36] <- "Electronic & Other Electric Equipment"
+exp_ind$Industry[exp_ind$sic==12] <- "Coal Mining"
+exp_ind$Industry[exp_ind$sic==29] <- "Petroleum Refining"
+exp_ind$Industry[exp_ind$sic==41] <- "Local & Suburban Transit"
+exp_ind$Industry[exp_ind$sic==55] <- "Automative Dealers & Service Stations"
+exp_ind$Industry[exp_ind$sic==33] <- "Primary Metal"
+exp_ind$Industry[exp_ind$sic==35] <- "Industrial Machinery & Equipment"
+exp_ind$Industry[exp_ind$sic==24] <- "Lumber & Wood"
+exp_ind$Industry[exp_ind$sic==75] <- "Auto Repair, Services, & Parking"
+exp_ind$Industry[exp_ind$sic==32] <- "Stone, Clay, & Glass Products"
+exp_ind$Industry[exp_ind$sic==10] <- "Metal Mining"
+exp_ind$Industry[exp_ind$sic==26] <- "Paper & Allied Products"
+exp_ind$Industry[exp_ind$sic==14] <- "Nonmetallic Minerals, Except Fuels"
+exp_ind$Industry[exp_ind$sic==64] <- "Insurance Agents, Brokers, & Service"
+exp_ind$Industry[exp_ind$sic==15] <- "General Building Contractors"
+exp_ind$Industry[exp_ind$sic==22] <- "Textile Mill Products"
+
 #top overall exposure 
 exp_ind1 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 29, 41, 55, 33),]
 
-datasummary(industry ~
+datasummary(Industry ~
             (`CC Exposure` = ccexp) * (Mean + SD + Median + N), 
             data = exp_ind1,
             title = 'Climate Change Overall Exposure for Top 10 SIC Industries',
             align = 'lcccc',
-            output = 'latex')
+            output='../results/Tables/top10stats_overall.tex')
 
 #top opportunity 
 exp_ind2 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 35, 29, 55, 75),]
 
-datasummary(industry ~
+datasummary(Industry ~
               (`CC Opportunity` = opexpo) * (Mean + SD + Median + N), 
             data = exp_ind2,
             title = 'Climate Change Opportunity Exposure for Top 10 SIC Industries',
             align = 'lcccc',
-            output = 'latex')
+            output = '../results/Tables/top10stats_opp.tex')
 
 #top regulatory 
 exp_ind3 <- exp_ind[exp_ind$sic %in% c(49, 12, 29, 32, 10, 37, 33, 35, 41, 24),]
 
-datasummary(industry ~
+datasummary(Industry ~
               (`CC Regulatory` = rgexpo) * (Mean + SD + Median + N), 
             data = exp_ind3,
             title = 'Climate Change Regulatory Exposure for Top 10 SIC Industries',
             align = 'lcccc',
-            output = 'latex')
+            output = '../results/Tables/top10stats_reg.tex')
 
 #top physical
 exp_ind4 <- exp_ind[exp_ind$sic %in% c(26, 24, 14, 49, 12, 64, 15, 10, 22, 35),]
 
-datasummary(industry ~
+datasummary(Industry ~
               (`CC Physical` = phexpo) * (Mean + SD + Median + N), 
             data = exp_ind4,
             title = 'Climate Change Physical Exposure for Top 10 SIC Industries',
             align = 'lcccc',
-            output = 'latex')
+            output = '../results/Tables/top10stats_phy.tex')
 
 ######graphs over time
 
