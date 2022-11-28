@@ -343,7 +343,8 @@ ccexposure_yfull$logemissions_l1 <- unlist(test)
 
 ccexposure_yfull$industry_year_fe <- paste(ccexposure_yfull$Group.1, ccexposure_yfull$Group.3)
 
-controls <- paste0(c("logasset", "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset", "rnd_asset"), "_l1")
+#controls <- paste0(c("logasset", "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset", "rnd_asset"), "_l1")
+controls <- paste0(c("logasset", "debt_asset", "cash_asset", "ppe_asset", "ebit_asset"), "_l1")
 
 form1 <- paste0("ccexp ~ ",
                 paste(c("logemissions_l1", controls, "factor(industry_year_fe)", "factor(Group.4)"), collapse=" + "))
@@ -361,7 +362,7 @@ table1 <- list("Main" = lm(form1, data=ccexposure_yfull),
 )
 
 modelsummary(table1,
-             output="../results/Tables/table4a_replication.tex", 
+             #output="../results/Tables/table4a_replication.tex", 
              stars=T,
              coef_omit= "Intercept|factor",
              coef_rename = c("logemissions_l1"="ln(1 + Total Emissions)","logasset_l1"= "ln(Total Assets)","debt_asset_l1"= "Debt/Assets",
