@@ -100,6 +100,29 @@ ccexposure_qfull <- ccexposure_qfull |>
          phneg = ph_neg_ew_1,
          phsent = ph_sent_ew_1)
 
+ccexposure_yfull <- ccexposure_yfull |>
+  mutate(across(c(cc_expo_ew, cc_risk_ew, cc_pos_ew, cc_neg_ew, cc_sent_ew, op_expo_ew, op_risk_ew, op_pos_ew, op_neg_ew, op_sent_ew, rg_expo_ew, rg_risk_ew, rg_pos_ew, rg_neg_ew, rg_sent_ew, ph_expo_ew, ph_risk_ew, ph_pos_ew, ph_neg_ew, ph_sent_ew), list(~.*1000))) |>
+  rename(ccexp = cc_expo_ew_1,
+         ccrisk = cc_risk_ew_1,
+         ccpos = cc_pos_ew_1,
+         ccneg = cc_neg_ew_1,
+         ccsent = cc_sent_ew_1,
+         opexpo = op_expo_ew_1,
+         oprisk = op_risk_ew_1,
+         oppos = op_pos_ew_1,
+         opneg = op_neg_ew_1,
+         opsent = op_sent_ew_1,
+         rgexpo = rg_expo_ew_1, 
+         rgrisk = rg_risk_ew_1,
+         rgpos = rg_pos_ew_1,
+         rgneg = rg_neg_ew_1,
+         rgsent = rg_sent_ew_1,
+         phexpo = ph_expo_ew_1,
+         phrisk = ph_risk_ew_1,
+         phpos = ph_pos_ew_1,
+         phneg = ph_neg_ew_1,
+         phsent = ph_sent_ew_1)
+
 
 ########summary statistics tables 
 #install.packages("modelsummary")
@@ -132,8 +155,8 @@ datasummary((`WSJ CC News Index` = wsj) ~ Mean + SD + P25 + Median + P75 + N,
 
 ##########analysis by industry 
 names(ccexposure_qfull)[names(ccexposure_qfull)=="Industry Title"] <- "industry"
-exp_ind <- ccexposure_qfull |>
-  select(year, quarter, sic, industry, ccexp, opexpo, rgexpo, phexpo)
+exp_ind <- ccexposure_yfull |>
+  select(year, sic, ccexp, opexpo, rgexpo, phexpo)
 exp_ind$sic <- substr(exp_ind$sic, 1, 2)
 
 exp_ind$Industry <- NA
@@ -203,32 +226,84 @@ datasummary(Industry ~
 #overall 
 exp_ind1_avg <- exp_ind1[ ,list(mean=mean(ccexp)), by=year]
 
-exp_ind1_avg <- exp_ind1_avg[which(exp_ind1_avg$year<2021), ]
-
 ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
-  geom_line()
+  geom_line(size = 1, color = "#00AFBB") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  annotate(geom = "text",
+           label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
+           x = c(2005, 2009, 2012, 2015, 2017),
+           y = c(5, 5, 5, 5, 5),
+           angle = 90,
+           vjust = -1.5,
+           size = 3) +
+  labs(title = "CC Exposure Top 10 Industries",
+       x = "Year", y = "CCExposure") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+
+ggsave("../results/Figures/exposure_timeseries_overall.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 #opportunity 
 exp_ind2_avg <- exp_ind2[ ,list(mean=mean(opexpo)), by=year]
 
 ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
-  geom_line()
+  geom_line(size = 1, color = "#00AFBB") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  annotate(geom = "text",
+           label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
+           x = c(2005, 2009, 2012, 2015, 2017),
+           y = c(1.5, 1.75, 1.85, 1.9, 1.25),
+           angle = 90,
+           vjust = -1.5,
+           size = 3) +
+  labs(title = "CC Opportunity Exposure Top 10 Industries",
+       x = "Year", y = "CCExposure - Opportunity") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+
+ggsave("../results/Figures/exposure_timeseries_opp.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+
 
 #regulatory
 exp_ind3_avg <- exp_ind3[ ,list(mean=mean(rgexpo)), by=year]
 
 ggplot(data=exp_ind3_avg, aes(x=year, y=mean)) +
-  geom_line()
+  geom_line(size = 1, color = "#00AFBB") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  annotate(geom = "text",
+           label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
+           x = c(2005, 2009, 2012, 2015, 2017),
+           y = c(.25, .3, .25, .25, .3),
+           angle = 90,
+           vjust = -1.5,
+           size = 3) +
+  labs(title = "CC Regulatory Exposure Top 10 Industries",
+       x = "Year", y = "CCExposure - Regulatory") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+
+ggsave("../results/Figures/exposure_timeseries_reg.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 #physical 
 exp_ind4_avg <- exp_ind4[ ,list(mean=mean(phexpo)), by=year]
 
 ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
-  geom_line()
+  geom_line(size = 1, color = "#00AFBB") + 
+  geom_vline(xintercept = c(2005, 2012, 2017), color = "#FC4E07") + 
+  annotate(geom = "text",
+           label = c("Hurricane Katrina", "Hurricane Sandy", "Hurricane Harvey"),
+           x = c(2005, 2012, 2017),
+           y = c(.1, .1, .1),
+           angle = 90,
+           vjust = -1.5,
+           size = 3) +
+  labs(title = "CC Physical Exposure Top 10 Industries",
+       x = "Year", y = "CCExposure - Physical") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+
+ggsave("../results/Figures/exposure_timeseries_phy.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 ###
 
-ccexposure_qfull$logasset <- log(ccexposure_qfull$at)
+ccexposure_qfull <- data.frame(ccexposure_qfull)
+
 ccexposure_qfull$debt_asset <- ccexposure_qfull$dltt/ccexposure_qfull$at
 ccexposure_qfull$cash_asset <- ccexposure_qfull$che/ccexposure_qfull$at
 ccexposure_qfull$ppe_asset <- ccexposure_qfull$ppent/ccexposure_qfull$at
@@ -236,12 +311,18 @@ ccexposure_qfull$ebit_asset <- ccexposure_qfull$ebit/ccexposure_qfull$at
 ccexposure_qfull$capex_asset <- ccexposure_qfull$capx/ccexposure_qfull$at
 ccexposure_qfull$rnd_asset <- ccexposure_qfull$xrd/ccexposure_qfull$at
 
+winsors <- c("at", "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset", "rnd_asset")
+
+library(DescTools)
+ccexposure_qfull[, winsors] <- apply(ccexposure_qfull[, winsors], 2, FUN=function(x) Winsorize(x, minval=quantile(x, 0.01, na.rm=T), maxval=quantile(x, 0.99, na.rm=T)))
+
+ccexposure_qfull$logasset <- log(ccexposure_qfull$at)
+
 meanvars <- c("ccexp", "opexpo", "rgexpo", "phexpo", "En_En_ER_DP023", "logasset",
               "debt_asset", "cash_asset", "ppe_asset", "ebit_asset", "capex_asset",
               "rnd_asset", "wsj")
-#meanvars[!(meanvars %in% names(ccexposure_qfull))]
 
-ccexposure_yfull <- aggregate(ccexposure_qfull[, ..meanvars],
+ccexposure_yfull <- aggregate(ccexposure_qfull[, meanvars],
                               by=list(ccexposure_qfull$year, ccexposure_qfull$isin, ccexposure_qfull$sic, ccexposure_qfull$hqcountrycode),
                               FUN = function(x) mean(x, na.rm=T)) # IGNORING MISSING DATA
 
@@ -280,14 +361,18 @@ table1 <- list("Main" = lm(form1, data=ccexposure_yfull),
 )
 
 modelsummary(table1,
-             #output="../results/table_4a.tex", 
+             output="../results/Tables/table4a_replication.tex", 
              stars=T,
              coef_omit= "Intercept|factor",
+             coef_rename = c("logemissions_l1"="ln(1 + Total Emissions)","logasset_l1"= "ln(Total Assets)","debt_asset_l1"= "Debt/Assets",
+                             "cash_asset_l1"="Cash/Assets","ppe_asset_l1"= "PP&E/Assets","ebit_asset_l1"= "EBIT/Assets","capex_asset_l1"= "Cap. Expend./Assets",
+                             "rnd_asset_l1"="R&D/Assets"),
              gof_omit="Std",
              add_rows=data.frame(matrix(c(
                "Industry x Year FE", "X", "X", "X", "X",
                "Country FE", "X", "X", "X", "X"), ncol=5, byrow=T)),
-             vcov= ~ Group.1 + Group.3)
+             vcov= ~ Group.1 + Group.3,
+             notes = "All independent variables lagged by one period and (except ln(Total Emissions)) are winsorized at the one percent level. PP&E is Property, plant, and equipment. EBIT is Earnings before interest and taxes.")
 
 form5 <- paste0("ccexp ~ ",
                 paste(c("wsj", controls, "factor(Group.3)", "factor(Group.4)"), collapse=" + "))
