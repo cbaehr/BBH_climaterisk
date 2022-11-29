@@ -236,13 +236,13 @@ ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
            angle = 90,
            vjust = -1.5,
            size = 3) +
-  labs(title = "CC Exposure Top 10 Industries",
+  labs(title = " ",
        x = "Year", y = "CCExposure") +
-  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_overall.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
-#opportunity 
+  #opportunity 
 exp_ind2_avg <- exp_ind2[ ,list(mean=mean(opexpo)), by=year]
 
 ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
@@ -257,7 +257,7 @@ ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
            size = 3) +
   labs(title = "CC Opportunity Exposure Top 10 Industries",
        x = "Year", y = "CCExposure - Opportunity") +
-  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_opp.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
@@ -277,7 +277,7 @@ ggplot(data=exp_ind3_avg, aes(x=year, y=mean)) +
            size = 3) +
   labs(title = "CC Regulatory Exposure Top 10 Industries",
        x = "Year", y = "CCExposure - Regulatory") +
-  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_reg.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
@@ -290,13 +290,13 @@ ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
   annotate(geom = "text",
            label = c("Hurricane Katrina", "Hurricane Sandy", "Hurricane Harvey"),
            x = c(2005, 2012, 2017),
-           y = c(.1, .1, .1),
+           y = c(.018, .018, .018),
            angle = 90,
            vjust = -1.5,
            size = 3) +
   labs(title = "CC Physical Exposure Top 10 Industries",
        x = "Year", y = "CCExposure - Physical") +
-  theme_light() + theme(plot.title = element_text(hjust = 0.5)) 
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_phy.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
