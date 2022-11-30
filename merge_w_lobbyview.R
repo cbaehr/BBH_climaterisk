@@ -8,7 +8,8 @@ library(data.table)
 library(tidyverse)
 
 # set working directory
-setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1")
+setwd("~/Dropbox (Princeton)/BBH/BBH1")
+
 
 # load lobbying data
 lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
@@ -51,6 +52,14 @@ df <- lobby_issue |>
   # merge with firm data
   left_join(firm_data, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
   
+
+n_reports <- lobby |>
+  group_by(gvkey,year) |>
+  count() |>
+  filter(!is.na(gvkey)) |>
+  arrange(-n) |>
+  left_join(lobby |> select(gvkey,registrant_name) |> distinct(),by="gvkey")
+
 
 # only observations with climate exposure data
 cc <- df |>
