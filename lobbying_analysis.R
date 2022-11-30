@@ -13,7 +13,9 @@ library(fixest)
 library(janitor)
 
 # set working directory
-setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1/")
+setwd("~/Dropbox (Princeton)/BBH/BBH1/")
+# for Vincent
+# setwd("~/Dropbox (Privat)/BBH/BBH1/")
 
 # load data
 df <- fread("data/lobbying_df_reduced_fb.csv")
