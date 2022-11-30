@@ -24,15 +24,15 @@ firm_data <- fread("data/df_quarterly_fb.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # add _q as identifier for quarterly data
-  rename_at(vars(c(4:23,270:287)), ~ paste0(., "_q")) |>
+  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q")) |>
   # merge with yearly firm data
   left_join(fread("data/df_year_fb.csv") |>
               mutate(gvkey = as.character(gvkey)) |>
               filter(!is.na(gvkey)) |>
               # select only exposure data: control variables come from the quarterly dataframe
-              select(1:22,269:286) |>
+              select(isin:ph_sent_ew,ccpos:phsent) |>
               # add _y as identifier for yearly data
-              rename_at(vars(-c(1,2)), ~ paste0(., "_y")),
+              rename_at(vars(-c(isin,year)), ~ paste0(., "_y")),
             by = c("isin","year"))
 
 
@@ -51,14 +51,6 @@ df <- lobby_issue |>
   rename(year = report_year) |>
   # merge with firm data
   left_join(firm_data, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
-  
-
-n_reports <- lobby |>
-  group_by(gvkey,year) |>
-  count() |>
-  filter(!is.na(gvkey)) |>
-  arrange(-n) |>
-  left_join(lobby |> select(gvkey,registrant_name) |> distinct(),by="gvkey")
 
 
 # only observations with climate exposure data
