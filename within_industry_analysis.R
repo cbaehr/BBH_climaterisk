@@ -8,6 +8,7 @@ library(data.table)
 library(tidyverse)
 
 # set working directory
+setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")
 setwd("~/Dropbox (Privat)/BBH/BBH1/data/")
 
 # load data
@@ -56,12 +57,11 @@ within_industry_variance <- firm_mean |>
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  labs(x = "", y = "Climate Change Exposure") + 
+  labs(x = "", y = "Climate Change Attention") + 
   coord_flip()
 
 # save
-setwd("~/Dropbox (Privat)/BBH/BBH1/results/Figures/")
-ggsave("within_industry_variance.pdf", within_industry_variance, width=11, height=8.5)
+ggsave("../Figures/within_industry_variance.pdf", within_industry_variance, width=11, height=8.5)
 
 
 
@@ -96,7 +96,7 @@ within_industry_variances <- exposure_var |>
   mutate(industry=factor(industry, levels=sic_var$industry)) |>
   pivot_longer(cols = 2:6, names_to = "Variable", values_to = "value") |>
   mutate(Variable = recode(Variable,
-                           ccexp = "Exposure",
+                           ccexp = "Attention",
                            opexpo = "Opportunity",
                            phexpo = "Physical",
                            rgexpo = "Regulatory"),
