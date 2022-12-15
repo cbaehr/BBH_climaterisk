@@ -13,6 +13,7 @@ library(fixest)
 library(janitor)
 
 # set working directory
+setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")
 setwd("~/Dropbox (Princeton)/BBH/BBH1/")
 # for Vincent
 # setwd("~/Dropbox (Privat)/BBH/BBH1/")
@@ -101,18 +102,18 @@ models <- list(
   "Model 6" = feglm(climate ~ cc_expo_ew_q + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df))
 
 # names
-cm <- c("cc_expo_ew_y" = "Overall Exposure", 
+cm <- c("cc_expo_ew_y" = "Overall Attention", 
         "ebit" = "EBIT",
         "I(ebit/at)" = "EBIT/Assets",
         "log_co2_l1" = "Log(Total CO2 Emissions)",
         "us_dummy" = "US HQ",
         "total_lobby" = "Total Lobbying",
-        "cc_expo_ew_q" = "Overall Exposure")
+        "cc_expo_ew_q" = "Overall Attention")
 
 modelsummary(
   models,
   stars = c('*' = .1, '**' = .05, '***' = .01),
-  title = 'Effect of Climate Change Exposure on Lobbying on Climate Issues',
+  title = 'Effect of Climate Change Attention on Lobbying on Climate Issues',
   coef_map = cm
   # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
   ,output = "latex"
@@ -133,18 +134,18 @@ models2 <- list(
 )
 
 # names
-cm2 <- c("cc_expo_ew_y" = "Overall Exposure", 
+cm2 <- c("cc_expo_ew_y" = "Overall Attention", 
          "ebit" = "EBIT",
          "I(ebit/at)" = "EBIT/Assets",
          "log_co2_l1" = "Log(Total CO2 Emissions)",
          "us_dummy" = "US HQ",
          "total_lobby" = "Total Lobbying",
-         "cc_expo_ew_q" = "Overall Exposure")
+         "cc_expo_ew_q" = "Overall Attention")
 
 modelsummary(
   models2,
   stars = c('*' = .1, '**' = .05, '***' = .01),
-  title = 'Effect of Climate Change Exposure on Lobbying Across Disaggregated Climate Issues',
+  title = 'Effect of Climate Change Attention on Lobbying Across Disaggregated Climate Issues',
   coef_map = cm2
   # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
   ,output = "latex"
@@ -166,9 +167,9 @@ models3 <- list(
   "Model 15" = feglm(fuel_gas_oil ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df)
   )
 
-cm3 <- c( "op_expo_ew_y" = "Opportunity Exposure",
-         "rg_expo_ew_y" = "Regulatory Exposure",
-         "ph_expo_ew_y" = "Physical Exposure",
+cm3 <- c( "op_expo_ew_y" = "Opportunity Attention",
+         "rg_expo_ew_y" = "Regulatory Attention",
+         "ph_expo_ew_y" = "Physical Attention",
          "ebit" = "EBIT",
          "I(ebit/at)" = "EBIT/Assets",
          "log_co2_l1" = "Log(Total CO2 Emissions)",
@@ -178,7 +179,7 @@ cm3 <- c( "op_expo_ew_y" = "Opportunity Exposure",
 modelsummary(
   models3,
   stars = c('*' = .1, '**' = .05, '***' = .01),
-  title = 'Effect of Different Climate Change Exposure on Lobbying on Climate Issues',
+  title = 'Effect of Different Climate Change Attention on Lobbying on Climate Issues',
   coef_map = cm3
   # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
   ,output = "latex"
