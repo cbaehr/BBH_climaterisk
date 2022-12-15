@@ -129,10 +129,10 @@ ccexposure_yfull <- ccexposure_yfull |>
 library(modelsummary)
 
 #summary statistics for climate change exposure measures
-datasummary((`CC Exposure` = ccexp) + (`CC Opportunity` = opexpo) + (`CC Regulatory` = rgexpo) + (`CC Physical` = phexpo) + (`CC Positive Sentiment` = ccpos) + (`CC Negative Sentiment` = ccneg) + (`CC Risk` = ccrisk) ~ Mean + SD + P25 + Median + P75 + N, 
+datasummary((`CC Attention` = ccexp) + (`CC Opportunity` = opexpo) + (`CC Regulatory` = rgexpo) + (`CC Physical` = phexpo) + (`CC Positive Sentiment` = ccpos) + (`CC Negative Sentiment` = ccneg) + (`CC Risk` = ccrisk) ~ Mean + SD + P25 + Median + P75 + N, 
             data = ccexposure_qfull, # replication is tighter if we omit 2021 
-            title = 'Climate Change Exposure Variables - Summary Statistics',
-            note = 'This table reports summary statistics of different measures of climate change exposure, using quarterly earnings call data. The sample includes 10,673 unique firms from 34 countries over the period 2002 to 2020.',
+            title = 'Climate Change Attention Variables - Summary Statistics',
+            note = 'This table reports summary statistics of different measures of climate change attention, using quarterly earnings call data. The sample includes 10,673 unique firms from 34 countries over the period 2002 to 2020. Frequencies multiplied by $10^3$ for ease of interpretation',
             align = 'lcccccc',
             output = 'latex')
 
@@ -185,11 +185,11 @@ exp_ind$Industry[exp_ind$sic==22] <- "Textile Mill Products"
 exp_ind1 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 29, 41, 55, 33),]
 
 datasummary(Industry ~
-            (`CC Exposure` = ccexp) * (Mean + SD + Median + N), 
+            (`CC Attention` = ccexp) * (Mean + SD + Median + N), 
             data = exp_ind1,
-            title = 'Climate Change Overall Exposure for Top 10 SIC Industries',
+            title = 'Climate Change Overall Attention for Top 10 SIC Industries',
             align = 'lcccc',
-            output='../results/Tables/top10stats_overall.tex')
+            output='latex')
 
 #top opportunity 
 exp_ind2 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 35, 29, 55, 75),]
@@ -197,9 +197,9 @@ exp_ind2 <- exp_ind[exp_ind$sic %in% c(49, 16, 17, 37, 36, 12, 35, 29, 55, 75),]
 datasummary(Industry ~
               (`CC Opportunity` = opexpo) * (Mean + SD + Median + N), 
             data = exp_ind2,
-            title = 'Climate Change Opportunity Exposure for Top 10 SIC Industries',
+            title = 'Climate Change Opportunity Attention for Top 10 SIC Industries',
             align = 'lcccc',
-            output = '../results/Tables/top10stats_opp.tex')
+            output = 'latex')
 
 #top regulatory 
 exp_ind3 <- exp_ind[exp_ind$sic %in% c(49, 12, 29, 32, 10, 37, 33, 35, 41, 24),]
@@ -207,9 +207,9 @@ exp_ind3 <- exp_ind[exp_ind$sic %in% c(49, 12, 29, 32, 10, 37, 33, 35, 41, 24),]
 datasummary(Industry ~
               (`CC Regulatory` = rgexpo) * (Mean + SD + Median + N), 
             data = exp_ind3,
-            title = 'Climate Change Regulatory Exposure for Top 10 SIC Industries',
+            title = 'Climate Change Regulatory Attention for Top 10 SIC Industries',
             align = 'lcccc',
-            output = '../results/Tables/top10stats_reg.tex')
+            output = 'latex')
 
 #top physical
 exp_ind4 <- exp_ind[exp_ind$sic %in% c(26, 24, 14, 49, 12, 64, 15, 10, 22, 35),]
@@ -217,9 +217,9 @@ exp_ind4 <- exp_ind[exp_ind$sic %in% c(26, 24, 14, 49, 12, 64, 15, 10, 22, 35),]
 datasummary(Industry ~
               (`CC Physical` = phexpo) * (Mean + SD + Median + N), 
             data = exp_ind4,
-            title = 'Climate Change Physical Exposure for Top 10 SIC Industries',
+            title = 'Climate Change Physical Attention for Top 10 SIC Industries',
             align = 'lcccc',
-            output = '../results/Tables/top10stats_phy.tex')
+            output = 'latex')
 
 ######graphs over time
 
@@ -236,8 +236,7 @@ ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
            angle = 90,
            vjust = -1.5,
            size = 3) +
-  labs(title = " ",
-       x = "Year", y = "CCExposure") +
+  labs(title = " ", x = "Year", y = "CC Attention") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_overall.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
@@ -251,12 +250,11 @@ ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
   annotate(geom = "text",
            label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
            x = c(2005, 2009, 2012, 2015, 2017),
-           y = c(1.5, 1.75, 1.85, 1.9, 1.25),
+           y = c(2.3, 2.3, 2.3, 2.3, 2.3),
            angle = 90,
            vjust = -1.5,
            size = 3) +
-  labs(title = "CC Opportunity Exposure Top 10 Industries",
-       x = "Year", y = "CCExposure - Opportunity") +
+  labs(title = " ", x = "Year", y = "CC Attention - Opportunity") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_opp.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
@@ -271,12 +269,11 @@ ggplot(data=exp_ind3_avg, aes(x=year, y=mean)) +
   annotate(geom = "text",
            label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
            x = c(2005, 2009, 2012, 2015, 2017),
-           y = c(.25, .3, .25, .25, .3),
+           y = c(.35, .35, .35, .35, .35),
            angle = 90,
            vjust = -1.5,
            size = 3) +
-  labs(title = "CC Regulatory Exposure Top 10 Industries",
-       x = "Year", y = "CCExposure - Regulatory") +
+  labs(title = " ", x = "Year", y = "CC Attention - Regulatory") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_reg.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
@@ -294,8 +291,7 @@ ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
            angle = 90,
            vjust = -1.5,
            size = 3) +
-  labs(title = "CC Physical Exposure Top 10 Industries",
-       x = "Year", y = "CCExposure - Physical") +
+  labs(title = " ", x = "Year", y = "CC Attention - Physical") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
 ggsave("../results/Figures/exposure_timeseries_phy.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
