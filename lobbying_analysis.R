@@ -192,3 +192,110 @@ modelsummary(
     "Energy" = 1, 
     "Environment" = 1,
     "Fuel, Gas, and Oil" = 1))
+
+################################################################################
+
+### LOBBYVIEW MODELS WITH NO LAG IN CO2
+
+models <- list(
+  "Model 1" = feglm(climate ~ cc_expo_ew_y | year, family = "binomial", df),
+  "Model 2" = feglm(climate ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 3" = feglm(climate ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 4" = feglm(climate ~ cc_expo_ew_q | year, family = "binomial", df),
+  "Model 5" = feglm(climate ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 6" = feglm(climate ~ cc_expo_ew_q + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df))
+
+# names
+cm <- c("cc_expo_ew_y" = "Overall Attention", 
+        "ebit" = "EBIT",
+        "I(ebit/at)" = "EBIT/Assets",
+        "log_co2" = "Log(Total CO2 Emissions)",
+        "us_dummy" = "US HQ",
+        "total_lobby" = "Total Lobbying",
+        "cc_expo_ew_q" = "Overall Attention")
+
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  title = 'Effect of Climate Change Attention on Lobbying on Climate Issues',
+  coef_map = cm,
+  gof_omit = 'R2 Adj.|R2 Within',
+  output = "latex"
+) |>
+  # column labels
+  add_header_above(c(
+    " " = 1,
+    "Yearly" = 3,
+    "Quarterly" = 3
+  ))
+
+## Disaggregated lobby issues, overall climate exposure, annual
+models2 <- list(
+  "Model 7" = feglm(cleanair_water ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 8" = feglm(energy_nuclear ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 9" = feglm(environment ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 10" = feglm(fuel_gas_oil ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df)
+)
+
+# names
+cm2 <- c("cc_expo_ew_y" = "Overall Attention", 
+         "ebit" = "EBIT",
+         "I(ebit/at)" = "EBIT/Assets",
+         "log_co2" = "Log(Total CO2 Emissions)",
+         "us_dummy" = "US HQ",
+         "total_lobby" = "Total Lobbying",
+         "cc_expo_ew_q" = "Overall Attention")
+
+modelsummary(
+  models2,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  title = 'Effect of Climate Change Attention on Lobbying Across Disaggregated Climate Issues',
+  coef_map = cm2,
+  gof_omit = 'R2 Adj.|R2 Within',
+  output = "latex"
+) |>
+  # column labels
+  add_header_above(c(
+    " " = 1,
+    "Clean Air and Water" = 1,
+    "Energy" = 1, 
+    "Environment" = 1,
+    "Fuel, Gas, and Oil" = 1))
+
+##Aggreate and disaggregated lobby issues, disaggregated exposure types, annual
+models3 <- list(
+  "Model 11" = feglm(climate ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 12" = feglm(cleanair_water ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 13" = feglm(energy_nuclear ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 14" = feglm(environment ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 15" = feglm(fuel_gas_oil ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2 + us_dummy + total_lobby | year, family = "binomial", df)
+)
+
+cm3 <- c( "op_expo_ew_y" = "Opportunity Attention",
+          "rg_expo_ew_y" = "Regulatory Attention",
+          "ph_expo_ew_y" = "Physical Attention",
+          "ebit" = "EBIT",
+          "I(ebit/at)" = "EBIT/Assets",
+          "log_co2" = "Log(Total CO2 Emissions)",
+          "us_dummy" = "US HQ",
+          "total_lobby" = "Total Lobbying")
+
+modelsummary(
+  models3,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  title = 'Effect of Different Climate Change Attention on Lobbying on Climate Issues',
+  coef_map = cm3,
+  gof_omit = 'R2 Adj.|R2 Within',
+  output = "latex"
+) |>
+  # column labels
+  add_header_above(c(
+    " " = 1,
+    "Climate" = 1,
+    "Clean Air and Water" = 1,
+    "Energy" = 1, 
+    "Environment" = 1,
+    "Fuel, Gas, and Oil" = 1))
+
+
+
