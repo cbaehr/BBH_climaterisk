@@ -14,7 +14,7 @@ library(janitor)
 
 # set working directory
 setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")
-setwd("~/Dropbox (Princeton)/BBH/BBH1/")
+setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1")
 # for Vincent
 # setwd("~/Dropbox (Privat)/BBH/BBH1/")
 
@@ -90,7 +90,7 @@ df <- df |>
   ungroup()
 
 
-## Logit models ------------------------------------------------------------
+## Logit models (lagged CO2 ------------------------------------------------------------
 
 ## Overall climate lobbying, overall exposure for annual and quarterly
 models <- list(
@@ -193,9 +193,8 @@ modelsummary(
     "Environment" = 1,
     "Fuel, Gas, and Oil" = 1))
 
-################################################################################
 
-### LOBBYVIEW MODELS WITH NO LAG IN CO2
+# Logit models (no lag for CO2) ---------------------------------------------------
 
 models <- list(
   "Model 1" = feglm(climate ~ cc_expo_ew_y | year, family = "binomial", df),
@@ -298,4 +297,21 @@ modelsummary(
     "Fuel, Gas, and Oil" = 1))
 
 
+# Plots -------------------------------------------------------------------
 
+###Lobbying compared across time for top 10 industries by total attention 
+#filter industries 
+top10ind_total <- df |> 
+  filter(industry %in% c("Automotive Dealers and Gasoline Service Stations", "Coal Mining", "Construction - General Contractors & Operative Builders", "Electric, Gas, and Sanitary Services", "Electronic & Other Electrical Equipment and Components", "Heavy Construction, Except Building Construction and Contractors", "Local & Suburban Transit and Interurban Highway Transportation", "Petroleum Refining and Related Industries", "Primary Metal Industries", "Transportation Equipment"))
+
+top10ind_total$climate_n <- tapply(top10ind_total$climate, 
+                                   INDEX = list(top10ind_total$report_uuid, top10ind_total$client_uuid, top10ind_total$year), 
+                                   FUN = function(x) sum(x)>0)
+
+#sum total lobbying for each industry year 
+top10ind_total <- top10ind_total |>
+  group_by(year, industry) |>
+  summarise(total_climate = sum(climate))
+
+ggplot(data = top10ind_total, aes(x = year, y = total_lobby)) +
+  geom_line(aes(group = industry))
