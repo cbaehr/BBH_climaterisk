@@ -10,10 +10,10 @@ library(dplyr)
 #######import and merge data
 
 #import quarterly data 
-ccexposure_q <- fread("CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
+ccexposure_q <- fread("data/CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
 
 #import yearly data 
-ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
+ccexposure_y <- fread("data/CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
 #test <- paste(sort(unique(ccexposure_q$gvkey)), collapse = " \n")
 #write_lines(test, file = "/Users/christianbaehr/Desktop/test.txt")
 
@@ -21,8 +21,8 @@ ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
 library(readxl)
 
 #import compustat financial data 
-compustat <- fread("Misc/compustat_102422.csv")
-compustatna <- fread("Misc/compustat_northamerica.csv")
+compustat <- fread("data/Misc/compustat_102422.csv")
+compustatna <- fread("data/Misc/compustat_northamerica.csv")
 vars <- names(compustat)[names(compustat) %in% names(compustatna)]
 compustat <- compustat[, ..vars]
 compustatna <- compustatna[, ..vars]
@@ -32,7 +32,7 @@ compustat <- compustat[order(compustat[, c("gvkey", "fyear")]), ] # ensure if we
 compustat <- compustat[!duplicated(compustat[, c("gvkey", "fyear")])] # drop duplicate year-firm observations
 
 #import refinitive esg data 
-esg <- fread("Misc/refinitiveesg.csv")
+esg <- fread("data/Misc/refinitiveesg.csv")
 
 #add country codes
 #install.packages("countrycode")
@@ -45,7 +45,7 @@ ccexposure_y <- ccexposure_y %>%
   mutate(country_name = countrycode(ccexposure_y$hqcountrycode, origin = 'iso2c', destination = 'country.name'))
 
 #add industry description to SIC codes
-sic <- fread("Misc/sic_codes.csv")
+sic <- fread("data/Misc/sic_codes.csv")
 
 names(sic)[names(sic)=="SIC Code"] <- "sic"
 compustat <- compustat |> 
@@ -57,7 +57,7 @@ ccexposure_qfull <- left_join(ccexposure_q, compustat, by = c("year" = "fyear", 
 ccexposure_yfull <- left_join(ccexposure_y, compustat, by = c("year" = "fyear", "gvkey"))
 
 #include additional environmental ESG variables
-company_en <- fread("Misc/company_en.csv")
+company_en <- fread("data/Misc/company_en.csv")
 
 esg <- left_join(esg, company_en, by = c("OrgID", "FisYear"))
 
@@ -222,13 +222,17 @@ datasummary(Industry ~
             output = 'latex')
 
 ######graphs over time
+#color palette
+library(scales)
+library(viridis)
+show_col(viridis_pal()(4))
 
 #overall 
 exp_ind1_avg <- exp_ind1[ ,list(mean=mean(ccexp)), by=year]
 
 ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
-  geom_line(size = 1, color = "#00AFBB") + 
-  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  geom_line(size = 1, color = "#440154FF") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#31688EFF") + 
   annotate(geom = "text",
            label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
            x = c(2005, 2009, 2012, 2015, 2017),
@@ -239,14 +243,14 @@ ggplot(data=exp_ind1_avg, aes(x=year, y=mean)) +
   labs(title = " ", x = "Year", y = "CC Attention") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
-ggsave("../results/Figures/exposure_timeseries_overall.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+ggsave("results/Figures/exposure_timeseries.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
   #opportunity 
 exp_ind2_avg <- exp_ind2[ ,list(mean=mean(opexpo)), by=year]
 
 ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
-  geom_line(size = 1, color = "#00AFBB") + 
-  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  geom_line(size = 1, color = "#440154FF") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#31688EFF") + 
   annotate(geom = "text",
            label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
            x = c(2005, 2009, 2012, 2015, 2017),
@@ -257,15 +261,15 @@ ggplot(data=exp_ind2_avg, aes(x=year, y=mean)) +
   labs(title = " ", x = "Year", y = "CC Attention - Opportunity") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
-ggsave("../results/Figures/exposure_timeseries_opp.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+ggsave("results/Figures/exposure_timeseries__opp.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 
 #regulatory
 exp_ind3_avg <- exp_ind3[ ,list(mean=mean(rgexpo)), by=year]
 
 ggplot(data=exp_ind3_avg, aes(x=year, y=mean)) +
-  geom_line(size = 1, color = "#00AFBB") + 
-  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#FC4E07") + 
+  geom_line(size = 1, color = "#440154FF") + 
+  geom_vline(xintercept = c(2005, 2009, 2012, 2015, 2017), color = "#31688EFF") + 
   annotate(geom = "text",
            label = c("EU Emissions Trading", "Copenhagen Summit", "Doha Summit", "Paris Agreement", "Trump Paris Withdrawal"),
            x = c(2005, 2009, 2012, 2015, 2017),
@@ -276,14 +280,14 @@ ggplot(data=exp_ind3_avg, aes(x=year, y=mean)) +
   labs(title = " ", x = "Year", y = "CC Attention - Regulatory") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
-ggsave("../results/Figures/exposure_timeseries_reg.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+ggsave("results/Figures/exposure_timeseries__reg.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 #physical 
 exp_ind4_avg <- exp_ind4[ ,list(mean=mean(phexpo)), by=year]
 
 ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
-  geom_line(size = 1, color = "#00AFBB") + 
-  geom_vline(xintercept = c(2005, 2012, 2017), color = "#FC4E07") + 
+  geom_line(size = 1, color = "#440154FF") + 
+  geom_vline(xintercept = c(2005, 2012, 2017), color = "#31688EFF") + 
   annotate(geom = "text",
            label = c("Hurricane Katrina", "Hurricane Sandy", "Hurricane Harvey"),
            x = c(2005, 2012, 2017),
@@ -294,7 +298,7 @@ ggplot(data=exp_ind4_avg, aes(x=year, y=mean)) +
   labs(title = " ", x = "Year", y = "CC Attention - Physical") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14)) 
 
-ggsave("../results/Figures/exposure_timeseries_phy.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+ggsave("results/Figures/exposure_timeseries__phy.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 ###
 
