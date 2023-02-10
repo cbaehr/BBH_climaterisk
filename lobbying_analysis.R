@@ -11,6 +11,7 @@ library(marginaleffects)
 library(kableExtra)
 library(fixest)
 library(janitor)
+library(viridis)
 
 # set working directory
 setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")
@@ -19,37 +20,34 @@ setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1")
 # setwd("~/Dropbox (Privat)/BBH/BBH1/")
 
 # load data
-df <- fread("data/lobbying_df_reduced_fb.csv")
+df <- fread("data/lobbying_df_wide_reduced.csv")
 
 ## Who lobbies on climate issues? ------------------------------------------
 
 # dummy variable: climate issues
 df <- df |>
-  mutate(cleanair_water = ifelse(issue_code == "CAW",1,0),
-         energy_nuclear = ifelse(issue_code == "ENG",1,0),
-         environment = ifelse(issue_code == "ENV",1,0),
-         fuel_gas_oil = ifelse(issue_code == "FUE",1,0),
-         climate = ifelse(cleanair_water == 1 | 
-                            energy_nuclear == 1 |
-                            environment == 1 |
-                            fuel_gas_oil == 1,
+  mutate(CLI = ifelse(ENV == 1 | 
+                            CAW == 1 |
+                            ENG == 1 |
+                            FUE == 1 | 
+                        ENV == 1,
                           1,0))
 
 #summary stats for lobbying dummy variables
 climate_table <- df |> 
-  tabyl(climate)
+  tabyl(CLI)
 
 cleanair_table <- df |> 
-  tabyl(cleanair_water)
+  tabyl(CAW)
 
 energy_table <- df |> 
-  tabyl(energy_nuclear)
+  tabyl(ENG)
 
 fuel_table <- df |>
-  tabyl(fuel_gas_oil)
+  tabyl(FUE)
 
 env_table <- df |>
-  tabyl(environment)
+  tabyl(ENV)
 
 
 ## Control variables -------------------------------------------------------
@@ -94,12 +92,12 @@ df <- df |>
 
 ## Overall climate lobbying, overall exposure for annual and quarterly
 models <- list(
-  "Model 1" = feglm(climate ~ cc_expo_ew_y | year, family = "binomial", df),
-  "Model 2" = feglm(climate ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
-  "Model 3" = feglm(climate ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 4" = feglm(climate ~ cc_expo_ew_q | year, family = "binomial", df),
-  "Model 5" = feglm(climate ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
-  "Model 6" = feglm(climate ~ cc_expo_ew_q + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df))
+  "Model 1" = feglm(CLI ~ cc_expo_ew_y | year, family = "binomial", df),
+  "Model 2" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 3" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 4" = feglm(CLI ~ cc_expo_ew_q | year, family = "binomial", df),
+  "Model 5" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 6" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df))
 
 # names
 cm <- c("cc_expo_ew_y" = "Overall Attention", 
@@ -116,7 +114,7 @@ modelsummary(
   title = 'Effect of Climate Change Attention on Lobbying on Climate Issues',
   coef_map = cm
   # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
-  ,output = "latex"
+  ,output = "climate_logit.tex"
 ) |>
   # column labels
   add_header_above(c(
@@ -127,10 +125,10 @@ modelsummary(
 
 ## Disaggregated lobby issues, overall climate exposure, annual
 models2 <- list(
-  "Model 7" = feglm(cleanair_water ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 8" = feglm(energy_nuclear ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 9" = feglm(environment ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 10" = feglm(fuel_gas_oil ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df)
+  "Model 7" = feglm(CAW ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 8" = feglm(ENG ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 9" = feglm(ENV ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 10" = feglm(FUE ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df)
 )
 
 # names
@@ -160,11 +158,11 @@ modelsummary(
 
 ##Aggreate and disaggregated lobby issues, disaggregated exposure types, annual
 models3 <- list(
-  "Model 11" = feglm(climate ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 12" = feglm(cleanair_water ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 13" = feglm(energy_nuclear ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 14" = feglm(environment ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 15" = feglm(fuel_gas_oil ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df)
+  "Model 11" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 12" = feglm(CAW ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 13" = feglm(ENG ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 14" = feglm(ENV ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 15" = feglm(FUE ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df)
   )
 
 cm3 <- c( "op_expo_ew_y" = "Opportunity Attention",
@@ -304,14 +302,33 @@ modelsummary(
 top10ind_total <- df |> 
   filter(industry %in% c("Automotive Dealers and Gasoline Service Stations", "Coal Mining", "Construction - General Contractors & Operative Builders", "Electric, Gas, and Sanitary Services", "Electronic & Other Electrical Equipment and Components", "Heavy Construction, Except Building Construction and Contractors", "Local & Suburban Transit and Interurban Highway Transportation", "Petroleum Refining and Related Industries", "Primary Metal Industries", "Transportation Equipment"))
 
-top10ind_total$climate_n <- tapply(top10ind_total$climate, 
-                                   INDEX = list(top10ind_total$report_uuid, top10ind_total$client_uuid, top10ind_total$year), 
-                                   FUN = function(x) sum(x)>0)
-
-#sum total lobbying for each industry year 
-top10ind_total <- top10ind_total |>
+#plot total lobbying reports on climate for each industry year 
+top10ind_lobby <- top10ind_total |>
   group_by(year, industry) |>
-  summarise(total_climate = sum(climate))
+  summarise(total_climate_reports = sum(CLI), na.rm=TRUE)
 
-ggplot(data = top10ind_total, aes(x = year, y = total_lobby)) +
-  geom_line(aes(group = industry))
+ggplot(data = top10ind_lobby, aes(x = year, y = total_climate_reports, group = industry)) +
+  geom_line(aes(color = industry)) +
+  scale_color_viridis(discrete=TRUE) + 
+  labs(title = " ", x = "Year", y = "Total Climate Lobbying (# Reports)", color = "Industry") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14))
+
+ggsave("../results/Figures/lobbing_timeseries_industry.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+
+#plot total spending in reports tagged to climate for each industry year 
+top10ind_spend <- top10ind_total |>
+  filter(CLI == 1)|>
+  group_by(year, industry) |> 
+  summarise(total_climate_spend = sum(amount))
+
+ggplot(data = top10ind_spend, aes(x = year, y = total_climate_spend, group = industry)) +
+  geom_line(aes(color = industry)) +
+  scale_color_viridis(discrete=TRUE) + 
+  labs(title = " ", x = "Year", y = "Total Climate Lobbying ($)", color = "Industry") +
+  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14))
+
+ggsave("../results/Figures/lobbingspend_timeseries_industry.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+
+
+###Scatterplot of climate attention and total lobbying 
+
