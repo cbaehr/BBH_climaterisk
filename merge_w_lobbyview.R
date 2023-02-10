@@ -62,8 +62,6 @@ fwrite(df, file="data/lobbying_df_fb.csv")
 fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
 
 
-
-
 # Wide dataframe with binary issue code indicators ------------------------
 
 # Note that this dataframe does neither contain report-issue text data 
@@ -85,8 +83,13 @@ df_wide <- lobby_issue |>
   # merge with firm data
   left_join(firm_data, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 
-# write csv
-fwrite(df, file="data/lobbying_df_wide.csv")
+#filter for observations with climate attention data 
+cc_wide <- df_wide |>
+  filter(!is.na(cc_expo_ew_y))
 
+
+# write csv
+fwrite(df_wide, file="data/lobbying_df_wide.csv")
+fwrite(cc_wide, file="data/lobbying_df_wide_reduced.csv")
 
 ### End
