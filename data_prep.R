@@ -29,13 +29,23 @@ wsj <- read_excel("Misc/WSJ/EGLKS_dataupdated.xlsx")
 ###import compustat financial data 
 compustat <- fread("Misc/compustat_102422.csv")
 compustatna <- fread("Misc/compustat_northamerica.csv")
+## bind dataframes 
+# get variables that are in both dataframes
 vars <- names(compustat)[names(compustat) %in% names(compustatna)]
 compustat <- compustat[, ..vars]
 compustatna <- compustatna[, ..vars]
-compustat <- rbind(compustat, compustatna)
+compustat_comb <- rbind(compustat, compustatna)
 
 compustat <- compustat[order(compustat[, c("gvkey", "fyear")]), ] # ensure if we drop duplicates, we drop the LATER observations from a given year
 compustat <- compustat[!duplicated(compustat[, c("gvkey", "fyear")])] # drop duplicate year-firm observations
+
+dupl <- compustat_comb |>
+  group_by(gvkey,fyear) |>
+  filter(n()>1)
+
+tert <- compustat_comb |>
+  group_by(gvkey,fyear) |>
+  filter(n()>2)
 
 ### Refinitive esg data 
 esg <- fread("Misc/refinitiveesg.csv")
