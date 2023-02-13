@@ -8,7 +8,7 @@ library(data.table)
 library(tidyverse)
 
 # set working directory
-setwd("~/Dropbox (Princeton)/BBH/BBH1")
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
 # load lobbying data
