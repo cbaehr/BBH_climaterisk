@@ -9,7 +9,7 @@ library(tidyverse)
 
 # set working directory
 setwd("~/Dropbox (Princeton)/BBH/BBH1")
-
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
 # load lobbying data
 lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
@@ -20,26 +20,44 @@ lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level.csv")
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
+# firm_data <- fread("data/df_quarterly_fb.csv") |>
+#   mutate(gvkey = as.character(gvkey)) |>
+#   filter(!is.na(gvkey)) |>
+#   # add _q as identifier for quarterly data
+#   rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q")) |>
+#   # merge with yearly firm data
+#   left_join(fread("data/df_year_fb.csv") |>
+#               mutate(gvkey = as.character(gvkey)) |>
+#               filter(!is.na(gvkey)) |>
+#               # select only exposure data: control variables come from the quarterly dataframe
+#               select(isin:ph_sent_ew,ccpos:phsent) |>
+#               # add _y as identifier for yearly data
+#               rename_at(vars(-c(isin,year)), ~ paste0(., "_y")),
+#             by = c("isin","year"))
+
+# load firm climate risk data
+# create one data-frame with yearly and quarterly exposure data + yearly control variables
 firm_data <- fread("data/df_quarterly_fb.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # add _q as identifier for quarterly data
-  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q")) |>
-  # merge with yearly firm data
-  left_join(fread("data/df_year_fb.csv") |>
-              mutate(gvkey = as.character(gvkey)) |>
-              filter(!is.na(gvkey)) |>
-              # select only exposure data: control variables come from the quarterly dataframe
-              select(isin:ph_sent_ew,ccpos:phsent) |>
-              # add _y as identifier for yearly data
-              rename_at(vars(-c(isin,year)), ~ paste0(., "_y")),
-            by = c("isin","year"))
+  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q"))
 
+firm_data_year <- fread("data/df_year_fb.csv") |>
+  mutate(gvkey = as.character(gvkey)) |>
+  filter(!is.na(gvkey)) |>
+  # select only exposure data: control variables come from the quarterly dataframe
+  select(isin:ph_sent_ew,ccpos:phsent) |>
+  rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
+
+firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
+
+firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
 
 # Merging -----------------------------------------------------------------
 
 # Baseline dataset: all reports from lobbying disclosure act separated by issue
-df <- lobby_issue |>
+lobbying <- lobby_issue |>
   select(-c(2,3)) |>
   # merge with text of report
   left_join(lobby_text, by = "report_uuid") |>
@@ -48,9 +66,14 @@ df <- lobby_issue |>
   # merge with client data
   left_join(lobby_client, by = "client_uuid") |>
   mutate(gvkey = as.character(gvkey)) |>
-  rename(year = report_year) |>
+  rename(year = report_year)
+
+if(any(duplicated(lobbying))) {
+  stop("duplicated rows in lobbying data will screw up the merge")
+} else {
   # merge with firm data
-  left_join(firm_data, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+  df <- left_join(firm_data, lobbying, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+}
 
 
 # only observations with climate exposure data
@@ -68,7 +91,7 @@ fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
 # nor information on which institutions were lobbied
 # because these information vary by issue within each report.
 
-df_wide <- lobby_issue |>
+lobbying_wide <- lobby_issue |>
   select(-c(issue_ordi,gov_entity)) |>
   distinct() |>
   mutate(issue_bin = 1) |>
@@ -79,9 +102,14 @@ df_wide <- lobby_issue |>
   # merge with client data
   left_join(lobby_client, by = "client_uuid") |>
   mutate(gvkey = as.character(gvkey)) |>
-  rename(year = report_year) |>
+  rename(year = report_year)
+
+if(any(duplicated(lobbying_wide))) {
+  stop("duplicated rows in lobbying WIDE data will screw up the merge")
+} else {
   # merge with firm data
-  left_join(firm_data, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+  df_wide <- left_join(firm_data, lobbying_wide, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+}
 
 #filter for observations with climate attention data 
 cc_wide <- df_wide |>

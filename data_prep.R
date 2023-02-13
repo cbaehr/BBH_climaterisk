@@ -12,6 +12,7 @@ library(readxl)
 
 # set working directory
 setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1/data")
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")}
 
 # Import datasets ---------------------------------------------------------
 
@@ -44,7 +45,9 @@ company_en <- fread("Misc/company_en.csv")
 ### Sic codes
 sic <- fread("Misc/sic_2_digit_codes.csv") |>
   mutate(sic = as.integer(sic)) |>
-   filter(!is.na(sic))
+  filter(!is.na(sic))
+
+sic <- sic[!duplicated(sic), ]
 
 # Merge -------------------------------------------------------------------
 
