@@ -13,6 +13,7 @@ library(readxl)
 # set working directory
 setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1/data")
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/")}
 
 # Import datasets ---------------------------------------------------------
 

@@ -58,9 +58,20 @@ firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
 
 # Baseline dataset: all reports from lobbying disclosure act separated by issue
 lobbying <- lobby_issue |>
-  select(-c(2,3)) |>
+  # cases where issue enters report multiple time due to different text entries:
+  # we are only interested in each issue; not the sub-issues
+  # --> remove issue_ordi and get only distinct rows to avoid duplicates
+  select(-c(issue_ordi)) |>
+  distinct() |>
   # merge with text of report
-  left_join(lobby_text, by = "report_uuid") |>
+  left_join(lobby_text |> 
+              select(-c(issue_ordi)) |>
+              # cases where issue in report has multiple text entries:
+              # combine text for these cases so that every report-issue only enters once
+              group_by(report_uuid,issue_code) |>
+              mutate(issue_text = paste(issue_text, collapse = " ")) |>
+              distinct(), 
+            by = c("report_uuid","issue_code")) |>
   # merge with report data
   left_join(lobby_report, by = "report_uuid") |>
   # merge with client data
@@ -68,13 +79,30 @@ lobbying <- lobby_issue |>
   mutate(gvkey = as.character(gvkey)) |>
   rename(year = report_year)
 
+
+### there are 21 gvkey duplicates in firm_data
+# we will deal with this later
+# for now we drop these cases
+dupl <- firm_data |>
+  group_by(gvkey, year, quarter) |>
+  filter(n()>1) |>
+  arrange(gvkey, year, quarter) |>
+  mutate(identifier = paste0(gvkey,"_",year,"_",quarter)) |>
+  distinct(identifier) |>
+  pull(identifier)
+
+firm_data_reduced <- firm_data |>
+  mutate(identifier = paste0(gvkey,"_",year,"_",quarter)) |>
+  filter(!identifier %in% dupl)
+
+
 if(any(duplicated(lobbying))) {
   out <- lobbying[duplicated(lobbying)|duplicated(lobbying, fromLast=T),]
-  write.csv(out, "lobbyingdups.csv", row.names = F)
   stop("duplicated rows in lobbying data will screw up the merge")
 } else {
-  # merge with firm data
-  df <- left_join(firm_data, lobbying, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+  # merge with firm_data
+  df <- lobbying |>
+    left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 }
 
 
