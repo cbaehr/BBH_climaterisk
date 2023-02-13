@@ -69,6 +69,8 @@ lobbying <- lobby_issue |>
   rename(year = report_year)
 
 if(any(duplicated(lobbying))) {
+  out <- lobbying[duplicated(lobbying)|duplicated(lobbying, fromLast=T),]
+  write.csv(out, "lobbyingdups.csv", row.names = F)
   stop("duplicated rows in lobbying data will screw up the merge")
 } else {
   # merge with firm data
