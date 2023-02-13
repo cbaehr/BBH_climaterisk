@@ -96,14 +96,8 @@ firm_data_reduced <- firm_data |>
   filter(!identifier %in% dupl)
 
 
-if(any(duplicated(lobbying))) {
-  out <- lobbying[duplicated(lobbying)|duplicated(lobbying, fromLast=T),]
-  stop("duplicated rows in lobbying data will screw up the merge")
-} else {
-  # merge with firm_data
-  df <- lobbying |>
+df <- lobbying |>
     left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
-}
 
 
 # only observations with climate exposure data
@@ -134,12 +128,10 @@ lobbying_wide <- lobby_issue |>
   mutate(gvkey = as.character(gvkey)) |>
   rename(year = report_year)
 
-if(any(duplicated(lobbying_wide))) {
-  stop("duplicated rows in lobbying WIDE data will screw up the merge")
-} else {
-  # merge with firm data
-  df_wide <- left_join(firm_data, lobbying_wide, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
-}
+
+# merge with firm_data
+df_wide <- lobbying_wide |>
+  left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 
 #filter for observations with climate attention data 
 cc_wide <- df_wide |>
