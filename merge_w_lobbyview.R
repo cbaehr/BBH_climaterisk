@@ -11,11 +11,7 @@ library(tidyverse)
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
-# load lobbying data
-lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
-lobby_text <- fread("data/LOBBYING LobbyView/dataset___issue_text.csv")
-lobby_issue <- fread("data/LOBBYING LobbyView/dataset___issue_level.csv")
-lobby_bills <- fread("data/LOBBYING LobbyView/dataset___bills.csv")
+# load lobbying report data
 lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level.csv")
 
 ### Fix multiple-quarter report codes 
@@ -97,6 +93,14 @@ firm_data_year <- fread("data/df_year_fb.csv") |>
 firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
 
 firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
+
+
+
+### load rest of lobbying data
+lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
+lobby_text <- fread("data/LOBBYING LobbyView/dataset___issue_text.csv")
+lobby_issue <- fread("data/LOBBYING LobbyView/dataset___issue_level.csv")
+lobby_bills <- fread("data/LOBBYING LobbyView/dataset___bills.csv")
 
 # Merging -----------------------------------------------------------------
 
