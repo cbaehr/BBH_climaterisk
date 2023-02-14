@@ -60,7 +60,7 @@ df <- df |>
 df <- df |>
   rename(co2_emissions = En_En_ER_DP023)
 
-#Average lobbying
+#Total annual lobbying (# reports)
 df <- df |>    
   group_by(gvkey, year) |>
   mutate(total_lobby = n_distinct(report_uuid))
@@ -73,7 +73,7 @@ datasummary((`Total CO2 Emissions (Tonnes)` = co2_emissions) + (`Earnings Before
             fmt = 0,
             output = 'latex')
 
-#Lag emissions variable 
+#Log and lag emissions variable 
 df <- df |>
   mutate(log_co2 = log(co2_emissions + 1))
 
@@ -313,21 +313,21 @@ ggplot(data = top10ind_lobby, aes(x = year, y = total_climate_reports, group = i
   labs(title = " ", x = "Year", y = "Total Climate Lobbying (# Reports)", color = "Industry") +
   theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14))
 
-ggsave("../results/Figures/lobbing_timeseries_industry.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+ggsave("results/Figures/lobbing_timeseries.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
-#plot total spending in reports tagged to climate for each industry year 
-top10ind_spend <- top10ind_total |>
-  filter(CLI == 1)|>
-  group_by(year, industry) |> 
-  summarise(total_climate_spend = sum(amount))
+#plot total spending in reports tagged to climate for each industry year - needs to be updated for correct amount variable
+#top10ind_spend <- top10ind_total |>
+#  filter(CLI == 1)|>
+ # group_by(year, industry) |> 
+  #summarise(total_climate_spend = sum(amount))
 
-ggplot(data = top10ind_spend, aes(x = year, y = total_climate_spend, group = industry)) +
-  geom_line(aes(color = industry)) +
-  scale_color_viridis(discrete=TRUE) + 
-  labs(title = " ", x = "Year", y = "Total Climate Lobbying ($)", color = "Industry") +
-  theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14))
+#ggplot(data = top10ind_spend, aes(x = year, y = total_climate_spend, group = industry)) +
+  #geom_line(aes(color = industry)) +
+  #scale_color_viridis(discrete=TRUE) + 
+  #labs(title = " ", x = "Year", y = "Total Climate Lobbying ($)", color = "Industry") +
+  #theme_light() + theme(plot.title = element_text(hjust = 0.5), axis.title=element_text(size=14))
 
-ggsave("../results/Figures/lobbingspend_timeseries_industry.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
+#ggsave("../results/Figures/lobbingspend_timeseries_industry.pdf", width=unit(8, units="in"), height=unit(6, units="in"))
 
 
 ###Scatterplot of climate attention and total lobbying 
