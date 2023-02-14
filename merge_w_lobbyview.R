@@ -11,52 +11,12 @@ library(tidyverse)
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
-# load lobbying report data
-lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level.csv")
-
-### Fix multiple-quarter report codes 
-
-# shift amount value to numeric
-lobby_report$amount_num <- gsub("\\$|\\.|,", "", lobby_report$amount)
-lobby_report$amount_num <- as.numeric(lobby_report$amount_num)
-
-# convert quarter codes to list object at once for faster processing
-lobby_report$report_quarter_code_list <- sapply(as.character(lobby_report$report_quarter_code), FUN=function(x) strsplit(x, split=""))
-
-for(i in 1:nrow(lobby_report)) {
-  if(i==1) {store <- list()}
-  
-  # pull list of quarters corresponding to firm i year j
-  qt <- lobby_report$report_quarter_code_list[i][[1]]
-  
-  if(length(qt) > 1) { # if more than one quarter for this obs...
-    data <- rep(lobby_report[i,], times=length(qt))
-    mat <- matrix(data, nrow=length(qt), byrow=T)
-    mat <- data.frame(mat)
-    names(mat) <- names(lobby_report)
-    mat$amount_num <- unlist(mat$amount_num) / length(qt) # break up total value into average per period
-    
-  } else { # if only one quarter for this obs, do nothing...
-    mat <- lobby_report[i,]
-    
-  }
-  mat$report_quarter_code_new <- qt
-  store[[i]] <- mat
-}
-
-# shift individual firm-year-quarter dataframes back into a single df
-lobby_report <- do.call(rbind, store)
-
-# add variable to identify cases that caused the problem
-lobby_report$report_type <- ifelse(lobby_report$report_quarter_code=="12", "first half",
-                                   ifelse(lobby_report$report_quarter_code=="34", "second half",
-                                          ifelse(lobby_report$report_quarter_code=="1234", "full year", "quarter")))
-
-# drop utility variables and rename others
-lobby_report <- lobby_report[, !names(lobby_report) %in% c("report_quarter_code_list", "report_quarter_code")]
-names(lobby_report)[names(lobby_report)=="report_quarter_code_new"] <- "report_quarter_code"
-
-###
+# load lobbying data
+lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
+lobby_text <- fread("data/LOBBYING LobbyView/dataset___issue_text.csv")
+lobby_issue <- fread("data/LOBBYING LobbyView/dataset___issue_level.csv")
+lobby_bills <- fread("data/LOBBYING LobbyView/dataset___bills.csv")
+lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level_FIXED.csv")
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
@@ -93,14 +53,6 @@ firm_data_year <- fread("data/df_year_fb.csv") |>
 firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
 
 firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
-
-
-
-### load rest of lobbying data
-lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
-lobby_text <- fread("data/LOBBYING LobbyView/dataset___issue_text.csv")
-lobby_issue <- fread("data/LOBBYING LobbyView/dataset___issue_level.csv")
-lobby_bills <- fread("data/LOBBYING LobbyView/dataset___bills.csv")
 
 # Merging -----------------------------------------------------------------
 
@@ -145,7 +97,7 @@ firm_data_reduced <- firm_data |>
 
 
 df <- lobbying |>
-    left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+  left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 
 
 # only observations with climate exposure data
