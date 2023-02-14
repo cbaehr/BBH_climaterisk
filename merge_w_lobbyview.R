@@ -95,10 +95,9 @@ firm_data_reduced <- firm_data |>
   mutate(identifier = paste0(gvkey,"_",year,"_",quarter)) |>
   filter(!identifier %in% dupl)
 
-
+# merge
 df <- lobbying |>
   left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
-
 
 # only observations with climate exposure data
 cc <- df |>
