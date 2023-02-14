@@ -36,16 +36,17 @@ compustat <- compustat[, ..vars]
 compustatna <- compustatna[, ..vars]
 compustat_comb <- rbind(compustat, compustatna)
 
-compustat <- compustat[order(compustat[, c("gvkey", "fyear")]), ] # ensure if we drop duplicates, we drop the LATER observations from a given year
-compustat <- compustat[!duplicated(compustat[, c("gvkey", "fyear")])] # drop duplicate year-firm observations
+# ensure if we drop duplicates, we drop the LATER observations from a given year
+compustat_comb <- compustat_comb[order(compustat_comb[, c("gvkey", "fyear")]), ]
+# drop duplicate year-firm observations
+compustat_drop <- compustat_comb[!duplicated(compustat_comb[, c("gvkey", "fyear")])] 
 
-dupl <- compustat_comb |>
-  group_by(gvkey,fyear) |>
-  filter(n()>1)
-
-tert <- compustat_comb |>
-  group_by(gvkey,fyear) |>
-  filter(n()>2)
+# produce dataframe with gvkey-years that are in the dataset multiple times
+# dupl <- compustat_comb |>
+#   group_by(gvkey,fyear) |>
+#   filter(n()>1) |>
+#   arrange(gvkey,fyear)
+# fwrite(dupl, "Misc/compustat_duplicates.csv")
 
 ### Refinitive esg data 
 esg <- fread("Misc/refinitiveesg.csv")
@@ -64,12 +65,8 @@ sic <- sic[!duplicated(sic), ]
 
 ### Prepare datasets for merging
 # Merge compustat with sic codes
-compustat$sic <- strtrim(compustat$sic, 2)
-
-compustat <- compustat |>
-  mutate(sic = as.integer(sic))
-
-compustat <- compustat |> 
+compustat_drop <- compustat_drop |>
+  mutate(sic = as.integer(strtrim(sic, 2))) |> 
   left_join(sic, by = "sic")
 
 ### Merge ESG dataset with company data
@@ -86,14 +83,16 @@ esg <- esg |>
 # quarterly
 ccexposure_qfull <- ccexposure_q |>
   mutate(country_name = countrycode(hqcountrycode, origin = 'iso2c', destination = 'country.name')) |>
-  left_join(compustat, by = c("year" = "fyear", "gvkey")) |>
+  left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
   left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
 
 # annual
 ccexposure_afull <- ccexposure_y |>
   mutate(country_name = countrycode(hqcountrycode, origin = 'iso2c', destination = 'country.name')) |>
-  left_join(compustat, by = c("year" = "fyear", "gvkey")) |>
+  left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
   left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
+
+### Note that merging the exposure produces duplicates. Will deal with this later. (V, Feb 13, 23)
 
 
 # Transform variables -----------------------------------------------------
@@ -148,7 +147,7 @@ ccexposure_afull <- ccexposure_afull |>
 
 
 # Write .csv dfs ----------------------------------------------------------
-fwrite(x = ccexposure_afull, file = "df_year_fb.csv")
-fwrite(x = ccexposure_qfull, file = "df_quarterly_fb.csv")
+fwrite(x = ccexposure_afull, file = "indepvar_year.csv")
+fwrite(x = ccexposure_qfull, file = "indepvar_quarterly.csv")
 
 # End
