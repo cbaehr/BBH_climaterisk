@@ -37,13 +37,13 @@ lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level_FIXED.csv"
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
-firm_data <- fread("data/df_quarterly_fb.csv") |>
+firm_data <- fread("data/indepvar_quarterly.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # add _q as identifier for quarterly data
   rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q"))
 
-firm_data_year <- fread("data/df_year_fb.csv") |>
+firm_data_year <- fread("data/indepvar_year.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # select only exposure data: control variables come from the quarterly dataframe
