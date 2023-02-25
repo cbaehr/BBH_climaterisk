@@ -111,7 +111,8 @@ within_industry_variances <- exposure_var |>
   scale_shape_manual(values=c(15:18)) + 
   theme_bw() +
   labs(y="Variance",x = "") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        axis.text.x=element_text(angle = 35, vjust=0.95,hjust=1))
 
 # save
 ggsave("../results/Figures/within_industry_variances.pdf", within_industry_variances, width=11, height=8.5)
