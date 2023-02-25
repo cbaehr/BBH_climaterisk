@@ -8,11 +8,12 @@ library(data.table)
 library(tidyverse)
 
 # set working directory
-setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")
-setwd("~/Dropbox (Princeton)/BBH/BBH1/data/")
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/")}
+
 
 # load data
-df <- fread("df_year_fb.csv")
+df <- fread("indepvar_year.csv")
 
 # Within industry variation in exposure -----------------------------------
 
@@ -102,9 +103,9 @@ within_industry_variances <- exposure_var |>
                            rgexpo = "Regulatory"),
          round = round(value,digits = 2)) |>
   filter(Variable != "avg_var") |>
-  ggplot(aes(y=value,x=industry,color=Variable, shape = Variable)) +
-  geom_pointrange(aes(ymin = (value-.5),
-                      ymax = (value+.5))) +
+  ggplot(aes(y=value,x=industry)) +
+  facet_wrap(vars(Variable), nrow=1, scales = "free_x") +
+  geom_point() +
   coord_flip() + 
   viridis::scale_color_viridis(discrete = T,end = .9) +
   scale_shape_manual(values=c(15:18)) + 
