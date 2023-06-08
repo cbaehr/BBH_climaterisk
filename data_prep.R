@@ -23,23 +23,98 @@ ccexposure_q <- fread("CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
 #import yearly data 
 ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
 
+#sum(ccexposure_q$cc_expo_ew[which(ccexposure_q$isin=="AEA002001013" & ccexposure_q$year==2018)])/4
+#ccexposure_y$cc_expo_ew[which(ccexposure_y$isin=="AEA002001013" & ccexposure_y$year==2018)]
+
 ### WSJ news data 
 wsj <- read_excel("Misc/WSJ/EGLKS_dataupdated.xlsx")
 
 ###import compustat financial data 
-compustat <- fread("Misc/compustat_102422.csv")
-compustatna <- fread("Misc/compustat_northamerica.csv")
+#compustat <- fread("Misc/compustat_102422.csv")
+#compustatna <- fread("Misc/compustat_northamerica.csv")
+
+compustatglobal <- fread("/Users/christianbaehr/Downloads/compustat_Global_annual_6-6-2022.csv")
+compustatna <- fread("/Users/christianbaehr/Downloads/compustat_NA_annual_6-6-2022.csv")
+
+compustatglobal$uniqueid <- paste(compustatglobal$gvkey, compustatglobal$fyear)
+compustatna$uniqueid <- paste(compustatna$gvkey, compustatna$fyear)
+
+compustatglobal$dup <- duplicated(compustatglobal$uniqueid) | duplicated(compustatglobal$uniqueid, fromLast = T)
+compustatna$dup <- duplicated(compustatna$uniqueid) | duplicated(compustatna$uniqueid, fromLast = T)
+
+compustatglobal$maxdup <- NA
+compustatna$maxdup <- NA
+
+for(i in 1:nrow(compustatglobal)) {
+  if(compustatglobal$dup[i]) {
+    dates <- compustatglobal$datadate[which(compustatglobal$gvkey==compustatglobal$gvkey[i] & compustatglobal$fyear==compustatglobal$fyear[i])]
+    if (compustatglobal$datadate[i] == max(dates)) {
+      compustatglobal$maxdup[i] <- T
+    } else {
+      compustatglobal$maxdup[i] <- F
+    }
+  } else {
+    compustatglobal$maxdup[i] <- T
+  }
+}
+
+for(i in 1:nrow(compustatna)) {
+  if(compustatna$dup[i]) {
+    dates <- compustatna$datadate[which(compustatna$gvkey==compustatna$gvkey[i] & compustatna$fyear==compustatna$fyear[i])]
+    if (compustatna$datadate[i] == max(dates)) {
+      compustatna$maxdup[i] <- T
+    } else {
+      compustatna$maxdup[i] <- F
+    }
+  } else {
+    compustatna$maxdup[i] <- T
+  }
+}
+
+compustatglobal <- compustatglobal[which(compustatglobal$maxdup), ]
+compustatna <- compustatna[which(compustatna$maxdup), ]
+
+## drop company-year observations from GLOBAL that are also present in North America
+compustatglobal <- compustatglobal[which(!compustatglobal$uniqueid %in% compustatna$uniqueid ), ]
+
 ## bind dataframes 
 # get variables that are in both dataframes
-vars <- names(compustat)[names(compustat) %in% names(compustatna)]
-compustat <- compustat[, ..vars]
+vars <- names(compustatglobal)[names(compustatglobal) %in% names(compustatna)]
+compustatglobal <- compustatglobal[, ..vars]
 compustatna <- compustatna[, ..vars]
-compustat_comb <- rbind(compustat, compustatna)
+compustat <- rbind(compustatglobal, compustatna)
+compustat$conversion <- NA
 
-# ensure if we drop duplicates, we drop the LATER observations from a given year
-compustat_comb <- compustat_comb[order(compustat_comb[, c("gvkey", "fyear")]), ]
-# drop duplicate year-firm observations
-compustat_drop <- compustat_comb[!duplicated(compustat_comb[, c("gvkey", "fyear")])] 
+er <- fread("/Users/christianbaehr/Downloads/WS_XRU_D_csv_row.csv")
+names(er) <- sapply(er[2,], function(x) strsplit(as.character(x), ":")[[1]][1])
+er <- er[-(1:8), ]
+er[,1] <- IDateTime(er$Currency)[,1]
+er <- er[which(year(er$Currency) > 1999), ]
+
+unique(compustat$curcd)
+nomatch <- unique(compustat$curcd[!compustat$curcd %in% colnames(er)])
+sum(compustat$curcd %in% nomatch) # only 480 compustat cases have no exchange rate info
+compustat <- compustat[which(!compustat$curcd %in% nomatch), ]
+
+for(i in 1:nrow(compustat)) {
+  nm <- compustat$curcd[i]
+  if (nm=="USA") {
+    compustat$conversion[i] <- 1
+  } else {
+    ind <- which.min(abs(compustat$datadate[i] - er$Currency))
+    compustat$conversion[i] <- er[ind, ..nm]
+  }
+}
+
+compustat$conversion <- as.numeric(unlist(compustat$conversion))
+
+for(col in c("at", "capx", "che", "dltt", "ebit", "ppent", "xrd")) {
+  
+  compustat[, col] <- compustat[, col, with=F] / compustat$conversion
+  
+}
+
+sum(duplicated(compustat[, c("gvkey", "fyear")])) #no duplicates!
 
 # produce dataframe with gvkey-years that are in the dataset multiple times
 # dupl <- compustat_comb |>
@@ -65,7 +140,7 @@ sic <- sic[!duplicated(sic), ]
 
 ### Prepare datasets for merging
 # Merge compustat with sic codes
-compustat_drop <- compustat_drop |>
+compustat_drop <- compustat |>
   mutate(sic = as.integer(strtrim(sic, 2))) |> 
   left_join(sic, by = "sic")
 
