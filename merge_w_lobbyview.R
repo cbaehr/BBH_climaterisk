@@ -79,6 +79,34 @@ lobbying <- lobby_issue |>
   mutate(gvkey = as.character(gvkey)) |>
   rename(year = report_year)
 
+## drop NA gvkeys. Theres no way we can connect these to Compustat data
+lobbying <- lobbying[!is.na(lobbying$gvkey), ]
+
+##########
+
+## drop a few observations that seem duplicated. Identical except one row specifies lobbying the House and the second row
+## specifies lobbying House AND Senate. Seems doubtful these are genuinely distinct lobbying disbursements.
+lobbying <- lobbying[!duplicated(lobbying[, c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code")]), ]
+
+
+
+lobbying$amount_num <- gsub("\\$|,", "", lobbying$amount)
+lobbying$amount_num <- as.numeric(lobbying$amount_num)
+#test2 <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$report_uuid, lobbying$issue_code, lobbying$issue_text, lobbying$primary_naics), FUN=function(x) sum(x, na.rm=T))
+#names(test2) <- c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code", "issue_text", "primary_naics", "amount_num")
+
+lobbying_num <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), FUN=function(x) sum(x, na.rm=T))
+names(lobbying_num) <- c("gvkey", "year", "report_quarter_code", "issue_code", "amount_num")
+
+lobbying_text <- aggregate(lobbying[, c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")], 
+                           by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), 
+                           FUN=function(x) paste(x, collapse = "|"))
+names(lobbying_text) <- c("gvkey", "year", "report_quarter_code", "issue_code", "issue_text", "registrant_uuid", "registrant_name", "primary_naics")
+
+lobbying <- merge(lobbying_num, lobbying_text)
+
+##########
+
 
 ### there are 21 gvkey duplicates in firm_data
 # we will deal with this later
