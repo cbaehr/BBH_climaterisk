@@ -345,4 +345,5 @@ ggsave("results/Figures/descriptives/climate_firms_overtime_variation.pdf", widt
 ggsave("report/images/climate_firms_overtime_variation.png", width = 9, height = 5.5)
 
 
+
 ### END
