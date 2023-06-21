@@ -13,6 +13,17 @@ if(sum(duplicated(dat[, c("gvkey", "year", "report_quarter_code")]))) {warning("
 
 dat$CLI <- (dat$ENV==1 | dat$CAW==1 | dat$ENG==1 | dat$FUE==1) * 1
 
+us <- c("United States")
+eur <- c("France", "Germany", "Ireland", "Netherlands", "Switzerland", "United Kingdom", "Sweden", "Finland", "Norway", "Italy", "Denmark", 
+         "Belgium", "Luxembourg", "Spain", "Czechia", "Russia", "Austria")
+asia <- c("Japan", "China", "South Korea", "India", "Singapore", "Philippines", "Taiwan")
+
+dat$hqloc <- ifelse(dat$country_name %in% us, "usa",
+                    ifelse(dat$country_name %in% eur, "europe",
+                           ifelse(dat$country_name %in% asia, "asia", NA)))
+
+#write.csv(dat[sample(which(dat$country_name==""), 100), ], "/Users/christianbaehr/Desktop/test.csv")
+
 ###
 
 ### Create relative advantage score
@@ -22,6 +33,12 @@ industryscore <- industryscore[which(industryscore$Group.1!=""), ]
 names(industryscore) <- paste0(names(industryscore), "INDUSTRY")
 
 dat <- merge(dat, industryscore, by.x = c("industry", "year", "report_quarter_code"), by.y = c("Group.1INDUSTRY", "Group.2INDUSTRY", "Group.3INDUSTRY"), all.x=T)
+
+industryscore_hqloc <- aggregate(dat[c("ccexp", "op_expo_ew_q", "rg_expo_ew_q", "ph_expo_ew_q")], by = list(dat$industry, dat$year, dat$report_quarter_code, dat$hqloc), FUN = function(x) mean(x, na.rm=T))
+industryscore_hqloc <- industryscore_hqloc[which(industryscore_hqloc$Group.1!=""), ]
+names(industryscore_hqloc) <- paste0(names(industryscore_hqloc), "INDUSTRY_hqloc")
+
+dat <- merge(dat, industryscore_hqloc, by.x = c("industry", "year", "report_quarter_code", "hqloc"), by.y = c("Group.1INDUSTRY_hqloc", "Group.2INDUSTRY_hqloc", "Group.3INDUSTRY_hqloc", "Group.4INDUSTRY_hqloc"), all.x=T)
 
 dat$RELADV <- dat$ccexp - dat$ccexpINDUSTRY # relative advantage to industry
 dat$RELADV <- (dat$RELADV - mean(dat$RELADV, na.rm=T)) / sd(dat$RELADV, na.rm=T)
@@ -70,10 +87,9 @@ dat <- dat |>
 
 dat$ebit <- dat$ebit /100000
 
-View(dat[which(dat$ebit>10000), ])
-dat$client_name[which(dat$ebit>10000)]
-
-
+unique(dat$client_name[which(dat$ebit>500)])
+hist(dat$ebit[dat$ebit>100])
+hist(dat$ebit[abs(dat$ebit)<0.1])
 
 ###
 
@@ -126,10 +142,34 @@ modelsummary(
   vcov= ~ gvkey,
   output = "../results/withinIND_logit.tex")
 
+###
 
+asia <- list(
+  "Combined" = feglm(CLI ~ RELADV + RELADV_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="asia",]),
+  "Opportunity" = feglm(CLI ~ RELADV_op + RELADV_op_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="asia",]),
+  "Physical" = feglm(CLI ~ RELADV_ph + RELADV_ph_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="asia",]),
+  "Regulatory" = feglm(CLI ~ RELADV_rg + RELADV_rg_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="asia",]))
 
+europe <- list(
+  "Combined" = feglm(CLI ~ RELADV + RELADV_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="europe",]),
+  "Opportunity" = feglm(CLI ~ RELADV_op + RELADV_op_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="europe",]),
+  "Physical" = feglm(CLI ~ RELADV_ph + RELADV_ph_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="europe",]),
+  "Regulatory" = feglm(CLI ~ RELADV_rg + RELADV_rg_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="europe",]))
 
+usa <- list(
+  "Combined" = feglm(CLI ~ RELADV + RELADV_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="usa",]),
+  "Opportunity" = feglm(CLI ~ RELADV_op + RELADV_op_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="usa",]),
+  "Physical" = feglm(CLI ~ RELADV_ph + RELADV_ph_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="usa",]),
+  "Regulatory" = feglm(CLI ~ RELADV_rg + RELADV_rg_SQ + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year + industry, family = "binomial", data=dat_nomi[dat_nomi$hqloc=="usa",]))
 
+library(dotwhisker)
+library(dplyr)
+
+usa1 <- tidy(usa[[1]])
+europe1 <- tidy(europe[[1]])
+
+dwplot(list("Asia"=asia[[1]], europe[[1]], usa[[1]]), 
+       vars_order = c("RELADV", "RELADV_SQ"))
 
 
 
