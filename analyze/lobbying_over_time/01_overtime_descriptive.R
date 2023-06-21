@@ -34,6 +34,7 @@ df <- df |>
 df |> tabyl(CLI)
 df |> tabyl(CLI, year_quarter)
 
+inspect <- df |> select(year_quarter) |> arrange(year_quarter)
 
 
 ## Reports over time -------------------------------------------------------
