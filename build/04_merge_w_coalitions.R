@@ -1,0 +1,100 @@
+### Firms & Lobbying
+### Get Directionality with Coalition data
+
+rm(list=ls())
+
+# load packages
+pacman::p_load(data.table, tidyverse, janitor)
+
+
+# set working directory
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
+
+
+
+# Load data ---------------------------------------------------------------
+
+df <- fread("data/lobbying_df_fb.csv")
+
+coal <- fread("data/Lerner and Osgood 2022 replication/analysis_data_no_proprietary.csv")
+
+
+
+# Edit coalition data ---------------------------------------------------
+
+coal <- coal |>
+  select(
+    gvkey, year,
+    numsupcoal,# coalitions joined that strongly or weakly favor climate action
+    numoppcoal # coalitions joined that strongly or weakly oppose climate action
+  ) 
+
+coal |> tabyl(numsupcoal)
+coal |> tabyl(numoppcoal)
+coal |> tabyl(numsupcoal, numoppcoal) # not much overlap
+
+# Create dummy
+coal <- coal |>
+  mutate(
+    sup_climate_action = ifelse(numsupcoal > 0, 1, 0),
+    opp_climate_action = ifelse(numoppcoal > 0, 1, 0),
+    gvkey = as.character(gvkey)
+  )
+
+# How many not part at any point?
+# support
+coal |>
+  group_by(gvkey) %>%
+  summarise(support_count = sum(sup_climate_action),
+            opposition_count = sum(opp_climate_action)) %>%
+  filter(support_count == 0 & opposition_count == 0) |>
+  nrow()
+  
+
+coal |> tabyl(sup_climate_action, opp_climate_action) # not much overlap: 274 firm-years / 45 firms
+
+
+
+
+# Merge with df -----------------------------------------------------------
+
+df2 <- df |>
+  left_join(coal, by = c("gvkey", "year"))
+
+df2 |> tabyl(sup_climate_action)
+df2 |> tabyl(opp_climate_action)
+
+
+
+# Code directionality -----------------------------------------------------
+
+
+df3 <- df2 |>
+  mutate(
+    # lobbying on climate
+    CLI = ifelse(issue_code %in% c("ENV", "CAW", "ENG", "FUE"),
+                 1,
+                 0),
+    pro_CLI = ifelse(CLI == 1 &
+                       sup_climate_action == 1,
+                     1,
+                     0),
+    contra_CLI = ifelse(CLI == 1 &
+                          opp_climate_action == 1,
+                        1,
+                        0)
+  )
+
+insp <- df3 |> select(gvkey, year, issue_code, CLI, pro_CLI, sup_climate_action, contra_CLI, opp_climate_action)
+
+df3 |> tabyl(pro_CLI)
+df3 |> tabyl(contra_CLI)
+
+
+
+# Write -------------------------------------------------------------------
+
+fwrite(df3, "~/Dropbox (Princeton)/BBH/BBH1/data/lobbying_df_w_directionality.csv")
+
+### END
