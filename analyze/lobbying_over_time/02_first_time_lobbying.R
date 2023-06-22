@@ -202,17 +202,15 @@ insp <- df2 |>
 
 # Code first entry non-climate --------------------------------------------------------
 
-
-
 ## Year quarter ------------------------------------------------------------
 
-df2 <- df |>
+df2 <- df2 |>
   # get number of reports by firm in given year quarter
   group_by(year_quarter, gvkey) |>
   mutate(
     n_reports_q = ifelse(!is.na(gvkey), n(), NA),
-    n_climate_reports_q = ifelse(!is.na(gvkey), sum(CLI), NA),
-    climate_report_q_bin = ifelse(n_climate_reports_q > 0, 1, 0)
+    n_not_climate_reports_q = ifelse(!is.na(gvkey), sum(not_CLI), NA),
+    not_climate_report_q_bin = ifelse(n_not_climate_reports_q > 0, 1, 0)
   ) |>
   ungroup() |>
   arrange(gvkey, year_quarter)
@@ -222,33 +220,33 @@ df2 <- df |>
 # # worked
 
 # Next: code first time lobbying
-# Get firms that lobby on climate at any point
-firms_cl <- df2 |>
-  select(gvkey, climate_report_q_bin) |>
-  filter(climate_report_q_bin == 1) |>
+# Get firms that lobby on non-climate issues at any point
+firms_notcl <- df2 |>
+  select(gvkey, not_climate_report_q_bin) |>
+  filter(not_climate_report_q_bin == 1) |>
   distinct(gvkey) |>
   pull()
 
 df2 <- df2 |>
   group_by(gvkey) |>
   mutate(
-    firms_climate = ifelse(gvkey %in% firms_cl, 1, 0),
-    year_quarter_first_climate = ifelse(firms_climate == 1,
-                                        first(year_quarter[climate_report_q_bin == 1]),
+    firms_not_climate = ifelse(gvkey %in% firms_notcl, 1, 0),
+    year_quarter_first_not_climate = ifelse(firms_not_climate == 1,
+                                        first(year_quarter[not_climate_report_q_bin == 1]),
                                         "999999"),
-    first_climate_report_q_bin = ifelse(year_quarter == year_quarter_first_climate, 1, 0),
-    first_climate_report_q_bin = ifelse(
-      is.na(first_climate_report_q_bin),
+    first_not_climate_report_q_bin = ifelse(year_quarter == year_quarter_first_not_climate, 1, 0),
+    first_not_climate_report_q_bin = ifelse(
+      is.na(first_not_climate_report_q_bin),
       0,
-      first_climate_report_q_bin
+      first_not_climate_report_q_bin
     )
   )
 
-insp <- df2 |>
-  select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin,
-         firms_climate, year_quarter_first_climate, first_climate_report_q_bin) |>
-  distinct()
-# worked
+# insp <- df2 |>
+#   select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin,
+#          firms_climate, year_quarter_first_climate, first_climate_report_q_bin) |>
+#   distinct()
+# # worked
 
 
 
@@ -259,42 +257,42 @@ df2 <- df2 |>
   group_by(year, gvkey) |>
   mutate(
     n_reports_y = ifelse(!is.na(gvkey), n(), NA),
-    n_climate_reports_y = ifelse(!is.na(gvkey), sum(CLI), NA),
-    climate_report_y_bin = ifelse(n_climate_reports_y > 0, 1, 0)
+    n_not_climate_reports_y = ifelse(!is.na(gvkey), sum(not_CLI), NA),
+    not_climate_report_y_bin = ifelse(n_not_climate_reports_y > 0, 1, 0)
   ) |>
   ungroup() |>
   arrange(gvkey, year_quarter)
 
-insp <- df2 |> select(gvkey, year_quarter, n_reports_y, n_climate_reports_y, climate_report_y_bin) |>
+insp <- df2 |> select(gvkey, year_quarter, n_reports_y, n_not_climate_reports_y, not_climate_report_y_bin) |>
   distinct()
 # worked
 
 # Next: code first time lobbying
 # Get firms that lobby on climate at any point
-firms_cl_y <- df2 |>
-  select(gvkey, climate_report_y_bin) |>
-  filter(climate_report_y_bin == 1) |>
+firms_not_cl_y <- df2 |>
+  select(gvkey, not_climate_report_y_bin) |>
+  filter(not_climate_report_y_bin == 1) |>
   distinct(gvkey) |>
   pull()
 
 df2 <- df2 |>
   group_by(gvkey) |>
   mutate(
-    firms_climate = ifelse(gvkey %in% firms_cl_y, 1, 0),
-    year_first_climate = ifelse(firms_climate == 1,
-                                first(year[climate_report_y_bin == 1]),
+    firms_not_climate = ifelse(gvkey %in% firms_not_cl_y, 1, 0),
+    year_first_not_climate = ifelse(firms_not_climate == 1,
+                                first(year[not_climate_report_y_bin == 1]),
                                 9999),
-    first_climate_report_y_bin = ifelse(year == year_first_climate, 1, 0),
-    first_climate_report_y_bin = ifelse(
-      is.na(first_climate_report_y_bin),
+    first_not_climate_report_y_bin = ifelse(year == year_first_not_climate, 1, 0),
+    first_not_climate_report_y_bin = ifelse(
+      is.na(first_not_climate_report_y_bin),
       0,
-      first_climate_report_y_bin
+      first_not_climate_report_y_bin
     )
   )
 
 insp <- df2 |>
-  select(gvkey, year_quarter, n_reports_y, n_climate_reports_y, climate_report_y_bin,
-         firms_climate, year_first_climate, first_climate_report_y_bin) |>
+  select(gvkey, year_quarter, n_reports_y, n_not_climate_reports_y, not_climate_report_y_bin,
+         firms_not_climate, year_first_not_climate, first_not_climate_report_y_bin) |>
   distinct()
 # worked
 
@@ -307,29 +305,29 @@ insp <- df2 |>
 
 # We need a df with only one observation per firm per year_quarter for this
 df_red <- df2 |>
-  select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin,
-         firms_climate, year_quarter_first_climate, first_climate_report_q_bin) |>
+  select(gvkey, year_quarter, n_reports_q, n_not_climate_reports_q, not_climate_report_q_bin,
+         firms_not_climate, year_quarter_first_not_climate, first_not_climate_report_q_bin) |>
   distinct() |>
   arrange(gvkey, year_quarter) |>
   group_by(gvkey) |>
-  mutate(climate_report_afterpause_q_bin = ifelse(
-    climate_report_q_bin == 1 &
-      lag(climate_report_q_bin, default = 0) == 0 &
-      first_climate_report_q_bin == 0,
+  mutate(not_climate_report_afterpause_q_bin = ifelse(
+    not_climate_report_q_bin == 1 &
+      lag(not_climate_report_q_bin, default = 0) == 0 &
+      first_not_climate_report_q_bin == 0,
     1,
     0
   )) |>
   ungroup() |>
-  select(gvkey, year_quarter, climate_report_afterpause_q_bin)
+  select(gvkey, year_quarter, not_climate_report_afterpause_q_bin)
 
 # Merge with df2
 df2 <- df2 |>
   left_join(df_red, by = c("gvkey", "year_quarter"))
 
 insp <- df2 |>
-  filter(firms_climate == 1) |>
-  select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin,
-         firms_climate, first_climate_report_q_bin, climate_report_afterpause_q_bin) |>
+  filter(firms_not_climate == 1) |>
+  select(gvkey, year_quarter, n_reports_q, n_not_climate_reports_q, not_climate_report_q_bin,
+         firms_not_climate, first_not_climate_report_q_bin, not_climate_report_afterpause_q_bin) |>
   arrange(gvkey, year_quarter)
 # worked
 
@@ -338,29 +336,29 @@ insp <- df2 |>
 
 # We need a df with only one observation per firm per year for this
 df_red <- df2 |>
-  select(gvkey, year, n_reports_y, n_climate_reports_y, climate_report_y_bin,
-         firms_climate, year_first_climate, first_climate_report_y_bin) |>
+  select(gvkey, year, n_reports_y, n_not_climate_reports_y, not_climate_report_y_bin,
+         firms_not_climate, year_first_not_climate, first_not_climate_report_y_bin) |>
   distinct() |>
   arrange(gvkey, year) |>
   group_by(gvkey) |>
-  mutate(climate_report_afterpause_y_bin = ifelse(
-    climate_report_y_bin == 1 &
-      lag(climate_report_y_bin, default = 0) == 0 &
-      first_climate_report_y_bin == 0,
+  mutate(not_climate_report_afterpause_y_bin = ifelse(
+    not_climate_report_y_bin == 1 &
+      lag(not_climate_report_y_bin, default = 0) == 0 &
+      first_not_climate_report_y_bin == 0,
     1,
     0
   )) |>
   ungroup() |>
-  select(gvkey, year, climate_report_afterpause_y_bin)
+  select(gvkey, year, not_climate_report_afterpause_y_bin)
 
 # Merge with df2
 df2 <- df2 |>
   left_join(df_red, by = c("gvkey", "year"))
 
 insp <- df2 |>
-  filter(firms_climate == 1) |>
-  select(gvkey, year_quarter, n_reports_y, n_climate_reports_y, climate_report_y_bin,
-         firms_climate, first_climate_report_y_bin, climate_report_afterpause_y_bin) |>
+  filter(firms_not_climate == 1) |>
+  select(gvkey, year_quarter, n_reports_y, n_not_climate_reports_y, not_climate_report_y_bin,
+         firms_not_climate, first_not_climate_report_y_bin, not_climate_report_afterpause_y_bin) |>
   arrange(gvkey, year_quarter)
 # worked
 
@@ -485,12 +483,12 @@ insp <- df2 |>
 df2 |>
   group_by(year_quarter) |>
   summarize(n_first_climate = sum(first_climate_report_q_bin, na.rm = TRUE),
-            n_first_any = sum(first_lobbying_yq, na.rm = TRUE)) |>
+            n_first_not_climate = sum(first_not_climate_report_q_bin, na.rm = TRUE)) |>
   pivot_longer(cols = starts_with("n_"),
                names_to = "type",
                names_prefix = "n_",
                values_to = "n") |>
-  filter(year_quarter != "1999_1") |>
+  # filter(year_quarter != "1999_1") |>
   ggplot(aes(x = factor(year_quarter), y = n, group = factor(type))) +
   geom_line(aes(linetype = factor(type))) +
   theme_bw() +
@@ -499,7 +497,7 @@ df2 |>
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 # looks ugly
@@ -509,7 +507,7 @@ df2 |>
 df2 |>
   group_by(year) |>
   summarize(n_first_climate = sum(first_climate_report_y_bin, na.rm = TRUE),
-            n_first_any = sum(first_lobbying_y, na.rm = TRUE)) |>
+            n_first_any = sum(first_not_climate_report_y_bin, na.rm = TRUE)) |>
   pivot_longer(cols = starts_with("n_"),
                names_to = "type",
                names_prefix = "n_",
@@ -522,7 +520,7 @@ df2 |>
   labs(x = "Year", y = "Number of First Lobbying Reports", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
@@ -543,7 +541,7 @@ insp <- df2 |>
 df2 |>
   group_by(year_quarter) |>
   summarize(n_pause_climate = sum(climate_report_afterpause_q_bin, na.rm = TRUE),
-            n_pause_any = sum(lobbying_pause_any_q_bin, na.rm = TRUE)) |>
+            n_pause_any = sum(not_climate_report_afterpause_q_bin, na.rm = TRUE)) |>
   pivot_longer(cols = starts_with("n_"),
                names_to = "type",
                names_prefix = "n_",
@@ -556,7 +554,7 @@ df2 |>
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 # looks ugly
@@ -566,7 +564,7 @@ df2 |>
 df2 |>
   group_by(year) |>
   summarize(n_pause_climate = sum(climate_report_afterpause_y_bin, na.rm = TRUE),
-            n_pause_any = sum(lobbying_pause_any_y_bin, na.rm = TRUE)) |>
+            n_pause_any = sum(not_climate_report_afterpause_y_bin, na.rm = TRUE)) |>
   pivot_longer(cols = starts_with("n_"),
                names_to = "type",
                names_prefix = "n_",
@@ -578,7 +576,7 @@ df2 |>
   labs(x = "Year", y = "Number of Lobbying Reports After Pause", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
@@ -606,12 +604,12 @@ df2 |>
   mutate(type = "climate") |>
   bind_rows(
     df2 |>
-      group_by(year, first_lobbying_y) |>
-      summarize(n_first_any = n_distinct(gvkey)) |>
-      filter(first_lobbying_y == 1) |>
-      select(-c(first_lobbying_y)) |>
-      rename(n = n_first_any) |>
-      mutate(type = "any")
+      group_by(year, first_not_climate_report_y_bin) |>
+      summarize(n_first_other = n_distinct(gvkey)) |>
+      filter(first_not_climate_report_y_bin == 1) |>
+      select(-c(first_not_climate_report_y_bin)) |>
+      rename(n = n_first_other) |>
+      mutate(type = "oter")
   ) |>
   filter(year != 1999) |>
   ggplot(aes(x = factor(year), y = n, group = factor(type))) +
@@ -620,7 +618,7 @@ df2 |>
   labs(x = "Year", y = "Number of firms that lobby for the first time", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
@@ -647,12 +645,12 @@ df2 |>
   mutate(type = "climate") |>
   bind_rows(
     df2 |>
-      group_by(year, lobbying_pause_any_y_bin) |>
-      summarize(n_pause_any = n_distinct(gvkey)) |>
-      filter(lobbying_pause_any_y_bin == 1) |>
-      select(-c(lobbying_pause_any_y_bin)) |>
-      rename(n = n_pause_any) |>
-      mutate(type = "any")
+      group_by(year, not_climate_report_afterpause_y_bin) |>
+      summarize(n_pause_other = n_distinct(gvkey)) |>
+      filter(not_climate_report_afterpause_y_bin == 1) |>
+      select(-c(not_climate_report_afterpause_y_bin)) |>
+      rename(n = n_pause_other) |>
+      mutate(type = "other")
   ) |>
   ggplot(aes(x = factor(year), y = n, group = factor(type))) +
   geom_line(aes(linetype = factor(type))) +
@@ -660,7 +658,7 @@ df2 |>
   labs(x = "Year", y = "Number of firms that lobby after a pause", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
