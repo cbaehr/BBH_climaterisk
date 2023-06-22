@@ -46,5 +46,39 @@ df <- df |>
   ungroup() |>
   arrange(gvkey, year_quarter)
 
-insp <- df |> select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin)
+insp <- df |> select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin) |>
+  distinct()
 # worked
+
+# Next: code first time lobbying
+# Get firms that lobby on climate at any point
+firms_cl <- df |>
+  select(gvkey, climate_report_q_bin) |>
+  filter(climate_report_q_bin == 1) |>
+  distinct(gvkey) |>
+  pull()
+
+df <- df |>
+  group_by(gvkey) |>
+  mutate(
+    firms_climate = ifelse(gvkey %in% firms_cl, 1, 0),
+    year_quarter_first_climate = ifelse(firms_climate == 1, 
+                                      first(year_quarter[climate_report_q_bin == 1]),
+                                      NA),
+    first_climate_report_q_bin = ifelse(year_quarter == year_quarter_first_climate, 1, 0)
+    )
+
+# insp <- df |> 
+#   select(gvkey, year_quarter, n_reports_q, n_climate_reports_q, climate_report_q_bin,
+#                      firms_climate, year_quarter_first_climate, first_climate_report_q_bin) |>
+#   distinct()
+# worked
+
+
+
+# Code climate lobbying after not having lobbied during the previo --------
+
+df <- df %>%
+  group_by(gvkey) %>%
+  mutate(first_climate_report_q_bin = ifelse(climate_report_q_bin == 1 & lag(climate_report_q_bin, default = 0) == 0, 1, 0)) %>%
+  ungroup()

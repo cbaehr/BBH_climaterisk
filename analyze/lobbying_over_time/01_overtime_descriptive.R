@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, janitor)
+pacman::p_load(data.table, tidyverse, janitor, MatchIt)
 
 
 # set working directory
@@ -344,6 +344,7 @@ df_c |>
 ## Save this
 ggsave("results/Figures/descriptives/climate_firms_overtime_variation.pdf", width = 9, height = 5.5)
 ggsave("report/images/climate_firms_overtime_variation.png", width = 9, height = 5.5)
+
 
 
 
