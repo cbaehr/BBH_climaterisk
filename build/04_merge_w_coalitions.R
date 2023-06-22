@@ -83,10 +83,15 @@ df3 <- df2 |>
     contra_CLI = ifelse(CLI == 1 &
                           opp_climate_action == 1,
                         1,
-                        0)
+                        0),
+    direction_CLI = case_when(
+      pro_CLI == 1 & contra_CLI != 1 ~ "Pro", 
+      contra_CLI == 1 & pro_CLI != 1~ "Contra",
+      pro_CLI == 1 & contra_CLI == 1 ~ "Both", 
+      pro_CLI != 1 & contra_CLI != 1 ~ "None")
   )
 
-insp <- df3 |> select(gvkey, year, issue_code, CLI, pro_CLI, sup_climate_action, contra_CLI, opp_climate_action)
+insp <- df3 |> select(gvkey, year, issue_code, CLI, pro_CLI, direction_CLI, sup_climate_action, contra_CLI, opp_climate_action)
 
 df3 |> tabyl(pro_CLI)
 df3 |> tabyl(contra_CLI)

@@ -51,8 +51,8 @@ within_industry_variance <- firm_mean |>
   filter(sic %in% sic_ct$sic) |>
   mutate(industry=factor(industry, levels=sic_var$industry)) |>
   ggplot(aes(x=industry, y=ccexp)) +
-  geom_jitter(alpha=0.1) +
-  geom_boxplot(fill="red", outlier.shape = NA) +
+  # geom_jitter(alpha=0.1) +
+  geom_boxplot(fill="red", outlier.alpha = .075) +
   theme_bw() +
   theme(
     legend.position="none",
@@ -62,7 +62,7 @@ within_industry_variance <- firm_mean |>
   coord_flip()
 
 # save
-ggsave("../Figures/within_industry_variance.pdf", within_industry_variance, width=11, height=8.5)
+ggsave("../results/Figures/descriptives/within_industry_variance.pdf", within_industry_variance, width=11, height=8.5)
 
 
 
@@ -83,7 +83,7 @@ firm_means <- df |>
 exposure_var <-firm_means |> 
   group_by(industry) |>
   summarise(across(ccexp:phexpo, ~ var(.x, na.rm = TRUE))) |>
-  mutate(avg_var = rowMeans(across(ccexp:phexpo,na.rm=T))) |>
+  mutate(avg_var = rowMeans(across(ccexp:phexpo))) |>
   arrange(-avg_var)
 
 # Only those industries with more than 50 firms
@@ -115,7 +115,7 @@ within_industry_variances <- exposure_var |>
         axis.text.x=element_text(angle = 35, vjust=0.95,hjust=1))
 
 # save
-ggsave("../results/Figures/within_industry_variances.pdf", within_industry_variances, width=11, height=8.5)
+ggsave("../results/Figures/descriptives/within_industry_variances.pdf", within_industry_variances, width=11, height=8.5)
 
 
 # End
