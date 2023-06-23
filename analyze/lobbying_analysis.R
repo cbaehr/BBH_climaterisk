@@ -83,7 +83,8 @@ df <- df |>
   # arrange by year
   arrange(year) |>
   # for one year
-  mutate(log_co2_l1 = lag(log_co2, 1)) |>
+  mutate(log_co2_l1 = lag(log_co2, 1),
+         total_lobby_l1 = lag(total_lobby, 1)) |>
   #ungroup
   ungroup()
 
@@ -94,10 +95,10 @@ df <- df |>
 models <- list(
   "Model 1" = feglm(CLI ~ cc_expo_ew_y | year, family = "binomial", df),
   "Model 2" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
-  "Model 3" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 3" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df),
   "Model 4" = feglm(CLI ~ cc_expo_ew_q | year, family = "binomial", df),
   "Model 5" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
-  "Model 6" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) + log_co2_l1 + us_dummy + total_lobby | year, family = "binomial", df))
+  "Model 6" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df))
 
 # names
 cm <- c("cc_expo_ew_y" = "Overall Attention", 
@@ -122,6 +123,16 @@ modelsummary(
     "Yearly" = 3,
     "Quarterly" = 3
   ))
+
+
+
+
+
+
+
+
+
+
 
 ## Disaggregated lobby issues, overall climate exposure, annual
 models2 <- list(

@@ -143,18 +143,21 @@ fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
 # nor information on which institutions were lobbied
 # because these information vary by issue within each report.
 
-lobbying_wide <- lobby_issue |>
-  select(-c(issue_ordi,gov_entity)) |>
-  distinct() |>
-  mutate(issue_bin = 1) |>
-  # from long to wide
-  pivot_wider(names_from = issue_code, values_from = issue_bin, values_fill = 0) |>
-  # merge with report data
-  left_join(lobby_report, by = "report_uuid") |>
-  # merge with client data
-  left_join(lobby_client, by = "client_uuid") |>
-  mutate(gvkey = as.character(gvkey)) |>
-  rename(year = report_year)
+# lobbying_wide <- lobby_issue |>
+#   select(-c(issue_ordi,gov_entity)) |>
+#   distinct() |>
+#   mutate(issue_bin = 1) |>
+#   # from long to wide
+#   pivot_wider(names_from = issue_code, values_from = issue_bin, values_fill = 0) |>
+#   # merge with report data
+#   left_join(lobby_report, by = "report_uuid") |>
+#   # merge with client data
+#   left_join(lobby_client, by = "client_uuid") |>
+#   mutate(gvkey = as.character(gvkey)) |>
+#   rename(year = report_year)
+
+lobbying$issue_bin <- 1
+lobbying_wide <- pivot_wider(lobbying, names_from = "issue_code", values_from="issue_bin", values_fill = 0)
 
 
 # merge with firm_data
@@ -169,5 +172,8 @@ cc_wide <- df_wide |>
 # write csv
 fwrite(df_wide, file="data/lobbying_df_wide.csv")
 fwrite(cc_wide, file="data/lobbying_df_wide_reduced.csv")
+
+#cc_wide 225025 by 422
+#df_wide 1464710 by 422
 
 ### End
