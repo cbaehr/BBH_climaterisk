@@ -89,8 +89,8 @@ df3 <- df2 |>
     direction_CLI = case_when(
       pro_CLI == 1 ~ "Pro", 
       contra_CLI == 1 ~ "Contra",
-      sup_climate_action == 1 & opp_climate_action == 1 ~ "Both", 
-      sup_climate_action != 1 & opp_climate_action != 1 ~ "None")
+      CLI == 1 & sup_climate_action == 1 & opp_climate_action == 1 ~ "Both", 
+      CLI == 1 & sup_climate_action != 1 & opp_climate_action != 1 ~ "None")
   )
 
 insp <- df3 |> select(gvkey, year, issue_code, CLI, pro_CLI, direction_CLI, sup_climate_action, contra_CLI, opp_climate_action)

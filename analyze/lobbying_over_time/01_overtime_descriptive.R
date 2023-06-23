@@ -51,6 +51,9 @@ p1 <- df |>
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
+df |> tabyl(year_quarter, CLI) |>
+  mutate(share = `1` / (`1` + `0`) * 100)
+
 ## Save this
 ggsave(plot = p1, "results/Figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
 ggsave(plot = p1, "report/images/climate_lobbying_overtime.png", width = 9, height = 5.5)
@@ -101,6 +104,13 @@ p2 <- df |>
                         labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
+
+# Look at share
+print(n= 100, df |>
+  group_by(year_quarter, CLI) |>
+  summarise(money = sum(amount_num, na.rm = TRUE)) |>
+  pivot_wider(names_from =  "CLI", values_from = "money") |>
+  mutate(share = `1` / (`1` + `0`) * 100))
 
 ## Save this
 ggsave(plot = p2, "results/Figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
@@ -246,7 +256,7 @@ define_climate_attention <- function(df, variables) {
 }
 
 # Create variables
-df2 <- define_climate_attention(df, c("ccexp", "opexpo_q", "rgexpo_q", "phexpo_q"))
+df2 <- define_climate_attention(df, c("ccexp_q", "opexpo_q", "rgexpo_q", "phexpo_q"))
 
 
 # inspect <- df |>
@@ -258,7 +268,7 @@ df_c <- df2 |> filter(CLI == 1)
 ## Reports over time -------------------------------------------------------
 
 df_c |>
-  count(year_quarter, ccexp_disc) |> rename(quantile = ccexp_disc) |> mutate(measure = "Attention") |>
+  count(year_quarter, ccexp_q_disc) |> rename(quantile = ccexp_q_disc) |> mutate(measure = "Attention") |>
   bind_rows(
     df_c |> count(year_quarter, opexpo_q_disc) |> rename(quantile = opexpo_q_disc) |> mutate(measure = "Opportunity"),
     df_c |> count(year_quarter, rgexpo_q_disc) |> rename(quantile = rgexpo_q_disc) |> mutate(measure = "Regulatory"),
@@ -286,10 +296,10 @@ ggsave("report/images/climate_lobbying_overtime_variation.png", width = 9, heigh
 ## Money over time ---------------------------------------------------------
 
 df_c |>
-  group_by(year_quarter, ccexp_disc) |>
+  group_by(year_quarter, ccexp_q_disc) |>
   summarise(money = sum(amount_num, na.rm = TRUE)) |>
   mutate(money = money / 10^7) |>
-  rename(quantile = ccexp_disc) |> mutate(measure = "Attention") |>
+  rename(quantile = ccexp_q_disc) |> mutate(measure = "Attention") |>
   bind_rows(
     df_c |> group_by(year_quarter, opexpo_q_disc) |>
       summarise(money = sum(amount_num, na.rm = TRUE)) |>
@@ -325,9 +335,9 @@ ggsave("report/images/climate_spending_overtime_variation.png", width = 9, heigh
 ## Firms over time ---------------------------------------------------------
 
 df_c |>
-  group_by(year_quarter, ccexp_disc) |>
+  group_by(year_quarter, ccexp_q_disc) |>
   summarise(firms = n_distinct(gvkey)) |>
-  rename(quantile = ccexp_disc) |> mutate(measure = "Attention") |>
+  rename(quantile = ccexp_q_disc) |> mutate(measure = "Attention") |>
   bind_rows(
     df_c |> group_by(year_quarter, opexpo_q_disc) |>
       summarise(firms = n_distinct(gvkey)) |>

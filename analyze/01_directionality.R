@@ -100,12 +100,12 @@ pcomb <- plot_grid(p1, p2, labels = "AUTO", nrow = 2)
 ggsave2(plot = pcomb, "results/Figures/descriptives/climate_lobbying_directionality_comb.pdf", width = 9, height = 9)
 
 
-# Differentiate by climate attention --------------------------------------
+# Quarter: Differentiate by climate attention --------------------------------------
 
 # Get within industry-year categorical & binary variables indicating how much 
 # climate change attention firms experienced in comparison to other firms
 # in the same industry
-define_climate_attention <- function(df, variables) {
+define_climate_attention_q <- function(df, variables) {
   for (variable in variables) {
     df <- df %>%
       filter(!is.na(sic)) %>%
@@ -132,27 +132,27 @@ define_climate_attention <- function(df, variables) {
 }
 
 # Create variables
-df <- define_climate_attention(df, c("ccexp", "opexpo_q", "rgexpo_q", "phexpo_q"))
+df2 <- define_climate_attention_q(df, c("ccexp_q", "opexpo_q", "rgexpo_q", "phexpo_q"))
 
 
 ## Money over time ---------------------------------------------------------
 
 
-df |>
-  group_by(year_quarter, ccexp_disc, direction_CLI) |>
+df2 |>
+  group_by(year_quarter, ccexp_q_disc, direction_CLI) |>
   summarise(money = sum(amount_num, na.rm = TRUE)) |>
   mutate(money = money / 10^7) |>
-  rename(quantile = ccexp_disc) |> mutate(measure = "Attention") |>
+  rename(quantile = ccexp_q_disc) |> mutate(measure = "Attention") |>
   bind_rows(
-    df |> group_by(year_quarter, opexpo_q_disc, direction_CLI) |>
+    df2 |> group_by(year_quarter, opexpo_q_disc, direction_CLI) |>
       summarise(money = sum(amount_num, na.rm = TRUE)) |>
       mutate(money = money / 10^7) |>
       rename(quantile = opexpo_q_disc) |> mutate(measure = "Opportunity"),
-    df |> group_by(year_quarter, rgexpo_q_disc, direction_CLI) |>
+    df2 |> group_by(year_quarter, rgexpo_q_disc, direction_CLI) |>
       summarise(money = sum(amount_num, na.rm = TRUE)) |>
       mutate(money = money / 10^7) |>
       rename(quantile = rgexpo_q_disc) |> mutate(measure = "Regulatory"),
-    df |> group_by(year_quarter, phexpo_q_disc, direction_CLI) |>
+    df2 |> group_by(year_quarter, phexpo_q_disc, direction_CLI) |>
       summarise(money = sum(amount_num, na.rm = TRUE)) |>
       mutate(money = money / 10^7) |>
       rename(quantile = phexpo_q_disc) |> mutate(measure = "Physical")
@@ -175,3 +175,77 @@ ggsave("results/Figures/descriptives/climate_spending_direction_overtime_variati
 ggsave("report/images/climate_spending_direction_overtime_variation.png", width = 9, height = 9)
 
 
+
+# Year: Differentiate by climate attention --------------------------------------
+
+# Get within industry-year categorical & binary variables indicating how much 
+# climate change attention firms experienced in comparison to other firms
+# in the same industry
+define_climate_attention_y <- function(df, variables) {
+  for (variable in variables) {
+    df <- df %>%
+      filter(!is.na(sic)) %>%
+      group_by(year, sic) %>%
+      mutate(
+        !!paste0(variable, "_ysic_q1") := quantile(.data[[variable]], 0.25, na.rm = TRUE),
+        !!paste0(variable, "_ysic_median") := median(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_ysic_mean") := mean(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_ysic_q3") := quantile(.data[[variable]], 0.75, na.rm = TRUE),
+        !!paste0(variable, "_ysic_var") := var(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_disc") := case_when(
+          .data[[variable]] < !!sym(paste0(variable, "_ysic_q1")) ~ "q1",
+          .data[[variable]] >= !!sym(paste0(variable, "_ysic_q1")) & .data[[variable]] < !!sym(paste0(variable, "_ysic_median")) ~ "q2",
+          .data[[variable]] >= !!sym(paste0(variable, "_ysic_median")) & .data[[variable]] < !!sym(paste0(variable, "_ysic_q3")) ~ "q3",
+          .data[[variable]] >= !!sym(paste0(variable, "_ysic_q3")) ~ "q4"
+        ),
+        !!paste0(variable, "_ysic_above_mean") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_ysic_mean")), 1, 0),
+        !!paste0(variable, "_ysic_above_75") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_ysic_q3")), 1, 0)
+      ) %>%
+      ungroup()
+  }
+  
+  return(df)
+}
+
+# Create variables
+df3 <- define_climate_attention_y(df2, c("ccexp_y", "opexpo_y", "rgexpo_y", "phexpo_y"))
+
+
+## Money over time ---------------------------------------------------------
+
+
+df3 |>
+  group_by(year, ccexp_y_disc, direction_CLI) |>
+  summarise(money = sum(amount_num, na.rm = TRUE)) |>
+  mutate(money = money / 10^7) |>
+  rename(quantile = ccexp_y_disc) |> mutate(measure = "Attention") |>
+  bind_rows(
+    df3 |> group_by(year, opexpo_y_disc, direction_CLI) |>
+      summarise(money = sum(amount_num, na.rm = TRUE)) |>
+      mutate(money = money / 10^7) |>
+      rename(quantile = opexpo_y_disc) |> mutate(measure = "Opportunity"),
+    df3 |> group_by(year, rgexpo_y_disc, direction_CLI) |>
+      summarise(money = sum(amount_num, na.rm = TRUE)) |>
+      mutate(money = money / 10^7) |>
+      rename(quantile = rgexpo_y_disc) |> mutate(measure = "Regulatory"),
+    df3 |> group_by(year, phexpo_y_disc, direction_CLI) |>
+      summarise(money = sum(amount_num, na.rm = TRUE)) |>
+      mutate(money = money / 10^7) |>
+      rename(quantile = phexpo_y_disc) |> mutate(measure = "Physical")
+  ) |>
+  ungroup() |>
+  filter(!direction_CLI %in% c("None", "", "Both")) |>
+  ggplot(aes(x = factor(year), y = money, group = factor(quantile))) +
+  geom_line(aes(color = factor(quantile))) +
+  theme_bw() +
+  facet_grid(measure ~direction_CLI) +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
+                   labels = function(x) str_sub(x, end = -3)) +
+  scale_color_brewer(type =  "qual", palette = 2) +
+  theme(legend.position = "bottom")
+
+# I like the quarterly plot better
+
+### END

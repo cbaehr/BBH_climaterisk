@@ -41,15 +41,16 @@ firm_data <- fread("data/indepvar_quarterly.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # add _q as identifier for quarterly data
-  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccpos:phsent)), ~ paste0(., "_q"))
+  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccexp:phsent)), ~ paste0(., "_q"))
 
 firm_data_year <- fread("data/indepvar_year.csv") |>
   mutate(gvkey = as.character(gvkey)) |>
   filter(!is.na(gvkey)) |>
   # select only exposure data: control variables come from the quarterly dataframe
-  select(isin:ph_sent_ew,ccpos:phsent) |>
+  select(isin:ph_sent_ew,ccexp:phsent) |>
   rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
 
+firm_data <- firm_data[!duplicated(firm_data), ] # none
 firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
 
 firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
