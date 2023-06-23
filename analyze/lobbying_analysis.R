@@ -20,7 +20,7 @@ setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1")
 # setwd("~/Dropbox (Privat)/BBH/BBH1/")
 
 # load data
-df <- fread("data/lobbying_df_wide_reduced.csv")
+df <- fread("data/lobbying_df_wide__red_w_directionality.csv")
 
 ## Who lobbies on climate issues? ------------------------------------------
 
