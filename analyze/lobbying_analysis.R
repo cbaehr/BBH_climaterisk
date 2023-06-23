@@ -379,7 +379,6 @@ modelsummary(
   coef_map = cm
   ,vcov = ~ year + industry
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  ,output = "latex"
   ,output = "results/Tables/climate_directionality_logit_measures_year.tex"
 )
 
