@@ -14,10 +14,10 @@ library(janitor)
 library(viridis)
 
 # set working directory
-setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")
-setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1")
-# for Vincent
-# setwd("~/Dropbox (Privat)/BBH/BBH1/")
+if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
+
 
 # load data
 df <- fread("data/lobbying_df_wide__red_w_directionality.csv")
