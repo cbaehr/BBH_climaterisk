@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, janitor, MatchIt)
+pacman::p_load(data.table, tidyverse, janitor, cowplot)
 
 
 # set working directory
@@ -34,28 +34,26 @@ df <- df |>
 df |> tabyl(CLI)
 df |> tabyl(CLI, year_quarter)
 
-inspect <- df |> select(year_quarter) |> arrange(year_quarter)
-
-
 ## Reports over time -------------------------------------------------------
 
-df |>
+p1 <- df |>
   count(year_quarter, CLI) |>
   ggplot(aes(x = factor(year_quarter), y = n, group = factor(CLI))) +
   geom_line(aes(linetype = factor(CLI))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Number of Lobbying Reports", color = "Climate Report") +
+  labs(x = "Year", y = "Number of Lobbying Reports", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_lobbying_overtime.png", width = 9, height = 5.5)
+ggsave(plot = p1, "results/Figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
+ggsave(plot = p1, "report/images/climate_lobbying_overtime.png", width = 9, height = 5.5)
 
 
 # By issues
@@ -69,10 +67,11 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = n, group = factor(issue))) +
   geom_line(aes(color = factor(issue))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Number of Lobbying Reports") +
+  labs(x = "Year", y = "Number of Lobbying Reports") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_color_brewer(type =  "qual", name = "", palette = 2) +
   theme(legend.position = "bottom")
 
@@ -86,25 +85,26 @@ ggsave("report/images/climate_lobbying_overtime_issues.png", width = 9, height =
 
 ## Money over time ---------------------------------------------------------
 
-df |>
+p2 <- df |>
   group_by(year_quarter, CLI) |>
   summarise(money = sum(amount_num, na.rm = TRUE)) |>
   mutate(money = money / 10^9) |>
   ggplot(aes(x = factor(year_quarter), y = money, group = factor(CLI))) +
   geom_line(aes(linetype = factor(CLI))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Money Spent (Bio USD)") +
+  labs(x = "Year", y = "Money Spent (Bio USD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_spending_overtime.png", width = 9, height = 5.5)
+ggsave(plot = p2, "results/Figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
+ggsave(plot = p2, "report/images/climate_spending_overtime.png", width = 9, height = 5.5)
 
 
 # By issues
@@ -133,8 +133,9 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = money, group = factor(issue))) +
   geom_line(aes(color = factor(issue))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Money Spent (Bio USD)") +
+  labs(x = "Year", y = "Money Spent (Bio USD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_color_brewer(type =  "qual", name = "", palette = 2) +
@@ -144,6 +145,10 @@ df |>
 ggsave("results/Figures/descriptives/climate_spending_overtime_issues.pdf", width = 9, height = 5.5)
 ggsave("report/images/climate_spending_overtime_issues.png", width = 9, height = 5.5)
 
+
+# Combine
+pcomb <- plot_grid(p1, p2, labels = "AUTO", nrow = 2)
+ggsave2(plot = pcomb, "results/Figures/descriptives/climate_lobbying_overtime_comb.pdf", width = 9, height = 9)
 
 
 
@@ -155,12 +160,13 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = firms, group = factor(CLI))) +
   geom_line(aes(linetype = factor(CLI))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "No. of firms lobbying") +
+  labs(x = "Year", y = "No. of firms lobbying") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
-                        labels = c("All Issues", "Climate Issues"),
+                        labels = c("Other Issues", "Climate Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
@@ -191,10 +197,12 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = firms, group = factor(issue))) +
   geom_line(aes(color = factor(issue))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "No. of firms lobbying") +
+  labs(x = "Year", y = "No. of firms lobbying") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_color_brewer(type =  "qual", name = "", palette = 2) +
   theme(legend.position = "bottom")
 
@@ -238,14 +246,14 @@ define_climate_attention <- function(df, variables) {
 }
 
 # Create variables
-df <- define_climate_attention(df, c("ccexp", "opexpo_q", "rgexpo_q", "phexpo_q"))
+df2 <- define_climate_attention(df, c("ccexp", "opexpo_q", "rgexpo_q", "phexpo_q"))
 
 
 # inspect <- df |>
 #   select(gvkey, sic, year_quarter, ccexp, ccexp_yqsic_q1:ccexp_above_75)
 
 
-df_c <- df |> filter(CLI == 1)
+df_c <- df2 |> filter(CLI == 1)
 
 ## Reports over time -------------------------------------------------------
 
@@ -260,8 +268,9 @@ df_c |>
   geom_line(aes(color = factor(quantile))) +
   theme_bw() +
   facet_wrap(~measure, ncol = 2) +
-  labs(x = "Year Quarter", y = "Number of Lobbying Reports", color = "Firm Quantile") +
+  labs(x = "Year", y = "Number of Lobbying Reports", color = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_color_brewer(type =  "qual", palette = 2) +
@@ -300,8 +309,9 @@ df_c |>
   geom_line(aes(color = factor(quantile))) +
   theme_bw() +
   facet_wrap(~measure, ncol = 2) +
-  labs(x = "Year Quarter", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_color_brewer(type =  "qual", palette = 2) +
@@ -334,8 +344,9 @@ df_c |>
   geom_line(aes(color = factor(quantile))) +
   theme_bw() +
   facet_wrap(~measure, ncol = 2) +
-  labs(x = "Year Quarter", y = "No. of firms lobbying", color = "Firm Quantile") +
+  labs(x = "Year", y = "No. of firms lobbying", color = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_color_brewer(type =  "qual", palette = 2) +
@@ -344,8 +355,6 @@ df_c |>
 ## Save this
 ggsave("results/Figures/descriptives/climate_firms_overtime_variation.pdf", width = 9, height = 5.5)
 ggsave("report/images/climate_firms_overtime_variation.png", width = 9, height = 5.5)
-
-
 
 
 ### END

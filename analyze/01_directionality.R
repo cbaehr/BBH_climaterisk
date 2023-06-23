@@ -6,7 +6,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, janitor)
+pacman::p_load(data.table, tidyverse, janitor, cowplot)
 
 
 # set working directory
@@ -24,11 +24,10 @@ df <- df |>
     )
 
 
-
 # Plot climate lobbying directionality over time --------------------------
 
 # By quarter
-df |>
+p1 <- df |>
   group_by(year_quarter) |>
   summarize(n_pro_climate = sum(pro_CLI, na.rm = TRUE),
             n_contra_climate = sum(contra_CLI, na.rm = TRUE)) |>
@@ -41,10 +40,11 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = n, group = factor(type))) +
   geom_line(aes(linetype = factor(type))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Number of Lobbying Pro & Contra Climate Policies", color = "Climate Report") +
+  labs(x = "Year", y = "Number of Lobbying Reports", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
+  expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
                         labels = c("Contra", "Pro"),
                         values = c("solid", "dashed")) +
@@ -52,8 +52,8 @@ df |>
 
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_lobbying_directionality.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_lobbying_directionality.png", width = 9, height = 5.5)
+ggsave(plot = p1, "results/Figures/descriptives/climate_lobbying_directionality.pdf", width = 9, height = 5.5)
+ggsave(plot = p1, "report/images/climate_lobbying_directionality.png", width = 9, height = 5.5)
 
 
 
@@ -61,7 +61,7 @@ ggsave("report/images/climate_lobbying_directionality.png", width = 9, height = 
 # Plot money with climate lobbying directionality over time --------------------------
 
 # By quarter
-df |>
+p2 <- df |>
   group_by(year_quarter, pro_CLI) |>
   summarize(n = sum(amount_num, na.rm = TRUE)) |>
   mutate(n = n / 10^7) |>
@@ -76,7 +76,7 @@ df |>
   ggplot(aes(x = factor(year_quarter), y = n, group = factor(type))) +
   geom_line(aes(linetype = factor(type))) +
   theme_bw() +
-  labs(x = "Year Quarter", y = "Money Spent (Mio USD) On Lobbying Pro & Contra Climate Policies", color = "Climate Report") +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
@@ -87,9 +87,17 @@ df |>
 
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_lobbying_money_directionality.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_lobbying_money_directionality.png", width = 9, height = 5.5)
+ggsave(plot = p2, "results/Figures/descriptives/climate_lobbying_money_directionality.pdf", width = 9, height = 5.5)
+ggsave(plot = p2, "report/images/climate_lobbying_money_directionality.png", width = 9, height = 5.5)
 
+
+
+
+## Next to each other ------------------------------------------------------
+
+pcomb <- plot_grid(p1, p2, labels = "AUTO", nrow = 2)
+
+ggsave2(plot = pcomb, "results/Figures/descriptives/climate_lobbying_directionality_comb.pdf", width = 9, height = 9)
 
 
 # Differentiate by climate attention --------------------------------------
@@ -155,7 +163,7 @@ df |>
   geom_line(aes(color = factor(quantile))) +
   theme_bw() +
   facet_grid(measure ~direction_CLI) +
-  labs(x = "Year Quarter", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
