@@ -16,6 +16,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # Load data ---------------------------------------------------------------
 
 df <- fread("data/lobbying_df_fb.csv")
+df_wide <- fread("data/lobbying_df_wide_reduced.csv")
 
 coal <- fread("data/Lerner and Osgood 2022 replication/analysis_data_no_proprietary.csv")
 
@@ -67,8 +68,15 @@ df2 |> tabyl(opp_climate_action)
 
 
 
+df_wide2 <- df_wide |> 
+  mutate(gvkey = as.character(gvkey)) |>
+  left_join(coal, by = c("gvkey", "year"))
+
+
 # Code directionality -----------------------------------------------------
 
+
+## Long df --------------------------------------------------------------
 
 df3 <- df2 |>
   mutate(
@@ -126,9 +134,40 @@ desc |> tabyl(direction_CLI) |>
   
 
 
+## Wide df_reduced ---------------------------------------------------------
+
+df_wide3 <- df_wide2 |>
+  mutate(
+    # lobbying on climate
+    CLI = ifelse(ENV == 1 |
+                   CAW == 1 |
+                   ENG == 1 |
+                   FUE == 1,
+                 1, 0),
+    pro_CLI = ifelse(CLI == 1 &
+                       sup_climate_action == 1 &
+                       opp_climate_action == 0,
+                     1,
+                     0),
+    contra_CLI = ifelse(CLI == 1 &
+                          opp_climate_action == 1 &
+                          sup_climate_action == 0,
+                        1,
+                        0),
+    direction_CLI = case_when(
+      pro_CLI == 1 ~ "Pro", 
+      contra_CLI == 1 ~ "Contra",
+      CLI == 1 & sup_climate_action == 1 & opp_climate_action == 1 ~ "Both", 
+      CLI == 1 & sup_climate_action != 1 & opp_climate_action != 1 ~ "None")
+  )
+
+
+
+
 
 # Write -------------------------------------------------------------------
 
 fwrite(df3, "~/Dropbox (Princeton)/BBH/BBH1/data/lobbying_df_w_directionality.csv")
+fwrite(df_wide3, "~/Dropbox (Princeton)/BBH/BBH1/data/lobbying_df_wide__red_w_directionality.csv")
 
 ### END

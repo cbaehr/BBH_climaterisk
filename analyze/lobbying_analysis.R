@@ -29,8 +29,7 @@ df <- df |>
   mutate(CLI = ifelse(ENV == 1 | 
                             CAW == 1 |
                             ENG == 1 |
-                            FUE == 1 | 
-                        ENV == 1,
+                            FUE == 1,
                           1,0))
 
 #summary stats for lobbying dummy variables
