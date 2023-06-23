@@ -167,7 +167,7 @@ df_wide3 <- df_wide2 |>
 
 # Write -------------------------------------------------------------------
 
-fwrite(df3, "~/Dropbox (Princeton)/BBH/BBH1/data/lobbying_df_w_directionality.csv")
-fwrite(df_wide3, "~/Dropbox (Princeton)/BBH/BBH1/data/lobbying_df_wide__red_w_directionality.csv")
+fwrite(df3, "data/lobbying_df_w_directionality.csv")
+fwrite(df_wide3, "data/lobbying_df_wide__red_w_directionality.csv")
 
 ### END
