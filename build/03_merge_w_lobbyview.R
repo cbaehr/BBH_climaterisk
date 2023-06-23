@@ -159,6 +159,11 @@ fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
 lobbying$issue_bin <- 1
 lobbying_wide <- pivot_wider(lobbying, names_from = "issue_code", values_from="issue_bin", values_fill = 0)
 
+View(lobbying_wide[duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")]) | duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")], fromLast = T), ])
+
+aggregate(lobbying_wide)
+
+
 
 # merge with firm_data
 df_wide <- lobbying_wide |>

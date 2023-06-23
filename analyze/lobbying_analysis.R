@@ -87,17 +87,20 @@ df <- df |>
   #ungroup
   ungroup()
 
+df$industry_year <- paste(df$industry, df$year)
+df$industry_year[which(df$industry=="")] <- NA
+
+sum(duplicated(df[, c("year", "report_quarter_code", "gvkey")]))
 
 ## Logit models (lagged CO2 ------------------------------------------------------------
 
-## Overall climate lobbying, overall exposure for annual and quarterly
+## Overall climate lobbying, overall exposure for annual
 models <- list(
   "Model 1" = feglm(CLI ~ cc_expo_ew_y | year, family = "binomial", df),
   "Model 2" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
   "Model 3" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df),
-  "Model 4" = feglm(CLI ~ cc_expo_ew_q | year, family = "binomial", df),
-  "Model 5" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
-  "Model 6" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df))
+  "Model 4" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry_year, family = "binomial", df)
+)
 
 # names
 cm <- c("cc_expo_ew_y" = "Overall Attention", 
@@ -113,15 +116,35 @@ modelsummary(
   stars = c('*' = .1, '**' = .05, '***' = .01),
   title = 'Effect of Climate Change Attention on Lobbying on Climate Issues',
   coef_map = cm
-  # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
-  ,output = "climate_logit.tex"
-) |>
-  # column labels
-  add_header_above(c(
-    " " = 1,
-    "Yearly" = 3,
-    "Quarterly" = 3
-  ))
+  ,vcov = ~ year + industry
+  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
+  ,output = "climate_logit_year.tex"
+)
+
+# modelsummary(
+#   models,
+#   stars = c('*' = .1, '**' = .05, '***' = .01),
+#   title = 'Effect of Climate Change Attention on Lobbying on Climate Issues',
+#   coef_map = cm
+#   # ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
+#   ,output = "climate_logit.tex"
+# ) |>
+#   # column labels
+#   add_header_above(c(
+#     " " = 1,
+#     "Yearly" = 3,
+#     "Quarterly" = 3
+#   ))
+
+## Overall climate lobbying, overall exposure for annual and quarterly
+models <- list(
+  "Model 1" = feglm(CLI ~ cc_expo_ew_y | year, family = "binomial", df),
+  "Model 2" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 3" = feglm(CLI ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df),
+  "Model 4" = feglm(CLI ~ cc_expo_ew_q | year, family = "binomial", df),
+  "Model 5" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) | year, family = "binomial", df),
+  "Model 6" = feglm(CLI ~ cc_expo_ew_q + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df))
+
 
 
 
