@@ -89,8 +89,6 @@ lobbying <- lobbying[!is.na(lobbying$gvkey), ]
 ## specifies lobbying House AND Senate. Seems doubtful these are genuinely distinct lobbying disbursements.
 lobbying <- lobbying[!duplicated(lobbying[, c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code")]), ]
 
-
-
 lobbying$amount_num <- gsub("\\$|,", "", lobbying$amount)
 lobbying$amount_num <- as.numeric(lobbying$amount_num)
 #test2 <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$report_uuid, lobbying$issue_code, lobbying$issue_text, lobbying$primary_naics), FUN=function(x) sum(x, na.rm=T))
@@ -156,14 +154,41 @@ fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
 #   mutate(gvkey = as.character(gvkey)) |>
 #   rename(year = report_year)
 
+
+#numeric year-qtr-gvkey ids to speed indexing
+lobbying$gvkey_n <- as.numeric(factor(lobbying$gvkey))
+lobbying$unique_id <- as.numeric(paste0(lobbying$year, lobbying$report_quarter_code, lobbying$gvkey_n))
+
+for(i in unique(lobbying$unique_id)) {
+  temp <- lobbying[which(lobbying$unique_id == i), ]
+  if (nrow(temp) > 1) {
+    
+    if( any(temp$amount_num>0) & length(unique(temp$amount_num))==1 ) {
+      ## if all issue codes have exactly the same amounts, assume redundancy
+      ## and distribute the single amount across all issues evenly
+      temp$amount_num <- temp$amount_num[1] / nrow(temp)
+    } else if( any(temp$amount_num>0) & sum(temp$amount_num>0)==1 ) {
+      ## if one issue code has a non-zero amount but all other issue codes are
+      ## zero, then distribute the single amount evenly across all issues
+      temp$amount_num <- sum(temp$amount_num, na.rm=T) / nrow(temp)
+    } else {
+      
+    }
+    ## replace existing amount nums with distributed values
+    lobbying$amount_num[which(lobbying$unique_id == i)] <- temp$amount_num
+    
+  }
+  
+}
+
+## drop text variables that differ across issue codes (screw up the pivot, can solve later if we want)
+lobbying <- lobbying[, !names(lobbying) %in% c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")]
 lobbying$issue_bin <- 1
-lobbying_wide <- pivot_wider(lobbying, names_from = "issue_code", values_from="issue_bin", values_fill = 0)
 
-View(lobbying_wide[duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")]) | duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")], fromLast = T), ])
-
-aggregate(lobbying_wide)
-
-
+lobbying_wide <- pivot_wider(lobbying, names_from = c("issue_code"), values_from=c("issue_bin", "amount_num"), values_fill = 0)
+#View(lobbying_wide[duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")]) | duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")], fromLast = T), ])
+## maintain existing names for issue code dummies. dont have to rewrite downstream code
+names(lobbying_wide) <- gsub("issue_bin_", "", names(lobbying_wide))
 
 # merge with firm_data
 df_wide <- lobbying_wide |>
