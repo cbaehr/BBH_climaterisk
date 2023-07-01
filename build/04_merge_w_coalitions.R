@@ -60,6 +60,7 @@ coal |> tabyl(sup_climate_action, opp_climate_action) # not much overlap: 274 fi
 
 # Merge with df -----------------------------------------------------------
 
+df$year <- as.numeric(df$year)
 df2 <- df |>
   left_join(coal, by = c("gvkey", "year"))
 
@@ -67,6 +68,7 @@ df2 |> tabyl(sup_climate_action)
 df2 |> tabyl(opp_climate_action)
 
 
+df_wide$year <- as.numeric(df_wide$year)
 
 df_wide2 <- df_wide |> 
   mutate(gvkey = as.character(gvkey)) |>

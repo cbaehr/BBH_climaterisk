@@ -38,14 +38,18 @@ lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level_FIXED.csv"
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
 firm_data <- fread("data/indepvar_quarterly.csv") |>
-  mutate(gvkey = as.character(gvkey)) |>
-  filter(!is.na(gvkey)) |>
+  #mutate(gvkey = as.character(gvkey)) |>
+  mutate(isin = as.character(isin), year=as.numeric(year)) |>
+  #filter(!is.na(gvkey)) |>
+  filter(!is.na(isin)) |>
   # add _q as identifier for quarterly data
   rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccexp:phsent)), ~ paste0(., "_q"))
 
 firm_data_year <- fread("data/indepvar_year.csv") |>
-  mutate(gvkey = as.character(gvkey)) |>
-  filter(!is.na(gvkey)) |>
+  #mutate(gvkey = as.character(gvkey)) |>
+  mutate(isin = as.character(isin)) |>
+  #filter(!is.na(gvkey)) |>
+  filter(!is.na(isin)) |>
   # select only exposure data: control variables come from the quarterly dataframe
   select(isin:ph_sent_ew,ccexp:phsent) |>
   rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
@@ -123,6 +127,7 @@ firm_data_reduced <- firm_data |>
   filter(!identifier %in% dupl)
 
 # merge
+lobbying$gvkey <- as.numeric(lobbying$gvkey)
 df <- lobbying |>
   left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 
@@ -198,6 +203,8 @@ df_wide <- lobbying_wide |>
 cc_wide <- df_wide |>
   filter(!is.na(cc_expo_ew_y))
 
+names(df_wide)[names(df_wide)=="assets"] <- "at"
+names(cc_wide)[names(cc_wide)=="assets"] <- "at"
 
 # write csv
 fwrite(df_wide, file="data/lobbying_df_wide.csv")
