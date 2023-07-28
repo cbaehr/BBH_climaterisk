@@ -58,7 +58,7 @@ within_industry_variance <- firm_mean |>
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  labs(x = "", y = "Climate Change Attention") + 
+  labs(x = "", y = "Climate Change Exposure") + 
   coord_flip()
 
 # save
