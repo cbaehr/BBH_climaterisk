@@ -217,6 +217,18 @@ modelsummary(
 
 ###
 
+plotmods <- list(models[[5]], models[[6]])
+pdf("results/Figures/coefplot_byexposure.pdf")
+coefplot(plotmods, 
+         dict = c(op_expo_ew_y="Opportunity", rg_expo_ew_y="Regulatory", ph_expo_ew_y="Physical"),
+         keep = c("Opportunity", "Regulatory", "Physical"), horiz=T, ylim.add = c(-0.5, 1), ci.lty=c(1),
+         main = " ")
+legend("topright", col = 1:2, pch = c(16, 17), lwd = 1, lty = 1,
+       legend = c("Year", "+ Year*Industry"), title = "Fixed Effects")
+dev.off()
+
+###
+
 ## Disaggregated lobby issues, overall climate exposure, annual
 models2 <- list(
   "(1)" = feglm(CAW ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),

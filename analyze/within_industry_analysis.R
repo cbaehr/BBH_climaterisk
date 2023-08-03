@@ -43,8 +43,8 @@ sic_var <- firm_mean |>
 
 # Only those industries with more than 50 firms
 sic_ct <- firm_mean |>
-  count(sic) |>
-  filter(n>50)
+  count(sic) #|>
+  #filter(n>50)
 
 # plot
 within_industry_variance <- firm_mean |>
@@ -88,8 +88,8 @@ exposure_var <-firm_means |>
 
 # Only those industries with more than 50 firms
 sic_ct <- firm_mean |>
-  count(industry) |>
-  filter(n>50)
+  count(industry) #|>
+  #filter(n>50)
 
 # Plot
 within_industry_variances <- exposure_var |>
@@ -117,5 +117,37 @@ within_industry_variances <- exposure_var |>
 # save
 ggsave("../results/Figures/descriptives/within_industry_variances.pdf", within_industry_variances, width=11, height=8.5)
 
+###
+
+# top 10 only
+
+# Plot
+within_industry_variances <- exposure_var |>
+  filter(industry %in% sic_ct$industry) |>
+  mutate(industry=factor(industry, levels=sic_var$industry)) |>
+  pivot_longer(cols = 2:6, names_to = "Variable", values_to = "value") |>
+  mutate(Variable = recode(Variable,
+                           opexpo = "Opportunity",
+                           phexpo = "Physical",
+                           rgexpo = "Regulatory"),
+         round = round(value,digits = 2)) |>
+  filter(!Variable %in% c("avg_var", "ccexp")) |>
+  group_by(industry) |>
+  mutate(sumv=sum(value)) |>
+  ungroup() |>
+  arrange(desc(sumv)) |>
+  head(30) |>
+  ggplot(aes(y=value,x=industry)) +
+  facet_wrap(vars(Variable), nrow=1, scales = "free_x") +
+  geom_point(size=3) +
+  coord_flip() + 
+  viridis::scale_color_viridis(discrete = T,end = .9) +
+  scale_shape_manual(values=c(15:18)) + 
+  theme_bw() +
+  labs(y="Variance",x = "") +
+  theme(legend.position = "bottom",
+        axis.text.x=element_text(angle = 35, vjust=0.95,hjust=1))
+
+ggsave("../results/Figures/descriptives/within_industry_variances_TOP10.pdf", within_industry_variances, width=11, height=8.5)
 
 # End
