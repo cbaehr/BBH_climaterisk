@@ -13,12 +13,13 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("indepvar_year.csv")
-
+df <- fread("indepvar_year.csv", colClasses = c("sic"="character"))
+df$sic <- as.numeric(substr(df$sic, 1, 2))
 # Within industry variation in exposure -----------------------------------
 
 # read sic 2 digit names
 sic_desc <- fread("Misc/sic_2_digit_codes.csv")
+sic_desc <- sic_desc[!duplicated(sic_desc), ]
 
 # calculate average climate change exposure by firm
 firm_mean <- df |>
@@ -44,7 +45,7 @@ sic_var <- firm_mean |>
 # Only those industries with more than 50 firms
 sic_ct <- firm_mean |>
   count(sic) #|>
-  #filter(n>50)
+  filter(n>50)
 
 # plot
 within_industry_variance <- firm_mean |>
@@ -88,8 +89,8 @@ exposure_var <-firm_means |>
 
 # Only those industries with more than 50 firms
 sic_ct <- firm_mean |>
-  count(industry) #|>
-  #filter(n>50)
+  count(industry) |>
+  filter(n>50)
 
 # Plot
 within_industry_variances <- exposure_var |>
