@@ -7,6 +7,10 @@ library(tidyr)
 library(data.table)
 library(tidyverse)
 library(dplyr)
+library(countrycode)
+library(modelsummary)
+
+
 
 
 # Import and Merge Data ---------------------------------------------------
@@ -27,10 +31,6 @@ compustat <- fread("compustat_102422.csv")
 
 #import refinitive esg data 
 esg <- fread("refinitiveesg.csv")
-
-#add country codes
-install.packages("countrycode")
-library(countrycode)
 
 ccexposure_q <- ccexposure_q %>%
   mutate(country_name = countrycode(ccexposure_q$hqcountrycode, origin = 'iso2c', destination = 'country.name'))
@@ -109,10 +109,6 @@ ccexposure_afull <- ccexposure_afull |>
          phsent = ph_sent_ew_1)
 
 # Summary Statistics Tables -----------------------------------------------
-
-#packages
-install.packages("modelsummary")
-library(modelsummary)
 
 #summary statistics for climate change exposure measures
 datasummary((`CC Exposure` = ccexp) + (`CC Opportunity` = opexpo) + (`CC Regulatory` = rgexpo) + (`CC Physical` = phexpo) + (`CC Positive Sentiment` = ccpos) + (`CC Negative Sentiment` = ccneg) + (`CC Risk` = ccrisk) ~ Mean + SD + P25 + Median + P75 + N, 

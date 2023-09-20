@@ -64,48 +64,44 @@ sic_var_levels <- sic_var |>
 # Violin Plot
 df |>
   filter(industry %in% sic_var_levels$industry) |>
-  mutate(
-    industry=factor(industry, levels=sic_var_levels$industry),
-    log_value = log(Value+0.1)
-    ) |>
-  ggplot(aes(y=log_value,x=industry)) +
-  facet_wrap(vars(Exposure), nrow=1, scales = "free_x") +
-  geom_violin(trim = FALSE, fill = "darkgrey") +
-  # geom_jitter() +
-  # geom_boxplot(fill="darkgreen", outlier.alpha = .075) +
-  coord_flip() + 
-  # viridis::scale_color_viridis(discrete = T,end = .9) +
-  # scale_shape_manual(values=c(15:18)) + 
+  mutate(industry = factor(industry, levels = sic_var_levels$industry)) |>
+  ggplot(aes(y = Value, x = industry)) +
+  facet_wrap(vars(Exposure), nrow = 1, scales = "free_x") +
+  geom_violin(trim = T,
+              fill = "darkgrey",
+              scale = "width") +
+  coord_flip() +
   theme_bw() +
-  labs(y="Distribution of Logged Exposure Variables",x = "") +
+  labs(y = "Distribution of Exposure Variables", x = "") +
   theme(legend.position = "bottom",
-        axis.text.x=element_text(angle = 35, vjust=0.95,hjust=1))
+        text = element_text(size = 12))
 
 
-ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_violin.pdf", width=10, height=5.5)
+ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_violin.pdf", width=10, height=8)
 
 # BoxPlot
+
 df |>
   filter(industry %in% sic_var_levels$industry) |>
   mutate(
     industry=factor(industry, levels=sic_var_levels$industry),
-    log_value = log(Value+0.1)
-  ) |>
-  ggplot(aes(y=log_value,x=industry)) +
+    industry = fct_relabel(industry, ~str_wrap(., width = 40))
+    ) |>
+  ggplot(aes(y=Value,x=industry)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "free_x") +
-  # geom_violin(trim = FALSE, fill = "darkgrey") +
-  # geom_jitter() +
-  geom_boxplot(fill="darkgrey", outlier.alpha = .075) +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+               ) +
   coord_flip() + 
-  # viridis::scale_color_viridis(discrete = T,end = .9) +
-  # scale_shape_manual(values=c(15:18)) + 
   theme_bw() +
-  labs(y="Distribution of Logged Exposure Variables",x = "") +
+  labs(y = "Distribution of Exposure Variables", x = "") +
   theme(legend.position = "bottom",
-        axis.text.x=element_text(angle = 35, vjust=0.95,hjust=1))
+        text = element_text(size = 15))
 
 
-ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=5.5)
+ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=8)
 
 
 

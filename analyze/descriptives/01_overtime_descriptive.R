@@ -314,20 +314,33 @@ df_c |>
       rename(quantile = phexpo_q_disc) |> mutate(measure = "Physical")
     ) |>
   ungroup() |>
+  mutate(
+    quantile = case_when(
+      quantile == "q1" ~ 1,
+      quantile == "q2" ~ 2,
+      quantile == "q3" ~ 3,
+      quantile == "q4" ~ 4
+    )
+  ) |>
   ggplot(aes(x = factor(year_quarter), y = money, group = factor(quantile))) +
-  geom_line(aes(color = factor(quantile))) +
+  geom_line(aes(color = factor(quantile), linetype = factor(quantile)), linewidth = 1.25) +
   theme_bw() +
   facet_wrap(~measure, ncol = 3) +
-  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile") +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile", linetype = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
-  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
-                   labels = function(x) str_sub(x, end = -3)) +
-  scale_color_brewer(type =  "qual", palette = 2) +
-  theme(legend.position = "bottom", text = element_text(size = 15))
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 8)], labels = function(x) str_sub(x, end = -3)) +
+  # scale_color_viridis_d(option = "D", end = 0.9) +
+  scale_linetype_manual(values = c("dotted", "twodash", "dashed", "solid")) +
+  # scale_color_brewer(type = "qual", palette = "Set1") +
+  scale_color_manual(values = c("darkgrey", "blue", "red", "black")) +
+  theme(legend.position = "bottom", 
+        text = element_text(size = 17),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_spending_overtime_variation.pdf", width = 10, height = 5.5)
+ggsave("results/Figures/descriptives/climate_spending_overtime_variation.pdf", width = 10, height = 7)
 ggsave("report/images/climate_spending_overtime_variation.png", width = 10, height = 5.5)
 
 

@@ -12,6 +12,7 @@ library(kableExtra)
 library(fixest)
 library(janitor)
 library(viridis)
+library(censReg)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
