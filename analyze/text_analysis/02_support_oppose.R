@@ -51,11 +51,11 @@ df <- df |>
 
 support <- df |>
   filter(str_detect(issue_text, "support")) |>
-  select(gvkey, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(gvkey, conm, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 oppose <- df |>
   filter(str_detect(issue_text, "oppose")) |>
-  select(gvkey, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(gvkey, conm, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 
 # Build excel sheets ------------------------------------------------------
@@ -81,3 +81,5 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 create_excel(support)
 create_excel(oppose)
+
+### END
