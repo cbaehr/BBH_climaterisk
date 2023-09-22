@@ -18,11 +18,11 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
 
 # Specify covariate names
-cm <- c("cc_expo_ew_y" = "Overall Exposure", 
-        "cc_expo_ew_q" = "Overall Exposure",
-        "op_expo_ew_y" = "Opportunity Exposure",
+cm <- c("op_expo_ew_y" = "Opportunity Exposure",
         "rg_expo_ew_y" = "Regulatory Exposure",
         "ph_expo_ew_y" = "Physical Exposure", 
+        "cc_expo_ew_y" = "Overall Exposure", 
+        "cc_expo_ew_q" = "Overall Exposure",
         "ebit" = "EBIT",
         "I(ebit/at)" = "EBIT/Assets",
         "log_co2_l1" = "Log(Total CO2 Emissions)",
