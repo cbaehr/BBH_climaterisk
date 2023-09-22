@@ -204,54 +204,46 @@ names(lobbying_wide) <- gsub("issue_bin_", "", names(lobbying_wide))
 df_wide <- lobbying_wide |>
   left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
 
-#filter for observations with climate attention data 
-cc_wide <- df_wide |>
-  filter(!is.na(cc_expo_ew_y))
-
-names(df_wide)[names(df_wide)=="assets"] <- "at"
-names(cc_wide)[names(cc_wide)=="assets"] <- "at"
 
 
-
-
-# Transform variables wide_reduced ----------------------------------------
+# Transform variables  ----------------------------------------
 
 
 # dummy variable: climate issues
-cc_wide <- cc_wide |>
+df_wide <- df_wide |>
   mutate(CLI = ifelse(ENV == 1 | 
                         CAW == 1 |
                         ENG == 1 |
                         FUE == 1,
                       1,0))
 
-cc_wide$CLI_dollars <- apply(cc_wide[, c("amount_num_ENV", "amount_num_CAW", "amount_num_ENG", "amount_num_FUE")],
-                        1, function(x) sum(x, na.rm=T) / 1000000)
+df_wide$CLI_dollars <- apply(df_wide[, c("amount_num_ENV", "amount_num_CAW", "amount_num_ENG", "amount_num_FUE")],
+                             1, function(x) sum(x, na.rm=T) / 1000000)
 
 
 
 # Control variables -------------------------------------------------------
 
 #US dummy variable 
-cc_wide <- cc_wide |>
+df_wide <- df_wide |>
   mutate(us_dummy = ifelse(hqcountrycode == "US",1,0))
 
 #Rename CO2 emissions variable 
-# cc_wide <- cc_wide |>
+# df_wide <- df_wide |>
 #   rename(co2_emissions = En_En_ER_DP023)
 
 #Total annual lobbying (total dollars)
-cc_wide <- cc_wide |>
+df_wide <- df_wide |>
   group_by(gvkey, year) |>
   # mutate(total_lobby = n_distinct(report_uuid))
-  mutate(total_lobby = sum(c_across(grep("amount_num", names(cc_wide), value=T))))
+  mutate(total_lobby = sum(c_across(grep("amount_num", names(df_wide), value=T))))
 
 
 #Log and lag emissions variable 
-# cc_wide <- cc_wide |>
+# df_wide <- df_wide |>
 #   mutate(log_co2 = log(co2_emissions + 1))
 
-cc_wide <- cc_wide |>
+df_wide <- df_wide |>
   # group by unit (in our case: firm)
   group_by(gvkey) |>
   # arrange by year
@@ -263,21 +255,32 @@ cc_wide <- cc_wide |>
   ungroup()
 
 
-cc_wide$industry <- cc_wide$bvd_sector
-cc_wide <- cc_wide[which(cc_wide$industry!=""), ]
-cc_wide$industry_year <- paste(cc_wide$industry, cc_wide$year)
+df_wide$industry <- df_wide$bvd_sector
+df_wide <- df_wide[which(df_wide$industry!=""), ]
+df_wide$industry_year <- paste(df_wide$industry, df_wide$year)
 
-sum(duplicated(cc_wide[, c("year", "report_quarter_code", "gvkey")]))
+sum(duplicated(df_wide[, c("year", "report_quarter_code", "gvkey")]))
 
 ## continuous variables in regression models
-cc_wide_cont_vars <- c("cc_expo_ew_y", "cc_expo_ew_q", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y",
-                  "ebit", "at", "total_lobby")
+df_wide_cont_vars <- c("cc_expo_ew_y", "cc_expo_ew_q", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y",
+                       "ebit", "assets", "total_lobby")
 ## pull from main data
-cc_wide_cont <- cc_wide[, cc_wide_cont_vars]
+df_wide_cont <- df_wide[, df_wide_cont_vars]
 ## rescale to standard normal
-cc_wide_cont <- scale(cc_wide_cont)
-## slot back into main cc_wide
-cc_wide[, cc_wide_cont_vars] <- cc_wide_cont
+df_wide_cont <- scale(df_wide_cont)
+## slot back into main df_wide
+df_wide[, df_wide_cont_vars] <- df_wide_cont
+
+names(df_wide)[names(df_wide)=="assets"] <- "at"
+
+# create year_quarter
+df_wide <- df_wide |>
+  mutate(year_quarter = paste0(year, "_", report_quarter_code))
+
+# Filter observations with climate exposure data --------------------------
+
+cc_wide <- df_wide |>
+  filter(!is.na(cc_expo_ew_y))
 
 
 # write csv

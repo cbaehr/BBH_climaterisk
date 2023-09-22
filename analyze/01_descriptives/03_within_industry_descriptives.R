@@ -4,8 +4,7 @@
 rm(list=ls())
 
 # load packages
-library(data.table)
-library(tidyverse)
+pacman::p_load(data.table, tidyverse)
 
 # set working directory
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")}
@@ -13,21 +12,19 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("indepvar_year.csv", colClasses = c("sic"="character"))
+df <- fread("02_processed/exposure_year.csv", colClasses = c("sic"="character"))
 df$sic <- as.numeric(substr(df$sic, 1, 2))
 
 # Within industry variation in exposure -----------------------------------
 
-# read sic 2 digit names
-sic_desc <- fread("Misc/sic_2_digit_codes.csv")
-sic_desc <- sic_desc[!duplicated(sic_desc), ]
 
 # merge
 df <- df |> 
-  left_join(sic_desc, by = "sic") |>
+  # filter out empty bvd_sector
+  filter(bvd_sector != "") |> 
   # select variables we need
-  select(isin, year, sic, industry, opexpo, rgexpo, phexpo) |>
-  pivot_longer(cols = 5:7, names_to = "Exposure", values_to = "Value") |>
+  select(isin, year, bvd_sector, opexpo, rgexpo, phexpo) |>
+  pivot_longer(cols = opexpo:phexpo, names_to = "Exposure", values_to = "Value") |>
   mutate(Exposure = recode(Exposure,
                            opexpo = "Opportunity",
                            phexpo = "Physical",
@@ -35,37 +32,35 @@ df <- df |>
          round = round(Value,digits = 2))
 
 # calculate number of firms per industry
-sic_n_firms <- df |>
-  group_by(sic) |>
-  count() |>
-  filter(n>50)
+industry_n_firms <- df |>
+  group_by(bvd_sector) |>
+  count()
 
 # Calculate variance within each industry
-sic_var <- df |>
-  filter(sic %in% sic_n_firms$sic) |>
+industry_var <- df |>
   # group by industry
-  group_by(industry, Exposure) |>
+  group_by(bvd_sector, Exposure) |>
   # get variance for each industry
   summarise(Variance = var(Value, na.rm = TRUE)) |>
   ungroup() |>
-  filter(!is.na(industry)) |>
+  filter(!is.na(bvd_sector)) |>
   arrange(desc(Variance))
 
 # Calculate mean variance across exposure variables
-sic_var_levels <- sic_var |>
-  group_by(industry) |>
+industry_var_levels <- industry_var |>
+  group_by(bvd_sector) |>
   summarise(mean = mean(Variance, na.rm = TRUE)) |>
   ungroup() |>
-  filter(!is.na(industry)) |>
+  filter(!is.na(bvd_sector)) |>
   arrange((mean)) |>
   tail(15)
 
 
 # Violin Plot
 df |>
-  filter(industry %in% sic_var_levels$industry) |>
-  mutate(industry = factor(industry, levels = sic_var_levels$industry)) |>
-  ggplot(aes(y = Value, x = industry)) +
+  filter(bvd_sector %in% industry_var_levels$bvd_sector) |>
+  mutate(bvd_sector = factor(bvd_sector, levels = industry_var_levels$bvd_sector)) |>
+  ggplot(aes(y = Value, x = bvd_sector)) +
   facet_wrap(vars(Exposure), nrow = 1, scales = "free_x") +
   geom_violin(trim = T,
               fill = "darkgrey",
@@ -82,12 +77,12 @@ ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_violin.p
 # BoxPlot
 
 df |>
-  filter(industry %in% sic_var_levels$industry) |>
+  filter(bvd_sector %in% industry_var_levels$bvd_sector) |>
   mutate(
-    industry=factor(industry, levels=sic_var_levels$industry),
-    industry = fct_relabel(industry, ~str_wrap(., width = 40))
+    bvd_sector=factor(bvd_sector, levels=industry_var_levels$bvd_sector),
+    bvd_sector = fct_relabel(bvd_sector, ~str_wrap(., width = 40))
     ) |>
-  ggplot(aes(y=Value,x=industry)) +
+  ggplot(aes(y=Value,x=bvd_sector)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "free_x") +
   geom_boxplot(fill="darkgrey"
                ,na.rm = TRUE

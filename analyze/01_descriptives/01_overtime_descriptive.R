@@ -14,32 +14,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/lobbying_df_wide.csv")
-
-
-
-# Climate change lobbying over time ---------------------------------------
-
-# Binary variable: climate issues
-df <- df |>
-  mutate(CLI = ifelse(ENV == 1 |
-                        CAW == 1 |
-                        ENG == 1 |
-                        FUE == 1,
-                      1, 0))
-
-df <- df |>
-  mutate(year_quarter = paste0(year,"_",report_quarter_code))
-
-df |> tabyl(CLI)
-df |> tabyl(CLI, year_quarter)
-
-# Create climate lobbying expenditures
-df$CLI_dollars <- apply(df[, c("amount_num_ENV", "amount_num_CAW", "amount_num_ENG", "amount_num_FUE")],
-                        1, function(x) sum(x, na.rm=T) / 1000000)
-
-df$amount_num <- apply(df[, amount_num_AGR:amount_num_REL],
-                        1, function(x) sum(x, na.rm=T) / 1000000)
+df <- fread("data/03_final/lobbying_df_wide.csv")
 
 
 ## Reports over time -------------------------------------------------------
@@ -63,8 +38,8 @@ df |> tabyl(year_quarter, CLI) |>
   mutate(share = `1` / (`1` + `0`) * 100)
 
 ## Save this
-ggsave(plot = p1, "results/Figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
-ggsave(plot = p1, "report/images/climate_lobbying_overtime.png", width = 9, height = 5.5)
+ggsave(plot = p1, "results/figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
+# ggsave(plot = p1, "report/images/climate_lobbying_overtime.png", width = 9, height = 5.5)
 
 
 # By issues
@@ -87,8 +62,8 @@ df |>
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_lobbying_overtime_issues.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_lobbying_overtime_issues.png", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_lobbying_overtime_issues.pdf", width = 9, height = 5.5)
+# ggsave("report/images/climate_lobbying_overtime_issues.png", width = 9, height = 5.5)
 
 
 
@@ -120,8 +95,8 @@ print(n= 100, df |>
   mutate(share = `1` / (`1` + `0`) * 100))
 
 ## Save this
-ggsave(plot = p2, "results/Figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
-ggsave(plot = p2, "report/images/climate_spending_overtime.png", width = 9, height = 5.5)
+ggsave(plot = p2, "results/figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
+# ggsave(plot = p2, "report/images/climate_spending_overtime.png", width = 9, height = 5.5)
 
 
 # By issues
@@ -159,13 +134,13 @@ df |>
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_spending_overtime_issues.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_spending_overtime_issues.png", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_spending_overtime_issues.pdf", width = 9, height = 5.5)
+# ggsave("report/images/climate_spending_overtime_issues.png", width = 9, height = 5.5)
 
 
 # Combine
 pcomb <- plot_grid(p1, p2, labels = "AUTO", nrow = 2)
-ggsave2(plot = pcomb, "results/Figures/descriptives/climate_lobbying_overtime_comb.pdf", width = 9, height = 9)
+ggsave2(plot = pcomb, "results/figures/descriptives/climate_lobbying_overtime_comb.pdf", width = 9, height = 9)
 
 
 
@@ -188,8 +163,8 @@ df |>
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_firms_overtime.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_firms_overtime.png", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_firms_overtime.pdf", width = 9, height = 5.5)
+# ggsave("report/images/climate_firms_overtime.png", width = 9, height = 5.5)
 
 
 # By issues
@@ -224,8 +199,8 @@ df |>
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_firms_overtime_issues.pdf", width = 9, height = 5.5)
-ggsave("report/images/climate_firms_overtime_issues.png", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_firms_overtime_issues.pdf", width = 9, height = 5.5)
+# ggsave("report/images/climate_firms_overtime_issues.png", width = 9, height = 5.5)
 
 
 
@@ -239,22 +214,22 @@ ggsave("report/images/climate_firms_overtime_issues.png", width = 9, height = 5.
 define_climate_attention <- function(df, variables) {
   for (variable in variables) {
     df <- df %>%
-      filter(!is.na(sic)) %>%
-      group_by(year_quarter, sic) %>%
+      filter(!is.na(industry)) %>%
+      group_by(year_quarter, industry) %>%
       mutate(
-        !!paste0(variable, "_yqsic_q1") := quantile(.data[[variable]], 0.25, na.rm = TRUE),
-        !!paste0(variable, "_yqsic_median") := median(.data[[variable]], na.rm = TRUE),
-        !!paste0(variable, "_yqsic_mean") := mean(.data[[variable]], na.rm = TRUE),
-        !!paste0(variable, "_yqsic_q3") := quantile(.data[[variable]], 0.75, na.rm = TRUE),
-        !!paste0(variable, "_yqsic_var") := var(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_yqindustry_q1") := quantile(.data[[variable]], 0.25, na.rm = TRUE),
+        !!paste0(variable, "_yqindustry_median") := median(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_yqindustry_mean") := mean(.data[[variable]], na.rm = TRUE),
+        !!paste0(variable, "_yqindustry_q3") := quantile(.data[[variable]], 0.75, na.rm = TRUE),
+        !!paste0(variable, "_yqindustry_var") := var(.data[[variable]], na.rm = TRUE),
         !!paste0(variable, "_disc") := case_when(
-          .data[[variable]] < !!sym(paste0(variable, "_yqsic_q1")) ~ "q1",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqsic_q1")) & .data[[variable]] < !!sym(paste0(variable, "_yqsic_median")) ~ "q2",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqsic_median")) & .data[[variable]] < !!sym(paste0(variable, "_yqsic_q3")) ~ "q3",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqsic_q3")) ~ "q4"
+          .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q1")) ~ "q1",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q1")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_median")) ~ "q2",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_median")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q3")) ~ "q3",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q3")) ~ "q4"
         ),
-        !!paste0(variable, "_yqsic_above_mean") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqsic_mean")), 1, 0),
-        !!paste0(variable, "_yqsic_above_75") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqsic_q3")), 1, 0)
+        !!paste0(variable, "_yqindustry_above_mean") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqindustry_mean")), 1, 0),
+        !!paste0(variable, "_yqindustry_above_75") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q3")), 1, 0)
       ) %>%
       ungroup()
   }
@@ -294,8 +269,8 @@ df_c |>
   theme(legend.position = "bottom", text = element_text(size = 15))
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_lobbying_overtime_variation.pdf", width = 10, height = 5.5)
-ggsave("report/images/climate_lobbying_overtime_variation.png", width = 10, height = 5.5)
+ggsave("results/figures/descriptives/climate_lobbying_overtime_variation.pdf", width = 10, height = 5.5)
+# ggsave("report/images/climate_lobbying_overtime_variation.png", width = 10, height = 5.5)
 
 
 
@@ -303,14 +278,14 @@ ggsave("report/images/climate_lobbying_overtime_variation.png", width = 10, heig
 
 df_c |>
   group_by(year_quarter, opexpo_q_disc) |>
-  summarise(money = sum(amount_num, na.rm = TRUE)) |>
+  summarise(money = sum(CLI_dollars, na.rm = TRUE)) |>
   rename(quantile = opexpo_q_disc) |> mutate(measure = "Opportunity") |>
   bind_rows(
     df_c |> group_by(year_quarter, rgexpo_q_disc) |>
-      summarise(money = sum(amount_num, na.rm = TRUE)) |>
+      summarise(money = sum(CLI_dollars, na.rm = TRUE)) |>
       rename(quantile = rgexpo_q_disc) |> mutate(measure = "Regulatory"),
     df_c |> group_by(year_quarter, phexpo_q_disc) |>
-      summarise(money = sum(amount_num, na.rm = TRUE)) |>
+      summarise(money = sum(CLI_dollars, na.rm = TRUE)) |>
       rename(quantile = phexpo_q_disc) |> mutate(measure = "Physical")
     ) |>
   ungroup() |>
@@ -340,8 +315,8 @@ df_c |>
         panel.grid.minor = element_blank())
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_spending_overtime_variation.pdf", width = 10, height = 7)
-ggsave("report/images/climate_spending_overtime_variation.png", width = 10, height = 5.5)
+ggsave("results/figures/descriptives/climate_spending_overtime_variation.pdf", width = 10, height = 7)
+# ggsave("report/images/climate_spending_overtime_variation.png", width = 10, height = 5.5)
 
 
 ## Firms over time ---------------------------------------------------------
@@ -372,8 +347,8 @@ df_c |>
   theme(legend.position = "bottom", text = element_text(size = 15))
 
 ## Save this
-ggsave("results/Figures/descriptives/climate_firms_overtime_variation.pdf", width = 10, height = 5.5)
-ggsave("report/images/climate_firms_overtime_variation.png", width = 10, height = 5.5)
+ggsave("results/figures/descriptives/climate_firms_overtime_variation.pdf", width = 10, height = 5.5)
+# ggsave("report/images/climate_firms_overtime_variation.png", width = 10, height = 5.5)
 
 
 ### END
