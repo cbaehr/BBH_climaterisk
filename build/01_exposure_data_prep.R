@@ -1,14 +1,16 @@
-### Data preparation ###
+### Climate Lobbying
 
-# Merge Climate Change Exposure data with controls and political behavior data
+### Data preparation 
+# Step 1: Merge Climate Change Exposure data with controls and political behavior data
 
 rm(list=ls())
 
+# install pacman if not done
+# install.packages("pacman")
+
+
 # load packages
-library(data.table)
-library(tidyverse)
-library(countrycode)
-library(readxl)
+pacman::p_load(data.table, tidyverse, countrycode, readxl)
 
 # set working directory
 if(Sys.info()["user"]=="fiona"){setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1/data")}
@@ -18,10 +20,10 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # Import datasets ---------------------------------------------------------
 
 ### Climate change exposure
-#import quarterly data 
-ccexposure_q <- fread("CC Exposure/cc_firmquarter_2021Q4_03082021_OSF (1).csv")
-#import yearly data 
-ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
+# import quarterly data 
+ccexposure_q <- fread("01_raw/exposure/cc_firmquarter_2021Q4_03082021_OSF.csv")
+# import yearly data 
+ccexposure_y <- fread("01_raw/exposure/cc_firmyear_2021Q4_03082021_OSF.csv")
 
 # #sum(ccexposure_q$cc_expo_ew[which(ccexposure_q$isin=="AEA002001013" & ccexposure_q$year==2018)])/4
 # #ccexposure_y$cc_expo_ew[which(ccexposure_y$isin=="AEA002001013" & ccexposure_y$year==2018)]
@@ -136,20 +138,32 @@ ccexposure_y <- fread("CC Exposure/cc_firmyear_2021Q4_03082021_OSF (1).csv")
 # 
 # sic <- sic[!duplicated(sic), ]
 
-orbis <- read_xlsx("BBH_orbis_extract.xlsx", sheet = 2, na = "n.a.")
+
+# Orbis data --------------------------------------------------------------
+
+
+# Read Orbis data
+orbis <- read_xlsx("01_raw/orbis/BBH_orbis_extract.xlsx", sheet = 2, na = "n.a.")
+
+# Transform
+# Delete the first row
 orbis <- data.frame(orbis[, -1])
+# Select variables and rename them
 names(orbis) <- c("conm", "isin", "isocode", "bvd_sector", "sic", "sic_primary", "sic_secondary",
-                  paste0("at_", 2021:2001), paste0("ebit_", 2021:2001))
+          paste0("at_", 2021:2001), paste0("ebit_", 2021:2001))
+# Remove rows with missing ISINs
 orbis <- orbis[!is.na(orbis$isin), ]
 
-## random company with duplicate rows
+## Remove a random company with duplicate rows
 drop <- orbis$isin=="US45321L1008" & orbis$bvd_sector=="Banking, Insurance & Financial Services"
 orbis <- orbis[!drop, ]
 
+# Reshape the data from wide to long format
 orbis_long <- reshape(orbis, direction = "long",
-                      varying = c(paste0("at_", 2021:2001), paste0("ebit_", 2021:2001)),
-                      timevar = "year", times = as.character(2001:2021), v.names = c("assets", "ebit"), idvar = "isin")
+            varying = c(paste0("at_", 2021:2001), paste0("ebit_", 2021:2001)),
+            timevar = "year", times = as.character(2001:2021), v.names = c("assets", "ebit"), idvar = "isin")
 orbis_long$year <- as.numeric(orbis_long$year)
+
 
 # Merge -------------------------------------------------------------------
 
@@ -174,15 +188,15 @@ orbis_long$year <- as.numeric(orbis_long$year)
 ccexposure_qfull <- ccexposure_q |>
   mutate(country_name = countrycode(hqcountrycode, origin = 'iso2c', destination = 'country.name')) |>
   left_join(orbis_long, by = c("year", "isin"))
-  #left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
-  #left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
+#left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
+#left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
 
 # annual
 ccexposure_afull <- ccexposure_y |>
   mutate(country_name = countrycode(hqcountrycode, origin = 'iso2c', destination = 'country.name')) |>
   left_join(orbis_long, by = c("year", "isin"))
-  #left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
-  #left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
+#left_join(compustat_drop, by = c("year" = "fyear", "gvkey")) |>
+#left_join(esg, by = c("isin" = "Isin", "year" = "FisYear"))
 
 ### Note that merging the exposure produces duplicates. Will deal with this later. (V, Feb 13, 23)
 
@@ -239,7 +253,7 @@ ccexposure_afull <- ccexposure_afull |>
 
 
 # Write .csv dfs ----------------------------------------------------------
-fwrite(x = ccexposure_afull, file = "indepvar_year.csv")
-fwrite(x = ccexposure_qfull, file = "indepvar_quarterly.csv")
+fwrite(x = ccexposure_afull, file = "02_processed/exposure_year.csv")
+fwrite(x = ccexposure_qfull, file = "02_processed/exposure_quarterly.csv")
 
 # End

@@ -4,19 +4,18 @@
 rm(list=ls())
 
 # load packages
-library(data.table)
-library(tidyverse)
+pacman::p_load(data.table, tidyverse)
 
 # set working directory
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
 # load lobbying data
-lobby_client <- fread("data/LOBBYING LobbyView/dataset___client_level.csv")
-lobby_text <- fread("data/LOBBYING LobbyView/dataset___issue_text.csv")
-lobby_issue <- fread("data/LOBBYING LobbyView/dataset___issue_level.csv")
-lobby_bills <- fread("data/LOBBYING LobbyView/dataset___bills.csv")
-lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level_FIXED.csv")
+lobby_client <- fread("data/01_raw/lobbyview/dataset___client_level.csv")
+lobby_text <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
+lobby_issue <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
+lobby_bills <- fread("data/01_raw/lobbyview/dataset___bills.csv")
+lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
@@ -35,9 +34,13 @@ lobby_report <- fread("data/LOBBYING LobbyView/dataset___report_level_FIXED.csv"
 #               rename_at(vars(-c(isin,year)), ~ paste0(., "_y")),
 #             by = c("isin","year"))
 
+
+
+# Load firm level data ----------------------------------------------------
+
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
-firm_data <- fread("data/indepvar_quarterly.csv") |>
+firm_data <- fread("data/02_processed/exposure_quarterly.csv") |>
   #mutate(gvkey = as.character(gvkey)) |>
   mutate(isin = as.character(isin), year=as.numeric(year)) |>
   #filter(!is.na(gvkey)) |>
@@ -45,7 +48,7 @@ firm_data <- fread("data/indepvar_quarterly.csv") |>
   # add _q as identifier for quarterly data
   rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccexp:phsent)), ~ paste0(., "_q"))
 
-firm_data_year <- fread("data/indepvar_year.csv") |>
+firm_data_year <- fread("data/02_processed/exposure_year.csv") |>
   #mutate(gvkey = as.character(gvkey)) |>
   mutate(isin = as.character(isin)) |>
   #filter(!is.na(gvkey)) |>
@@ -54,10 +57,12 @@ firm_data_year <- fread("data/indepvar_year.csv") |>
   select(isin:ph_sent_ew,ccexp:phsent) |>
   rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
 
+# Check for duplicates
 firm_data <- firm_data[!duplicated(firm_data), ] # none
 firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
 
 firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
+
 
 # Merging -----------------------------------------------------------------
 
@@ -136,8 +141,8 @@ cc <- df |>
   filter(!is.na(cc_expo_ew_y))
 
 # write csv
-fwrite(df, file="data/lobbying_df_fb.csv")
-fwrite(cc, file="data/lobbying_df_reduced_fb.csv")
+fwrite(df, file="data/03_final//lobbying_df.csv")
+fwrite(cc, file="data/03_final/lobbying_df_reduced_fb.csv")
 
 
 # Wide dataframe with binary issue code indicators ------------------------
@@ -206,11 +211,81 @@ cc_wide <- df_wide |>
 names(df_wide)[names(df_wide)=="assets"] <- "at"
 names(cc_wide)[names(cc_wide)=="assets"] <- "at"
 
+
+
+
+# Transform variables wide_reduced ----------------------------------------
+
+
+# dummy variable: climate issues
+cc_wide <- cc_wide |>
+  mutate(CLI = ifelse(ENV == 1 | 
+                        CAW == 1 |
+                        ENG == 1 |
+                        FUE == 1,
+                      1,0))
+
+cc_wide$CLI_dollars <- apply(cc_wide[, c("amount_num_ENV", "amount_num_CAW", "amount_num_ENG", "amount_num_FUE")],
+                        1, function(x) sum(x, na.rm=T) / 1000000)
+
+
+
+# Control variables -------------------------------------------------------
+
+#US dummy variable 
+cc_wide <- cc_wide |>
+  mutate(us_dummy = ifelse(hqcountrycode == "US",1,0))
+
+#Rename CO2 emissions variable 
+# cc_wide <- cc_wide |>
+#   rename(co2_emissions = En_En_ER_DP023)
+
+#Total annual lobbying (total dollars)
+cc_wide <- cc_wide |>
+  group_by(gvkey, year) |>
+  # mutate(total_lobby = n_distinct(report_uuid))
+  mutate(total_lobby = sum(c_across(grep("amount_num", names(cc_wide), value=T))))
+
+
+#Log and lag emissions variable 
+# cc_wide <- cc_wide |>
+#   mutate(log_co2 = log(co2_emissions + 1))
+
+cc_wide <- cc_wide |>
+  # group by unit (in our case: firm)
+  group_by(gvkey) |>
+  # arrange by year
+  arrange(year) |>
+  # for one year
+  mutate(#log_co2_l1 = lag(log_co2, 1),
+    total_lobby_l1 = lag(total_lobby, 1)) |>
+  #ungroup
+  ungroup()
+
+
+cc_wide$industry <- cc_wide$bvd_sector
+cc_wide <- cc_wide[which(cc_wide$industry!=""), ]
+cc_wide$industry_year <- paste(cc_wide$industry, cc_wide$year)
+
+sum(duplicated(cc_wide[, c("year", "report_quarter_code", "gvkey")]))
+
+## continuous variables in regression models
+cc_wide_cont_vars <- c("cc_expo_ew_y", "cc_expo_ew_q", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y",
+                  "ebit", "at", "total_lobby")
+## pull from main data
+cc_wide_cont <- cc_wide[, cc_wide_cont_vars]
+## rescale to standard normal
+cc_wide_cont <- scale(cc_wide_cont)
+## slot back into main cc_wide
+cc_wide[, cc_wide_cont_vars] <- cc_wide_cont
+
+
 # write csv
-fwrite(df_wide, file="data/lobbying_df_wide.csv")
-fwrite(cc_wide, file="data/lobbying_df_wide_reduced.csv")
+fwrite(df_wide, file="data/03_final/lobbying_df_wide.csv")
+fwrite(cc_wide, file="data/03_final/lobbying_df_wide_reduced.csv")
 
 #cc_wide 225025 by 422
 #df_wide 1464710 by 422
+
 
 ### End
