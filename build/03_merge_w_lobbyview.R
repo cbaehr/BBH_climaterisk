@@ -142,8 +142,7 @@ cc <- df |>
 
 # write csv
 fwrite(df, file="data/03_final//lobbying_df.csv")
-fwrite(cc, file="data/03_final/lobbying_df_reduced_fb.csv")
-
+fwrite(cc, file="data/03_final/lobbying_df_reduced.csv")
 
 # Wide dataframe with binary issue code indicators ------------------------
 
@@ -260,16 +259,6 @@ df_wide <- df_wide[which(df_wide$industry!=""), ]
 df_wide$industry_year <- paste(df_wide$industry, df_wide$year)
 
 sum(duplicated(df_wide[, c("year", "report_quarter_code", "gvkey")]))
-
-## continuous variables in regression models
-df_wide_cont_vars <- c("cc_expo_ew_y", "cc_expo_ew_q", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y",
-                       "ebit", "assets", "total_lobby")
-## pull from main data
-df_wide_cont <- df_wide[, df_wide_cont_vars]
-## rescale to standard normal
-df_wide_cont <- scale(df_wide_cont)
-## slot back into main df_wide
-df_wide[, df_wide_cont_vars] <- df_wide_cont
 
 names(df_wide)[names(df_wide)=="assets"] <- "at"
 

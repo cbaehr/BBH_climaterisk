@@ -87,8 +87,18 @@ ggsave("results/Figures/descriptives/expenditure_by_issue_code.pdf", width = 9, 
 #Load dataset
 df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
 
+#Normalize variables for interpretation 
+## continuous variables in regression models
+df_wide_cont_vars <- c("cc_expo_ew_y", "cc_expo_ew_q", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y",
+                       "ebit", "at", "total_lobby")
+## pull from main data
+df_wide_cont <- df[, ..df_wide_cont_vars]
+## rescale to standard normal
+df_wide_cont <- scale(df_wide_cont)
+## slot back into main df_wide
+df[, df_wide_cont_vars] <- df_wide_cont
+
 #Create new variable that is ebit/assets
-# Create a new variable 'Ratio' by dividing 'Var1' by 'Var2'
 df$ebit_at <- df$ebit / df$at
 
 # Specify covariate names
@@ -105,30 +115,42 @@ cm <- c("op_expo_ew_y" = "Opportunity Exposure",
 #Run model for first issue code (agriculture) - this works
 ag <- feglm(AGR ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_at + us_dummy + total_lobby| year + industry + industry_year, family = "binomial", df)
 
-# Create a vector of dependent variable names (starting with subset)
-dependent_vars <- c("AGR", "BUD", "FOO", "MIA")
+############
+##Identify placebo variables
+# Specify columns to remove
+columns_to_remove <- c("CAW", "ENV", "ENG", "FUE")
 
-# Create an empty list to store model results
-model_results <- list()
+# Remove specified columns
+df_placebo <- df |>
+  select(-all_of(columns_to_remove))
 
-# Define the common independent variable formula
-common_formula <- as.formula("dependent ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_at + us_dummy + total_lobby")
+start_index <- which(names(df_placebo) == "AGR")
+end_index <- which(names(df_placebo) == "REL")
 
-# Run the feglm model for each dependent variable
-for (dep_var in dependent_vars) {
-  # Update the formula with the current dependent variable
-  current_formula <- update(common_formula, as.formula(paste(paste0(dep_var, " ~ ."))))
-  
-  # Fit the feglm model with fixed effects - this does not work, it says industry is not in the dataset
-  model <- feglm(current_formula | year + industry + industry_year, family = binomial, data = df)
-  
-  # Store the model result in the list
-  model_results[[dep_var]] <- summary(model)
+# Extract column names between "AGR" and "REL" into a character vector
+dependent_vars <- names(df_placebo)[start_index:end_index]
+
+# View the character vector of column names
+print(dependent_vars)
+
+# Initialize an empty list to store model results
+results_list <- list()
+
+# Iterate over the dependent variables and fit the feglm model with fixed effects for each
+
+for (dv in dependent_vars) { {
+    formula <- as.formula(paste(dv, "~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_at + us_dummy + total_lobby| year + industry + industry_year")) # Include fixed effects in the formula
+    
+    # Fit the feglm model
+    model <- feglm(formula, family = "binomial", data = df)
+    
+    # Store the model results in the list
+    results_list[[paste(dv, sep = "_")]] <- summary(model)
+  }
 }
 
-# View the model results for each dependent variable
-for (dep_var in dependent_vars) {
-  cat("Model results for", dep_var, ":\n")
-  print(model_results[[dep_var]])
-  cat("\n")
-}
+# Access the results for each dependent variable and fixed effect combination
+for (dv in dependent_vars) {
+    cat("Model results for", dv, ":\n")
+    print(results_list[[paste(dv, sep = "_")]])
+  }

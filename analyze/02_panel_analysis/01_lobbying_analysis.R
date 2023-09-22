@@ -15,7 +15,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
+df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
 
 # Specify covariate names
 cm <- c("op_expo_ew_y" = "Opportunity Exposure",
@@ -29,6 +29,8 @@ cm <- c("op_expo_ew_y" = "Opportunity Exposure",
         "us_dummy" = "US HQ",
         "total_lobby" = "Total Lobbying ($)"
 )
+
+
 
 # Lobbying Occurrence ------------------------------------------------------
 

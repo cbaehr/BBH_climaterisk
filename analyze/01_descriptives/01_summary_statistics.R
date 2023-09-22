@@ -10,9 +10,24 @@ pacman::p_load(tidyverse, data.table, modelsummary)
 #Lobbying analysis dataset
 df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
 
-#Exposure dataset
-# load data
-df2 <- fread("data/02_processed/exposure_year.csv", colClasses = c("sic"="character"))
+##Transform exposure variables *100 for easier interpretation
+# Identify the subset of variables to be multiplied by 100
+variables_to_multiply <- c("cc_expo_ew_y", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y")
+
+# Multiply the selected variables by 100
+df <- df |>
+  mutate(across(all_of(variables_to_multiply), ~ . * 100))
+
+##Transform financial variables
+#Create new variable that is ebit/assets
+df$ebit_at <- df$ebit / df$at
+
+# Identify the subset of variables to be divided by 1000000 to show in millions
+variables_to_divide <- c("ebit", "ebit_at", "total_lobby")
+
+# Divide the selected variables by 1000000
+df <- df |>
+  mutate(across(all_of(variables_to_divide), ~ . / 1000000))
 
 
 ##Summary statistics for exposure variables
@@ -20,12 +35,12 @@ datasummary((Overall = cc_expo_ew_y) + (Opportunity = op_expo_ew_y) + (Regulator
             data = df,
             title = 'Climate Change Exposure (Annual)',
             align = 'lccccc',
-            fmt = 2,
+            fmt = 3,
             output = 'latex')
 
 
 ##Summary statistics for control variables 
-datasummary((`Earnings Before Interest and Taxes ($M)` = ebit) + (`Total Assets ($M)` = at) + (`Total Lobbying Per Year($)` = total_lobby) ~ Mean + SD + N,
+datasummary((`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets ($M)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + P25 + P75 + N,
             data = df,
             title = 'Control Variables',
             align = 'lccccc',
@@ -34,17 +49,17 @@ datasummary((`Earnings Before Interest and Taxes ($M)` = ebit) + (`Total Assets 
 
 ##Exposure scores for top 10 industries
 # select for relevant variables
-df2 <- df2 |> 
+df_ind <- df |> 
   # filter out empty bvd_sector
   filter(bvd_sector != "") |> 
   # select variables we need
-  select(isin, year, bvd_sector, ccexp, opexpo, rgexpo, phexpo)
+  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 
 #calculate summary for exposure variables
 #note - need to figure out how to order by largest to smallest and how to only include the top 10 by industry
-overall <- datasummary((Industry = bvd_sector) ~ ccexp*(Mean + SD + N),
-            data = df2,
+overall <- datasummary((Industry = bvd_sector) ~ cc_expo_ew_y*(Mean + SD + N),
+            data = df_ind,
             title = 'Overall Exposure by Industry',
             fmt = 3)
 
