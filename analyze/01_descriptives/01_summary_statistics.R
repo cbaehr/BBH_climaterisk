@@ -19,28 +19,29 @@ df <- df |>
   mutate(across(all_of(variables_to_multiply), ~ . * 100))
 
 ##Transform financial variables
-#Create new variable that is ebit/assets
-df$ebit_at <- df$ebit / df$at
 
 # Identify the subset of variables to be divided by 1000000 to show in millions
-variables_to_divide <- c("ebit", "ebit_at", "total_lobby")
+variables_to_divide <- c("ebit", "at", "total_lobby")
 
 # Divide the selected variables by 1000000
 df <- df |>
   mutate(across(all_of(variables_to_divide), ~ . / 1000000))
 
+#Create new variable that is ebit/assets
+df$ebit_at <- df$ebit / df$at
+
 
 ##Summary statistics for exposure variables
-datasummary((Overall = cc_expo_ew_y) + (Opportunity = op_expo_ew_y) + (Regulatory = rg_expo_ew_y) + (Physical = ph_expo_ew_y) ~ Mean + SD + P25 + P75 + N,
+datasummary((Overall = cc_expo_ew_y) + (Opportunity = op_expo_ew_y) + (Regulatory = rg_expo_ew_y) + (Physical = ph_expo_ew_y) + (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + Min + P25 + P75 + Max + N,
             data = df,
-            title = 'Climate Change Exposure (Annual)',
-            align = 'lccccc',
+            title = 'Summary Statistics',
+            align = 'lccccccc',
             fmt = 3,
             output = 'latex')
 
 
 ##Summary statistics for control variables 
-datasummary((`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets ($M)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + P25 + P75 + N,
+datasummary((`EBIT ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + P25 + P75 + N,
             data = df,
             title = 'Control Variables',
             align = 'lccccc',
