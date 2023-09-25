@@ -3,10 +3,11 @@
 
 rm(list=ls())
 
+# devtools::install_github('IQSS/Zelig') # needs be done only once
 # load packages
 pacman::p_load(data.table, tidyverse, modelsummary, 
                marginaleffects, kableExtra, fixest,
-               janitor, viridis, censReg)
+               janitor, viridis, censReg, Amelia, Zelig, texreg)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -15,7 +16,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
+#df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
+df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
 
 # Specify covariate names
 cm <- c("op_expo_ew_y" = "Opportunity Exposure",
@@ -332,4 +334,54 @@ modelsummary(
 
 
 ###Scatterplot of climate attention and total lobbying 
+
+########################
+
+## Multiple Imputation of missing data
+
+nms <- c("CLI", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y", "ebit", "at", 
+         "us_dummy", "total_lobby", "year", "report_quarter_code", "gvkey", "industry")
+df.pre_imp <- data.frame(df)
+df.pre_imp <- df.pre_imp[, nms]
+df.pre_imp$ebit_per_at <- df.pre_imp$ebit / df.pre_imp$at
+df.pre_imp$year_industry <- paste(df.pre_imp$year, df.pre_imp$industry)
+df.pre_imp$year <- as.numeric(df.pre_imp$year)
+
+## dont place any logical bounds on the values variables can take (e.g. ebit negative sometimes)
+## include quadratic time trends BY INDUSTRY in prediction
+## also include lagged and lead versions of the dependent variable in prediction
+df.imp <- amelia(df.pre_imp, m=5, ts="year", cs="industry", 
+                 idvars = c("report_quarter_code", "gvkey", "year_industry"), polytime = 2,
+                 intercs = T, lags = "CLI", leads = "CLI")
+
+f1 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y"
+f2 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_per_at + us_dummy + total_lobby"
+f3 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_per_at + us_dummy + total_lobby + factor(year)"
+f4 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_per_at + us_dummy + total_lobby + factor(year) + factor(industry)"
+f5 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_per_at + us_dummy + total_lobby + factor(year) + factor(industry) + factor(year_industry)"
+f6 <- "CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + ebit_per_at + us_dummy + total_lobby + factor(year) + factor(gvkey)"
+
+form <- lapply(list(f1, f2, f3, f4, f5, f6), as.formula)
+
+
+#ind <- c(1:3)
+z.out <- lapply(form, FUN = function(x) zelig(x, data=df.imp, model="logit", cite=F))
+# for(i in ind) {
+#   if(i==1) { z.out <- list() }
+#   z.out[[i]] <- zelig(form[[i]], data=df.imp, model="logit", cite=F)
+#   print(i)
+# }
+
+z.out <- lapply(z.out, extract)
+
+texreg(z.out, "/Users/christianbaehr/Desktop/out.tex", stars = c(0.01, 0.05, 0.1), 
+       omit.coef = "year_industry|year[0-9]{4}|gvkey|Intercept", digits = 3,
+       custom.model.names = paste0("(", 1:5, ")"))
+
+
+
+
+
+
+
 
