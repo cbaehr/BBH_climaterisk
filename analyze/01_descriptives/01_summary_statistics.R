@@ -31,21 +31,12 @@ df <- df |>
 df$ebit_at <- df$ebit / df$at
 
 
-##Summary statistics for exposure variables
+##Summary statistics for all variables
 datasummary((Overall = cc_expo_ew_y) + (Opportunity = op_expo_ew_y) + (Regulatory = rg_expo_ew_y) + (Physical = ph_expo_ew_y) + (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + Min + P25 + P75 + Max + N,
             data = df,
             title = 'Summary Statistics',
             align = 'lccccccc',
             fmt = 3,
-            output = 'latex')
-
-
-##Summary statistics for control variables 
-datasummary((`EBIT ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + P25 + P75 + N,
-            data = df,
-            title = 'Control Variables',
-            align = 'lccccc',
-            fmt = 2,
             output = 'latex')
 
 ##Exposure scores for top 10 industries
@@ -57,24 +48,123 @@ df_ind <- df |>
   select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 
-#calculate summary for exposure variables
-#note - need to figure out how to order by largest to smallest and how to only include the top 10 by industry
-overall <- datasummary((Industry = bvd_sector) ~ cc_expo_ew_y*(Mean + SD + N),
-            data = df_ind,
-            title = 'Overall Exposure by Industry',
-            fmt = 3)
+##calculate summary for exposure variables and identify top 10 
+#Overall exposure
+# Step 1: Calculate the mean of overall exposure
+avg_overall <- df_ind |>
+  group_by(bvd_sector) |>
+  summarize(mean = mean(cc_expo_ew_y, na.rm = TRUE))
 
-opp <- datasummary((Industry = bvd_sector) ~ opexpo*(Mean + SD + N),
-                       data = df2,
+# Step 2: Sort the dataframe based on the mean values in descending order
+sorted_avg_overall <- avg_overall[order(-avg_overall$mean), ]
+
+# Step 3: Select the top 10 rows from the sorted dataframe
+top10_avg_overall <- sorted_avg_overall[1:10, ]
+
+ov_industries <- as.character(top10_avg_overall$bvd_sector)
+
+
+#Step 4: Make datasummary table for these 10 industries 
+# select for relevant variables
+df_ind_ov <- df_ind |> 
+  # filter out empty bvd_sector
+  filter(bvd_sector %in% ov_industries) |> 
+  # select variables we need
+  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+
+#data summary
+overall <- datasummary((Industry = bvd_sector) ~ cc_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+            data = df_ind_ov,
+            title = 'Overall Exposure for Top 10 Industries',
+            fmt = 3,
+            output = 'latex')
+
+#Opp exposure
+# Step 1: Calculate the mean of opp exposure
+avg_opp <- df_ind |>
+  group_by(bvd_sector) |>
+  summarize(mean = mean(op_expo_ew_y, na.rm = TRUE))
+
+# Step 2: Sort the dataframe based on the mean values in descending order
+sorted_avg_opp <- avg_opp[order(-avg_opp$mean), ]
+
+# Step 3: Select the top 10 rows from the sorted dataframe
+top10_avg_opp <- sorted_avg_opp[1:10, ]
+
+opp_industries <- as.character(top10_avg_opp$bvd_sector)
+
+
+#Step 4: Make datasummary table for these 10 industries 
+# select for relevant variables
+df_ind_opp <- df_ind |> 
+  # filter out empty bvd_sector
+  filter(bvd_sector %in% opp_industries) |> 
+  # select variables we need
+  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+
+#data summary
+datasummary((Industry = bvd_sector) ~ op_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+                       data = df_ind_opp,
                        title = 'Opportunity Exposure by Industry',
-                       fmt = 3)
+                       fmt = 3,
+                      output = 'latex')
 
-reg <- datasummary((Industry = bvd_sector) ~ rgexpo*(Mean + SD + N),
-                       data = df2,
-                       title = 'Regulatory Exposure by Industry',
-                       fmt = 3)
+#Reg exposure
+# Step 1: Calculate the mean of opp exposure
+avg_reg <- df_ind |>
+  group_by(bvd_sector) |>
+  summarize(mean = mean(rg_expo_ew_y, na.rm = TRUE))
 
-phy <- datasummary((Industry = bvd_sector) ~ phexpo*(Mean + SD + N),
-                       data = df2,
+# Step 2: Sort the dataframe based on the mean values in descending order
+sorted_avg_reg <- avg_reg[order(-avg_reg$mean), ]
+
+# Step 3: Select the top 10 rows from the sorted dataframe
+top10_avg_reg <- sorted_avg_reg[1:10, ]
+
+reg_industries <- as.character(top10_avg_reg$bvd_sector)
+
+
+#Step 4: Make datasummary table for these 10 industries 
+# select for relevant variables
+df_ind_reg <- df_ind |> 
+  # filter out empty bvd_sector
+  filter(bvd_sector %in% reg_industries) |> 
+  # select variables we need
+  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+
+datasummary((Industry = bvd_sector) ~ rg_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+                       data = df_ind_reg,
+                       title = 'Regulatory Exposure',
+                       fmt = 3, 
+                   output = 'latex')
+
+#Phy exposure
+# Step 1: Calculate the mean of phy exposure
+avg_ph <- df_ind |>
+  group_by(bvd_sector) |>
+  summarize(mean = mean(ph_expo_ew_y, na.rm = TRUE))
+
+# Step 2: Sort the dataframe based on the mean values in descending order
+sorted_avg_ph <- avg_ph[order(-avg_ph$mean), ]
+
+# Step 3: Select the top 10 rows from the sorted dataframe
+top10_avg_ph <- sorted_avg_ph[1:10, ]
+
+ph_industries <- as.character(top10_avg_ph$bvd_sector)
+
+
+#Step 4: Make datasummary table for these 10 industries 
+# select for relevant variables
+df_ind_ph <- df_ind |> 
+  # filter out empty bvd_sector
+  filter(bvd_sector %in% ph_industries) |> 
+  # select variables we need
+  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+
+datasummary((Industry = bvd_sector) ~ ph_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+                       data = df_ind_ph,
                        title = 'Physical Exposure by Industry',
-                       fmt = 3)
+                       fmt = 3, 
+                   output = 'latex')
+
+##
