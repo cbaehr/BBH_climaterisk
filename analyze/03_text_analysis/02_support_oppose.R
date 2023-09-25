@@ -15,7 +15,7 @@ if(Sys.info()["user"]=="vh4264" ) {setwd("/home/vh4264/bbh1/")}
 
 
 # Load data
-df <- fread("data//lobbying_df_reduced_fb.csv") |>
+df <- fread("data/03_final/lobbying_df_reduced_fb.csv") |>
   # Remove observations with no text
   filter(issue_text != "") |>
   data.frame() |>
@@ -46,7 +46,6 @@ df <- df |>
   filter(CLI == 1)
 
 
-
 # Search for keyword ------------------------------------------------------
 
 support <- df |>
@@ -54,7 +53,7 @@ support <- df |>
   select(gvkey, conm, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 oppose <- df |>
-  filter(str_detect(issue_text, "oppose")) |>
+  filter(str_detect(issue_text, "oppos")) |>
   select(gvkey, conm, registrant_name, year, issue_code, issue_text, industry, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
 
 
@@ -77,9 +76,10 @@ create_excel <- function(x){
   saveWorkbook(wb, paste0(name, "reports.xlsx"), overwrite = TRUE)
 }
 
-if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/issues_texts_support_oppose/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/03_final/issues_texts_support_oppose/")}
 
 create_excel(support)
 create_excel(oppose)
+
 
 ### END
