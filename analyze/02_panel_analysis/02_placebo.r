@@ -297,4 +297,12 @@ tidied_results_expenditure |>
 ggsave("results/figures/regressions/placebos_expenditure.pdf", width = 8.5, height = 11)
 
 
+# Issue codes table -------------------------------------------------------
+
+codes <- read_excel("data/01_raw/lobbyview/lobbying_issue_codes.xlsx")
+
+codes |> kbl(format = "latex", booktabs = T, longtable = T,
+             caption = "Lobbying Report Issue Codes") |> 
+  save_kable("data/01_raw/lobbyview/lobbying_issue_codes.tex")
+
 ### END
