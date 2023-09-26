@@ -14,7 +14,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/lobbying_df_wide__red_w_directionality.csv")
+df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
 
 
 
@@ -163,5 +163,9 @@ modelsummary(
   ,output = "results/Tables/mobility/headquarter_interaction.tex"
 )
 
+
+
+
+# EC classification -------------------------------------------------------
 
 
