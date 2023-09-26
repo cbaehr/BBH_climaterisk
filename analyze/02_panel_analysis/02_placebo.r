@@ -5,7 +5,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, haschaR, broom)
+pacman::p_load(data.table, tidyverse, haschaR, broom, fixest, readxl, kableExtra)
 
 # prevent scientific notation
 options(scipen = 999)
@@ -304,5 +304,79 @@ codes <- read_excel("data/01_raw/lobbyview/lobbying_issue_codes.xlsx")
 codes |> kbl(format = "latex", booktabs = T, longtable = T,
              caption = "Lobbying Report Issue Codes") |> 
   save_kable("data/01_raw/lobbyview/lobbying_issue_codes.tex")
+
+
+
+# Produce tables for selected issue codes ---------------------------------
+
+placebo_plot_df <- tidied_results |>
+  mutate(Outcome = "Occurrence") |>
+  bind_rows(tidied_results_expenditure |>
+              mutate(Outcome = "Expenditure")) |>
+  mutate(dependent_var = str_replace(dependent_var, "amount_num_", "")) |>
+  filter(dependent_var %in% c("TAR", "MIA", "MON", "FIR", "TAX", "TRA", "ROD", "AUT")) |>
+  mutate(
+    term = case_when(
+      term == "op_expo_ew_y" ~ "Opportunity",
+      term == "rg_expo_ew_y" ~ "Regulatory",
+      term == "ph_expo_ew_y" ~ "Physical",
+      TRUE ~ term
+      ),
+    Category = case_when(
+      dependent_var == "TAR" ~ "Not Climate-related",
+      dependent_var == "MIA" ~ "Not Climate-related",
+      dependent_var == "MON" ~ "Not Climate-related",
+      dependent_var == "FIR" ~ "Not Climate-related",
+      dependent_var == "TAX" ~ "Climate-related",
+      dependent_var == "TRA" ~ "Climate-related",
+      dependent_var == "ROD" ~ "Climate-related",
+      dependent_var == "AUT" ~ "Climate-related",
+      TRUE ~ dependent_var
+    ),
+    dependent_var = case_when(
+      dependent_var == "TAR" ~ "Tariffs",
+      dependent_var == "MIA" ~ "Media",
+      dependent_var == "MON" ~ "Money",
+      dependent_var == "FIR" ~ "Guns",
+      dependent_var == "TAX" ~ "Taxation",
+      dependent_var == "TRA" ~ "Transportation",
+      dependent_var == "ROD" ~ "Roads",
+      dependent_var == "AUT" ~ "Automatives",
+      TRUE ~ dependent_var
+    )
+  )
+
+
+# Plot
+placebo_plot_df |>
+  mutate(
+    color = ifelse(p.value < 0.05, "black", "darkgrey"),
+    Outcome=factor(Outcome, levels=c("Occurrence", "Expenditure")),
+    Category = factor(Category, levels = c("Not Climate-related", "Climate-related"))
+    ) |>
+  ggplot(aes(x = estimate, y = dependent_var, color = color)) +
+  facet_grid(Category + Outcome ~ term, scales = "free") +
+  geom_point(size = 2) + 
+  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
+  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1.25) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
+  scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
+  # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
+  labs(x = "Coefficient", y = "Issue") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12))
+  
+
+ggsave("results/figures/regressions/placebos_sample.pdf", width = 8.5, height = 6.2)
+  
+  
+
+  
+  
+  
+  
+
 
 ### END
