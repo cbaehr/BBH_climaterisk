@@ -68,7 +68,10 @@ df |>
   coord_flip() +
   theme_bw() +
   labs(y = "Distribution of Exposure Variables", x = "") +
-  theme(legend.position = "bottom",
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
         text = element_text(size = 12))
 
 
@@ -92,8 +95,11 @@ df |>
   coord_flip() + 
   theme_bw() +
   labs(y = "Distribution of Exposure Variables", x = "") +
-  theme(legend.position = "bottom",
-        text = element_text(size = 15))
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 12))
 
 
 ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=8)
