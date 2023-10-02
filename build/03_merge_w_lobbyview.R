@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse)
+pacman::p_load(data.table, tidyverse, haven)
 
 # set working directory
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
@@ -14,7 +14,7 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 lobby_client <- fread("data/01_raw/lobbyview/dataset___client_level.csv")
 lobby_text <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
 lobby_issue <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
-lobby_bills <- fread("data/01_raw/lobbyview/dataset___bills.csv")
+#lobby_bills <- fread("data/01_raw/lobbyview/dataset___bills.csv")
 lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
 
 # load firm climate risk data
@@ -40,244 +40,314 @@ lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
-firm_data <- fread("data/02_processed/exposure_quarterly.csv") |>
-  #mutate(gvkey = as.character(gvkey)) |>
-  mutate(isin = as.character(isin), year=as.numeric(year)) |>
-  #filter(!is.na(gvkey)) |>
-  filter(!is.na(isin)) |>
-  # add _q as identifier for quarterly data
-  rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccexp:phsent)), ~ paste0(., "_q"))
+# firm_data <- fread("data/02_processed/exposure_quarterly.csv") |>
+#   #mutate(gvkey = as.character(gvkey)) |>
+#   mutate(isin = as.character(isin), year=as.numeric(year)) |>
+#   #filter(!is.na(gvkey)) |>
+#   filter(!is.na(isin)) |>
+#   # add _q as identifier for quarterly data
+#   rename_at(vars(c(cc_expo_ew:ph_sent_ew,ccexp:phsent)), ~ paste0(., "_q"))
 
-firm_data_year <- fread("data/02_processed/exposure_year.csv") |>
-  #mutate(gvkey = as.character(gvkey)) |>
-  mutate(isin = as.character(isin)) |>
-  #filter(!is.na(gvkey)) |>
-  filter(!is.na(isin)) |>
-  # select only exposure data: control variables come from the quarterly dataframe
-  select(isin:ph_sent_ew,ccexp:phsent) |>
-  rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
+
+#isin.codes <- unique(firm_data$isin)
+#write.table(isin.codes, file = "/Users/christianbaehr/Desktop/isin_codes.txt", row.names = F)
+
+# firm_data_year <- fread("data/02_processed/exposure_year.csv") |>
+#   #mutate(gvkey = as.character(gvkey)) |>
+#   mutate(isin = as.character(isin)) |>
+#   #filter(!is.na(gvkey)) |>
+#   filter(!is.na(isin)) |>
+#   # select only exposure data: control variables come from the quarterly dataframe
+#   select(isin:ph_sent_ew,ccexp:phsent) |>
+#   rename_at(vars(-c(isin,year)), ~ paste0(., "_y"))
+
+
 
 # Check for duplicates
-firm_data <- firm_data[!duplicated(firm_data), ] # none
-firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
+#firm_data <- firm_data[!duplicated(firm_data), ] # none
+#firm_data_year <- firm_data_year[!duplicated(firm_data_year), ]
 
-firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
+#firm_data <- left_join(firm_data, firm_data_year, by=c("isin","year"))
 
+#View(lobby_report[duplicated(lobby_report$report_uuid) | duplicated(lobby_report$report_uuid, fromLast = T), ])
 
-# Merging -----------------------------------------------------------------
+## once get rid of reports with multiple quarters, no duplicated quarter codes
+# lobby_report <- data.frame(lobby_report)
+# temp <- lobby_report[!duplicated(lobby_report$report_uuid), names(lobby_report)[names(lobby_report)!="report_quarter_code"]]
+# sum(duplicated(temp))
 
-# Baseline dataset: all reports from lobbying disclosure act separated by issue
-lobbying <- lobby_issue |>
-  # cases where issue enters report multiple time due to different text entries:
-  # we are only interested in each issue; not the sub-issues
-  # --> remove issue_ordi and get only distinct rows to avoid duplicates
-  select(-c(issue_ordi)) |>
-  distinct() |>
-  # merge with text of report
-  left_join(lobby_text |> 
-              select(-c(issue_ordi)) |>
-              # cases where issue in report has multiple text entries:
-              # combine text for these cases so that every report-issue only enters once
-              group_by(report_uuid,issue_code) |>
-              mutate(issue_text = paste(issue_text, collapse = " ")) |>
-              distinct(), 
-            by = c("report_uuid","issue_code")) |>
-  # merge with report data
-  left_join(lobby_report, by = "report_uuid") |>
-  # merge with client data
-  left_join(lobby_client, by = "client_uuid") |>
-  mutate(gvkey = as.character(gvkey)) |>
-  rename(year = report_year)
+## aggregate to the report_uuid level. Some reports have multiple rows, indicating multiple quarters lobbied in.
+## I smush into a single row and separate the quarters by the vertical bar
 
-## drop NA gvkeys. Theres no way we can connect these to Compustat data
-lobbying <- lobbying[!is.na(lobbying$gvkey), ]
+collapse.cols <- aggregate(lobby_report$report_quarter_code, by=list(lobby_report$report_uuid), FUN=function(x) paste(x, collapse = "|")) |>
+  setNames(c("report_uuid", "report_quarter_code"))
 
-##########
+## remove rows with duplicate report IDs
+lobby_report_nodup <- lobby_report[!duplicated(lobby_report$report_uuid), ]
+lobby_report_nodup <- data.frame(lobby_report_nodup)
 
-## drop a few observations that seem duplicated. Identical except one row specifies lobbying the House and the second row
-## specifies lobbying House AND Senate. Seems doubtful these are genuinely distinct lobbying disbursements.
-lobbying <- lobbying[!duplicated(lobbying[, c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code")]), ]
+## merge unique report-level data with the smushed quarter codes
+drop.quarter <- names(lobby_report_nodup)[names(lobby_report_nodup)!="report_quarter_code"]
+lobby_report_nodup <- merge(lobby_report_nodup[,drop.quarter], collapse.cols)
 
-lobbying$amount_num <- gsub("\\$|,", "", lobbying$amount)
+## number of quarters in the report
+lobby_report_nodup$n_quarters <- str_count(lobby_report_nodup$report_quarter_code, "\\|") + 1
+
+#####
+
+## remove nuisance characters
+lobby_issue$gov_entity <- gsub('"|\\{|\\}|([\\])|-', ' ', lobby_issue$gov_entity)
+lobby_issue$gov_entity <- gsub(',', ';', lobby_issue$gov_entity)
+lobby_issue$gov_entity <- gsub("\\s+", " ", lobby_issue$gov_entity) # remove redundant spaces
+
+## remove special escape characters
+lobby_text$issue_text <- gsub("[^A-z0-9. ]", " ", lobby_text$issue_text)
+lobby_text$issue_text <- gsub("`|\\^|\\[|\\]|\\\\|_", " ", lobby_text$issue_text)
+lobby_text$issue_text <- gsub("\\s+", " ", lobby_text$issue_text) # remove redundant spaces
+
+lobby_issuetext <- merge(lobby_issue, lobby_text)
+
+## sometimes multiple issue codes or government entities per lobby report
+#View(lobby_issue[duplicated(lobby_issue$report_uuid) | duplicated(lobby_issue$report_uuid, fromLast = T),])
+
+lobby_issuetext_nodup <- aggregate(lobby_issuetext[, c("issue_code", "gov_entity", "issue_text")], 
+                               by=list(lobby_issuetext$report_uuid), 
+                               FUN=function(x) paste(x, collapse = "|")) |>
+  setNames(c("report_uuid", "issue_code", "gov_entity", "issue_text"))
+
+#####
+
+lobbying <- merge(lobby_report_nodup, lobby_issuetext_nodup, all.x = T)
+lobbying <- merge(lobbying, lobby_client, all.x = T)
+
+## a few "NA" values get converted to NA but otherwise ok
 lobbying$amount_num <- as.numeric(lobbying$amount_num)
-#test2 <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$report_uuid, lobbying$issue_code, lobbying$issue_text, lobbying$primary_naics), FUN=function(x) sum(x, na.rm=T))
-#names(test2) <- c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code", "issue_text", "primary_naics", "amount_num")
 
-lobbying_num <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), FUN=function(x) sum(x, na.rm=T))
-names(lobbying_num) <- c("gvkey", "year", "report_quarter_code", "issue_code", "amount_num")
+collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text")],
+                  by=list(lobbying$client_uuid, lobbying$client_name, lobbying$registrant_uuid,
+                          lobbying$registrant_name, lobbying$report_year, lobbying$bvdid),
+                  FUN = function(x) paste(x, collapse = "|"))
 
-lobbying_text <- aggregate(lobbying[, c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")], 
-                           by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), 
-                           FUN=function(x) paste(x, collapse = "|"))
-names(lobbying_text) <- c("gvkey", "year", "report_quarter_code", "issue_code", "issue_text", "registrant_uuid", "registrant_name", "primary_naics")
+collapse.num <- aggregate(lobbying[, c("amount_num")],
+                   by=list(lobbying$client_uuid, lobbying$client_name, lobbying$registrant_uuid,
+                           lobbying$registrant_name, lobbying$report_year, lobbying$bvdid),
+                   FUN = function(x) sum(x, na.rm = T))
 
-lobbying <- merge(lobbying_num, lobbying_text)
+lobbying_firmyear <- merge(collapse.char, collapse.num)
+names(lobbying_firmyear) <- c("client_uuid", "client_name", "registrant_uuid", "registrant_name",
+                              "report_year", "bvdid", "report_uuid", "issue_code", "gov_entity", "issue_text", 
+                              "amount_num")
 
-##########
+lobbying_firmyear$n_issue_codes <- str_count(lobbying_firmyear$issue_code, "\\|") + 1
 
+rm(list = setdiff(ls(), "lobbying_firmyear"))
 
-### there are 21 gvkey duplicates in firm_data
-# we will deal with this later
-# for now we drop these cases
-dupl <- firm_data |>
-  group_by(gvkey, year, quarter) |>
-  filter(n()>1) |>
-  arrange(gvkey, year, quarter) |>
-  mutate(identifier = paste0(gvkey,"_",year,"_",quarter)) |>
-  distinct(identifier) |>
-  pull(identifier)
+#####
 
-firm_data_reduced <- firm_data |>
-  mutate(identifier = paste0(gvkey,"_",year,"_",quarter)) |>
-  filter(!identifier %in% dupl)
+## compustat doesnt have isin codes - there is NO WAY to merge w Sautner covars with compustat
 
-# merge
-lobbying$gvkey <- as.numeric(lobbying$gvkey)
-df <- lobbying |>
-  left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+sum(!is.na(lobbying$gvkey)) / nrow(lobbying) # only 23% of lobbying obs have real GVKEYS
+sum(!is.na(lobbying$bvdid)) / nrow(lobbying) # no NA bvdids
+sum(lobbying$bvdid!="") / nrow(lobbying) # ~84% of lobbying obs have real bvdids
 
-# only observations with climate exposure data
-cc <- df |>
-  filter(!is.na(cc_expo_ew_y))
+firm_data <- read_dta("data/01_raw/exposure/SvLVZ_pseudo.dta") # sautner firm data annual only
+## NO DUPLICATES IN SAUTNER FIRM DATA
+sum(duplicated(firm_data))
+
+#write.table(unique(lobbying$bvdid), "/Users/christianbaehr/Desktop/lobbyview_bvdid.txt", row.names = F)
+#write.table(unique(firm_data$isin), "/Users/christianbaehr/Desktop/sautner_isin.txt", row.names = F)
+
+bvdid_map <- readxl::read_xlsx("/Users/christianbaehr/Downloads/ORBIS_bvdid_search.xlsx", sheet = 2)
+bvdid_map <- bvdid_map[, names(bvdid_map) %in% c("BvD ID number", "ISIN number (All)")]
+#length(unique(lobbying$bvdid))
+#sum(unique(lobbying$bvdid) %in% isin_map$`BvD ID number`) ## only 1770 of 35202 bvdids in lobbying
+
+isin_map <- readxl::read_xlsx("/Users/christianbaehr/Downloads/ORBIS_isin_search.xlsx", sheet = 2)
+isin_map <- isin_map[, names(isin_map) %in% c("BvD ID number", "ISIN number (All)")]
+
+mapping <- rbind(bvdid_map, isin_map) |>
+  setNames(c("bvdid", "isin"))
+mapping <- mapping[!duplicated(mapping), ]
+
+df_wide <- merge(firm_data, mapping)
+
+sum(duplicated(lobbying_firmyear[, c("bvdid", "report_year", "report_uuid")]))
+
+df_wide <- merge(df_wide, lobbying_firmyear, by.x=c("bvdid", "year"),
+                        by.y = c("bvdid", "report_year"))
+
+sum(duplicated(df_wide[, c("bvdid", "year", "report_uuid")]))
+
+#View(df_wide[duplicated(df_wide[, c("bvdid", "year")]) | duplicated(df_wide[, c("bvdid", "year")], fromLast = T), c(1:3, 70:99)])
+#View(df_wide[duplicated(df_wide[, c("bvdid", "year", "report_uuid")]) | duplicated(df_wide[, c("bvdid", "year", "report_uuid")], fromLast = T), c(1:3, 70:99)])
+
+n_firms_in_report <- aggregate(df_wide$isin, by=list(df_wide$bvdid, df_wide$year, df_wide$report_uuid),
+                               FUN = function(x) length(unique(x)))
+names(n_firms_in_report) <- c("bvdid", "year", "report_uuid", "n_firms_in_report")
+
+df_wide <- merge(df_wide, n_firms_in_report)
+
+## for cases where same lobbying report is attributed to two firms in out data,
+## assume they each contributed an equal amount and divide the amount of lobbying
+## dollars into equal shares
+df_wide$amount_num <- df_wide$amount_num / df_wide$n_firms_in_report
+
+## doesnt look like there are actually any missing cc_expo_ew
+cc <- df_wide |>
+  filter(!is.na(cc_expo_ew))
 
 # write csv
-fwrite(df, file="data/03_final//lobbying_df.csv")
-fwrite(cc, file="data/03_final/lobbying_df_reduced.csv")
+fwrite(df_wide, file="data/03_final/lobbying_df_REVISE.csv")
+fwrite(cc, file="data/03_final/lobbying_df_reduced_REVISE.csv")
 
-# Wide dataframe with binary issue code indicators ------------------------
+## lobbying information will be double-counted for any firms that have a single bvdid
+## but multiple isin codes corresponding to that single bvdid. My solution is just to 
+## distribute the lobbying amounts evenly between the two components of the overall firm
 
-# Note that this dataframe does neither contain report-issue text data 
-# nor information on which institutions were lobbied
-# because these information vary by issue within each report.
+df_wide$CLI <- grepl("ENV|CAW|ENG|FUE", df_wide$issue_code) * 1
+df_wide$CLI[is.na(df_wide$issue_code)] <- NA
+unique(df_wide$issue_code[which(df_wide$CLI==1)])
+sum(is.na(df_wide$CLI))
 
-# lobbying_wide <- lobby_issue |>
-#   select(-c(issue_ordi,gov_entity)) |>
-#   distinct() |>
-#   mutate(issue_bin = 1) |>
-#   # from long to wide
-#   pivot_wider(names_from = issue_code, values_from = issue_bin, values_fill = 0) |>
-#   # merge with report data
-#   left_join(lobby_report, by = "report_uuid") |>
-#   # merge with client data
-#   left_join(lobby_client, by = "client_uuid") |>
-#   mutate(gvkey = as.character(gvkey)) |>
-#   rename(year = report_year)
+## number of environmental issues
+df_wide$n_envir_issues <- sapply(strsplit(df_wide$issue_code, "\\|"), FUN = function(x) sum( str_count("ENV|CAW|ENG|FUE", x) ))
 
+## total amount divided by proportion of environmental issues in report
+df_wide$CLI_dollars <- df_wide$amount_num * ( df_wide$n_envir_issues / df_wide$n_issue_codes )
 
-#numeric year-qtr-gvkey ids to speed indexing
-lobbying$gvkey_n <- as.numeric(factor(lobbying$gvkey))
-lobbying$unique_id <- as.numeric(paste0(lobbying$year, lobbying$report_quarter_code, lobbying$gvkey_n))
+df_wide$us_dummy <- ifelse(df_wide$hqcountrycode=="US", 1, 0)
 
-for(i in unique(lobbying$unique_id)) {
-  temp <- lobbying[which(lobbying$unique_id == i), ]
-  if (nrow(temp) > 1) {
-    
-    if( any(temp$amount_num>0) & length(unique(temp$amount_num))==1 ) {
-      ## if all issue codes have exactly the same amounts, assume redundancy
-      ## and distribute the single amount across all issues evenly
-      temp$amount_num <- temp$amount_num[1] / nrow(temp)
-    } else if( any(temp$amount_num>0) & sum(temp$amount_num>0)==1 ) {
-      ## if one issue code has a non-zero amount but all other issue codes are
-      ## zero, then distribute the single amount evenly across all issues
-      temp$amount_num <- sum(temp$amount_num, na.rm=T) / nrow(temp)
-    } else {
-      
-    }
-    ## replace existing amount nums with distributed values
-    lobbying$amount_num[which(lobbying$unique_id == i)] <- temp$amount_num
-    
-  }
-  
-}
+total_lobby <- aggregate(df_wide$amount_num, 
+                         by=list(df_wide$year, df_wide$bvdid), 
+                         FUN=function(x ) sum(x, na.rm = T))
+names(total_lobby) <- c("year", "bvdid", "total_lobby")
 
-## drop text variables that differ across issue codes (screw up the pivot, can solve later if we want)
-lobbying <- lobbying[, !names(lobbying) %in% c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")]
-lobbying$issue_bin <- 1
-
-lobbying_wide <- pivot_wider(lobbying, names_from = c("issue_code"), values_from=c("issue_bin", "amount_num"), values_fill = 0)
-#View(lobbying_wide[duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")]) | duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")], fromLast = T), ])
-## maintain existing names for issue code dummies. dont have to rewrite downstream code
-names(lobbying_wide) <- gsub("issue_bin_", "", names(lobbying_wide))
-
-# merge with firm_data
-df_wide <- lobbying_wide |>
-  left_join(firm_data_reduced, by = c("gvkey", "year", "report_quarter_code" = "quarter"))
+df_wide <- merge(df_wide, total_lobby)
 
 
-
-# Transform variables  ----------------------------------------
-
-
-# dummy variable: climate issues
-df_wide <- df_wide |>
-  mutate(CLI = ifelse(ENV == 1 | 
-                        CAW == 1 |
-                        ENG == 1 |
-                        FUE == 1,
-                      1,0))
-
-df_wide$CLI_dollars <- apply(df_wide[, c("amount_num_ENV", "amount_num_CAW", "amount_num_ENG", "amount_num_FUE")],
-                             1, function(x) sum(x, na.rm=T) / 1000000)
-
-
-
-# Control variables -------------------------------------------------------
-
-#US dummy variable 
-df_wide <- df_wide |>
-  mutate(us_dummy = ifelse(hqcountrycode == "US",1,0))
-
-#Rename CO2 emissions variable 
-# df_wide <- df_wide |>
-#   rename(co2_emissions = En_En_ER_DP023)
-
-#Total annual lobbying (total dollars)
-df_wide <- df_wide |>
-  group_by(gvkey, year) |>
-  # mutate(total_lobby = n_distinct(report_uuid))
-  mutate(total_lobby = sum(c_across(grep("amount_num", names(df_wide), value=T))))
-
-
-#Log and lag emissions variable 
-# df_wide <- df_wide |>
-#   mutate(log_co2 = log(co2_emissions + 1))
-
-df_wide <- df_wide |>
-  # group by unit (in our case: firm)
-  group_by(gvkey) |>
-  # arrange by year
-  arrange(year) |>
-  # for one year
-  mutate(#log_co2_l1 = lag(log_co2, 1),
-    total_lobby_l1 = lag(total_lobby, 1)) |>
-  #ungroup
-  ungroup()
-
-
-df_wide$industry <- df_wide$bvd_sector
-df_wide <- df_wide[which(df_wide$industry!=""), ]
+df_wide$industry <- df_wide$sic2
+#df_wide <- df_wide[which(df_wide$industry!=""), ]
 df_wide$industry_year <- paste(df_wide$industry, df_wide$year)
 
-sum(duplicated(df_wide[, c("year", "report_quarter_code", "gvkey")]))
+df_wide$ebit_at <- df_wide$W_ebit_assets
 
-names(df_wide)[names(df_wide)=="assets"] <- "at"
-
-# create year_quarter
-df_wide <- df_wide |>
-  mutate(year_quarter = paste0(year, "_", report_quarter_code))
-
-# Filter observations with climate exposure data --------------------------
-
-cc_wide <- df_wide |>
-  filter(!is.na(cc_expo_ew_y))
-
+cc_wide <- df_wide[!is.na(df_wide$cc_expo_ew), ]
 
 # write csv
-fwrite(df_wide, file="data/03_final/lobbying_df_wide.csv")
-fwrite(cc_wide, file="data/03_final/lobbying_df_wide_reduced.csv")
+fwrite(df_wide, file="data/03_final/lobbying_df_wide_REVISE.csv")
+fwrite(cc_wide, file="data/03_final/lobbying_df_wide_reduced_REVISE.csv")
 
 #cc_wide 225025 by 422
 #df_wide 1464710 by 422
 
 
 ### End
+
+################################################################################
+
+## deprecated code I tried using to increaes bvdid-isin matches. unsuccessfully
+
+# sum(lobbying$bvdid %in% bvdid_map$`BvD ID number`) # 1,000,133 bvdids match out of 1,267,469 total in lobbyview
+# 
+# sum(firm_data$isin %in% bvdid_map$`ISIN number (All)`)
+# firm_data$isin_match <- firm_data$isin %in% bvdid_map$`ISIN number (All)`
+# firm_data_match <- firm_data[which(firm_data$isin_match), ]
+# firm_data_nomatch <- firm_data[which(!firm_data$isin_match), ]
+# 
+# nonmatch_firmdata <- firm_data_nomatch$isin[which(firm_data_nomatch$hqcountrycode=="US")]
+# nonmatch_orbis <- bvdid_map$`ISIN number (All)`[which(!bvdid_map$`ISIN number (All)` %in% firm_data$isin)]
+# 
+# nonmatch_firmdata <- sort(unique(nonmatch_firmdata))
+# nonmatch_orbis <- unique(nonmatch_orbis)
+# View(data.frame(nonmatch_firmdata))
+# View(data.frame(unique(nonmatch_orbis)))
+# 
+# nonmatch_firmdata[180]
+# temp <- afind(nonmatch_orbis, nonmatch_firmdata[180])
+# 
+# close.match <- function(x) {
+#   y <- afind(nonmatch_orbis, x)
+#   return(sum(as.numeric(y$distance)<3, na.rm=T))
+# }
+# 
+# temp <- sapply(nonmatch_firmdata[101:200], close.match)
+# 
+# which(temp==1)
+# 
+# test <- afind(nonmatch_orbis, "US00404A1097")
+# test$match[test$distance<3]
+# 
+# test <- afind(bvdid_map$`Company name Latin alphabet`, "ACADIA HEALTHCARE")
+# hist(test$distance)
+# 
+# z <- scale(test$distance)
+# test$match[z<(-8)]
+# 
+# 
+# hist(temp$distance)
+# temp$match[temp$distance<=4]
+# 
+# 
+# isin_map <- data.frame(isin_map)
+# bvdid_map <- data.frame(bvdid_map)
+# joint_map <- rbind(isin_map[, c("BvD.ID.number", "ISIN.number")], newmap[, c("BvD.ID.number", "ISIN.number")])
+# 
+# sum(duplicated(joint_map))
+# joint_map <- joint_map[!duplicated(joint_map), ]
+# #joint_map <- joint_map[!is.na(joint_map$ISIN.number), ]
+# names(joint_map) <- c("bvdid", "isin")
+# 
+# length(unique(firm_data$isin)) # 10000 unique firms in firm data by isin
+# length(unique(lobbying$bvdid)) # 35000 unique firms in lobbying data by bvdid
+# 
+# lobbying.temp <- merge(lobbying, joint_map)
+# lobbying.temp.2 <- merge(lobbying.temp, firm_data, by.x = c("isin", "report_year"), by.y=c("isin", "year"))
+# 
+# sum(lobbying$bvdid %in% bvdid_map$BvD.ID.number)
+# sum(lobbying$bvdid %in% joint_map$bvdid)
+# 
+# length(unique(joint_map$bvdid))
+# length(unique(joint_map$isin))
+# 
+# length(unique(lobbying.temp.2$isin))
+# length(unique(lobbying.temp.2$bvdid))
+# ## problem is that we just have tons of missingness for isin codes which have bvdids 
+# 
+# sum(firm_data$isin %in% joint_map$isin)
+# 
+# 
+# View(joint_map[duplicated(joint_map$ISIN.number) | duplicated(joint_map$ISIN.number, fromLast = T), ])
+# 
+# ## lot of duplication in isin number
+# ## basically each isin is associated with MANY bvdid numbers
+# 
+# newmap <- readxl::read_xlsx("/Users/christianbaehr/Downloads/missing_bvdids_orbis.xlsx",
+#                             sheet = 2)
+# sum(unique(lobbying$bvdid) %in% map$BvD.ID.number) ## only 1770 of 35202 bvdids in lobbying
+# 
+# map <- rbind(isin_map[, c("BvD.ID.number", "ISIN.number")], newmap[, c("BvD.ID.number", "ISIN.number")])
+# 
+# length(unique(map$BvD.ID.number))
+# 
+# sum(firm_data$isin %in% isin_map$ISIN.number)
+# sum(firm_data$isin %in% map$ISIN.number)
+# 
+# lob.nomatch <- lobbying$bvdid[!lobbying$bvdid %in% isin_map$`BvD ID number`]
+# lob.nomatch <- unique(lob.nomatch)
+# map.nomatch <- isin_map$`BvD ID number`[!isin_map$`BvD ID number` %in% lobbying$bvdid]
+# 
+# View(data.frame(sort(lob.nomatch)))
+# View(data.frame(sort(map.nomatch)))
+# 
+# testa <- strsplit(lob.nomatch, "|")
+# testa <- unique(unlist(testa))
+# 
+# testb <- strsplit(map.nomatch, "|")
+# testb <- unique(unlist(testb))
+# 
+# temp <- afind(lob.nomatch, "US020405716")
+# hist(temp$distance)
+# 
+# as.character(temp$match)[as.numeric(temp$distance)<=4]
+
+
