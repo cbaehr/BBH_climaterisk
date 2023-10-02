@@ -157,12 +157,12 @@ sum(duplicated(firm_data))
 #write.table(unique(lobbying$bvdid), "/Users/christianbaehr/Desktop/lobbyview_bvdid.txt", row.names = F)
 #write.table(unique(firm_data$isin), "/Users/christianbaehr/Desktop/sautner_isin.txt", row.names = F)
 
-bvdid_map <- readxl::read_xlsx("/Users/christianbaehr/Downloads/ORBIS_bvdid_search.xlsx", sheet = 2)
+bvdid_map <- readxl::read_xlsx("data/01_raw/firm_identifier_mapping/ORBIS_bvdid_search.xlsx", sheet = 2)
 bvdid_map <- bvdid_map[, names(bvdid_map) %in% c("BvD ID number", "ISIN number (All)")]
 #length(unique(lobbying$bvdid))
 #sum(unique(lobbying$bvdid) %in% isin_map$`BvD ID number`) ## only 1770 of 35202 bvdids in lobbying
 
-isin_map <- readxl::read_xlsx("/Users/christianbaehr/Downloads/ORBIS_isin_search.xlsx", sheet = 2)
+isin_map <- readxl::read_xlsx("data/01_raw/firm_identifier_mapping/ORBIS_isin_search.xlsx", sheet = 2)
 isin_map <- isin_map[, names(isin_map) %in% c("BvD ID number", "ISIN number (All)")]
 
 mapping <- rbind(bvdid_map, isin_map) |>
