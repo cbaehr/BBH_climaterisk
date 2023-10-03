@@ -100,11 +100,13 @@ lobbying <- lobbying[!duplicated(lobbying[, c("gvkey", "year", "report_quarter_c
 
 lobbying$amount_num <- gsub("\\$|,", "", lobbying$amount)
 lobbying$amount_num <- as.numeric(lobbying$amount_num)
+lobbying$EPA <- grepl("ENVIRONMENTAL PROTECTION AGENCY", lobbying$gov_entity) * 1
+lobbying$DOE <- grepl("DEPARTMENT OF ENERGY", lobbying$gov_entity) * 1
 #test2 <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$report_uuid, lobbying$issue_code, lobbying$issue_text, lobbying$primary_naics), FUN=function(x) sum(x, na.rm=T))
 #names(test2) <- c("gvkey", "year", "report_quarter_code", "report_uuid", "issue_code", "issue_text", "primary_naics", "amount_num")
 
-lobbying_num <- aggregate(lobbying$amount_num, by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), FUN=function(x) sum(x, na.rm=T))
-names(lobbying_num) <- c("gvkey", "year", "report_quarter_code", "issue_code", "amount_num")
+lobbying_num <- aggregate(lobbying[,c("amount_num", "EPA", "DOE")], by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), FUN=function(x) sum(x, na.rm=T))
+names(lobbying_num) <- c("gvkey", "year", "report_quarter_code", "issue_code", "amount_num", "EPA", "DOE")
 
 lobbying_text <- aggregate(lobbying[, c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")], 
                            by=list(lobbying$gvkey, lobbying$year, lobbying$report_quarter_code, lobbying$issue_code), 
@@ -194,7 +196,11 @@ for(i in unique(lobbying$unique_id)) {
 lobbying <- lobbying[, !names(lobbying) %in% c("issue_text", "registrant_uuid", "registrant_name", "primary_naics")]
 lobbying$issue_bin <- 1
 
-lobbying_wide <- pivot_wider(lobbying, names_from = c("issue_code"), values_from=c("issue_bin", "amount_num"), values_fill = 0)
+## convert back to dummy
+lobbying$EPA <- (lobbying$EPA>0)*1
+lobbying$DOE <- (lobbying$DOE>0)*1
+
+lobbying_wide <- pivot_wider(lobbying, names_from = c("issue_code"), values_from=c("issue_bin", "amount_num", "DOE", "EPA"), values_fill = 0)
 #View(lobbying_wide[duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")]) | duplicated(lobbying_wide[, c("gvkey", "year", "report_quarter_code")], fromLast = T), ])
 ## maintain existing names for issue code dummies. dont have to rewrite downstream code
 names(lobbying_wide) <- gsub("issue_bin_", "", names(lobbying_wide))
