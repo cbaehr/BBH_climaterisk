@@ -49,13 +49,26 @@ df <- df |>
 
 # set seed
 seed <- 1234
+seed
 set.seed(seed)
 
 # set number of topics
 k <- 5
+k
+
+# set formula: firms + quarter fixed effects
+formula.t <- as.formula("~ opexpo_q + rgexpo_q + phexpo_q + gvkey + quarter")
+formula.file.string <- "-firm-quarter"
+
+formula.t
+formula.file.string
+
+formula.est <- update(formula.t, 1:k ~ .)
+formula.est
 
 # set min threshold
 low.thres <- 100
+low.thres
 
 # Process text for STM
 processed <- textProcessor(
