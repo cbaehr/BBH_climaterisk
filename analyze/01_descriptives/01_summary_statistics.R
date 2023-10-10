@@ -10,6 +10,9 @@ pacman::p_load(tidyverse, data.table, modelsummary)
 #Lobbying analysis dataset
 df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
 
+## Number of firms
+df |> distinct(gvkey) |> count() # 2215
+
 ##Transform exposure variables *100 for easier interpretation
 # Identify the subset of variables to be multiplied by 100
 variables_to_multiply <- c("cc_expo_ew_y", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y")

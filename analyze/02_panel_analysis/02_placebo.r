@@ -341,7 +341,7 @@ placebo_plot_df <- tidied_results |>
       dependent_var == "TAX" ~ "Taxation",
       dependent_var == "TRA" ~ "Transportation",
       dependent_var == "ROD" ~ "Roads",
-      dependent_var == "AUT" ~ "Automatives",
+      dependent_var == "AUT" ~ "Automotives",
       TRUE ~ dependent_var
     )
   )
