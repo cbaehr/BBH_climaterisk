@@ -15,7 +15,8 @@ lobby_client <- fread("data/01_raw/lobbyview/dataset___client_level.csv")
 lobby_text <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
 lobby_issue <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
 #lobby_bills <- fread("data/01_raw/lobbyview/dataset___bills.csv")
-lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
+#lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
+lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 
 # load firm climate risk data
 # create one data-frame with yearly and quarterly exposure data + yearly control variables
@@ -33,6 +34,57 @@ lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
 #               # add _y as identifier for yearly data
 #               rename_at(vars(-c(isin,year)), ~ paste0(., "_y")),
 #             by = c("isin","year"))
+
+## this firm has different client IDs, but the exact same bvdid and isin. So combine into one
+# exactscience <- lobby_client[grepl("EXACT SCIENCE", toupper(lobby_client$client_name)), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% exactscience$client_uuid)] <- exactscience$client_uuid[1]
+# 
+# cvs <- lobby_client[which(lobby_client$client_name %in% c("CVS/Caremark", "CVS Health (and subsidiaries)")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% cvs$client_uuid)] <- cvs$client_uuid[1]
+# 
+# kaman <- lobby_client[which(lobby_client$client_name %in% c("KAMAN CORPORATION AND SUBSIDIARIES", "Kaman Corporation")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% kaman$client_uuid)] <- kaman$client_uuid[1]
+# 
+# harman <- lobby_client[which(lobby_client$client_name %in% c("Harman International Industries Incorporated", "Harman International Industries Inc.")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% harman$client_uuid)] <- harman$client_uuid[1]
+# 
+# curtiss <- lobby_client[which(lobby_client$client_name %in% c("CURTISS WRIGHT", "Curtiss-Wright Corporation")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% curtiss$client_uuid)] <- curtiss$client_uuid[1]
+# 
+# moodys <- lobby_client[which(lobby_client$client_name %in% c("Moody's Corporation", "Dun and Bradstreet")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% moodys$client_uuid)] <- moodys$client_uuid[1]
+# 
+# amerada <- lobby_client[which(lobby_client$client_name %in% c("AMERADA HESS CORP", "HESS CORPORATION")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% amerada$client_uuid)] <- amerada$client_uuid[1]
+# 
+# workday <- lobby_client[which(lobby_client$client_name %in% c("Workday, Ltd.", "Workday, Inc.")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% workday$client_uuid)] <- workday$client_uuid[1]
+# 
+# 
+# aramark <- lobby_client[which(lobby_client$client_name %in% c("Aramark Corporation (through FTI Government Affairs)", "Aramark")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% aramark$client_uuid)] <- aramark$client_uuid[2]
+# 
+# 
+# cr_bard <- lobby_client[which(lobby_client$client_name %in% c("CR BARD INC", "C.R. Bard Inc.")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% cr_bard$client_uuid)] <- cr_bard$client_uuid[1]
+# 
+# amerisource <- lobby_client[which(lobby_client$client_name %in% c("AmerisourceBergen Corporation", "AMERISOURCEBERGEN")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% amerisource$client_uuid)] <- amerisource$client_uuid[1]
+# 
+# nexstar <- lobby_client[which(lobby_client$client_name %in% c("Nexstar Media Group, Inc.", "Nexstar Broadcasting Group, Inc.")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% nexstar$client_uuid)] <- nexstar$client_uuid[1]
+# 
+# arconic <- lobby_client[which(lobby_client$client_name %in% c("Arconic", "ALCOA INC")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% arconic$client_uuid)] <- arconic$client_uuid[1]
+# 
+# arconic <- lobby_client[which(lobby_client$client_name %in% c("Arconic", "ALCOA INC")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% arconic$client_uuid)] <- arconic$client_uuid[1]
+# 
+# allegheny <- lobby_client[which(lobby_client$client_name %in% c("Allegheny Technologies Inc.", "Allegheny Technologies Incorporated")), ]
+# lobby_report$client_uuid[which(lobby_report$client_uuid %in% allegheny$client_uuid)] <- allegheny$client_uuid[1]
+
+
+
 
 
 
@@ -79,26 +131,31 @@ lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level_FIXED.csv")
 ## aggregate to the report_uuid level. Some reports have multiple rows, indicating multiple quarters lobbied in.
 ## I smush into a single row and separate the quarters by the vertical bar
 
-collapse.cols <- aggregate(lobby_report$report_quarter_code, by=list(lobby_report$report_uuid), FUN=function(x) paste(x, collapse = "|")) |>
-  setNames(c("report_uuid", "report_quarter_code"))
+# collapse.cols <- aggregate(lobby_report$report_quarter_code, by=list(lobby_report$report_uuid), FUN=function(x) paste(x, collapse = "|")) |>
+#   setNames(c("report_uuid", "report_quarter_code"))
 
 ## remove rows with duplicate report IDs
-lobby_report_nodup <- lobby_report[!duplicated(lobby_report$report_uuid), ]
-lobby_report_nodup <- data.frame(lobby_report_nodup)
-
-## merge unique report-level data with the smushed quarter codes
-drop.quarter <- names(lobby_report_nodup)[names(lobby_report_nodup)!="report_quarter_code"]
-lobby_report_nodup <- merge(lobby_report_nodup[,drop.quarter], collapse.cols)
+# lobby_report_nodup <- lobby_report[!duplicated(lobby_report$report_uuid), ]
+# lobby_report_nodup <- data.frame(lobby_report_nodup)
+# 
+# ## merge unique report-level data with the smushed quarter codes
+# drop.quarter <- names(lobby_report_nodup)[names(lobby_report_nodup)!="report_quarter_code"]
+# lobby_report_nodup <- merge(lobby_report_nodup[,drop.quarter], collapse.cols)
 
 ## number of quarters in the report
-lobby_report_nodup$n_quarters <- str_count(lobby_report_nodup$report_quarter_code, "\\|") + 1
+#lobby_report_nodup$n_quarters <- str_count(lobby_report_nodup$report_quarter_code, "\\|") + 1
+
+## compute the number of quarters captured in a given report (12 = 2 quarters, 1234 = 4 quarters)
+lobby_report$n_quarters <- str_count(as.character(lobby_report$report_quarter_code), "")
 
 #####
+
 
 ## remove nuisance characters
 lobby_issue$gov_entity <- gsub('"|\\{|\\}|([\\])|-', ' ', lobby_issue$gov_entity)
 lobby_issue$gov_entity <- gsub(',', ';', lobby_issue$gov_entity)
 lobby_issue$gov_entity <- gsub("\\s+", " ", lobby_issue$gov_entity) # remove redundant spaces
+lobby_issue$gov_entity <- trimws(lobby_issue$gov_entity)
 
 ## remove special escape characters
 lobby_text$issue_text <- gsub("[^A-z0-9. ]", " ", lobby_text$issue_text)
@@ -117,26 +174,31 @@ lobby_issuetext_nodup <- aggregate(lobby_issuetext[, c("issue_code", "gov_entity
 
 #####
 
-lobbying <- merge(lobby_report_nodup, lobby_issuetext_nodup, all.x = T)
-lobbying <- merge(lobbying, lobby_client, all.x = T)
+#lobbying <- merge(lobby_report_nodup, lobby_issuetext_nodup, all.x = T)
+lobbying <- merge(lobby_report, lobby_issuetext_nodup, all.x = T)
+lobbying <- merge(lobbying, lobby_client, by = "client_uuid", all.x = T)
 
-## a few "NA" values get converted to NA but otherwise ok
+## a few missing values get converted to NA but otherwise ok
+lobbying$amount_num <- gsub(",|\\$", "", lobbying$amount)
 lobbying$amount_num <- as.numeric(lobbying$amount_num)
 
-collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text")],
-                  by=list(lobbying$client_uuid, lobbying$client_name, lobbying$registrant_uuid,
-                          lobbying$registrant_name, lobbying$report_year, lobbying$bvdid),
+
+## we match with firm data based on BvDID, so all clients under the same bvdid are assigned a consistent name
+
+## here I want to collapse the lobbying data to the FIRM-year level - which would mean no duplication of client_uuid-year-bvdid (remove client_uuid)
+
+collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name")],
+                  by=list(lobbying$report_year, lobbying$bvdid),
                   FUN = function(x) paste(x, collapse = "|"))
 
 collapse.num <- aggregate(lobbying[, c("amount_num")],
-                   by=list(lobbying$client_uuid, lobbying$client_name, lobbying$registrant_uuid,
-                           lobbying$registrant_name, lobbying$report_year, lobbying$bvdid),
+                   by=list(lobbying$report_year, lobbying$bvdid),
                    FUN = function(x) sum(x, na.rm = T))
 
 lobbying_firmyear <- merge(collapse.char, collapse.num)
-names(lobbying_firmyear) <- c("client_uuid", "client_name", "registrant_uuid", "registrant_name",
-                              "report_year", "bvdid", "report_uuid", "issue_code", "gov_entity", "issue_text", 
-                              "amount_num")
+names(lobbying_firmyear) <- c("report_year", "bvdid", "client_uuid", "client_name", 
+                              "report_uuid", "issue_code", "gov_entity", "issue_text", 
+                              "registrant_uuid", "registrant_name", "amount_num")
 
 lobbying_firmyear$n_issue_codes <- str_count(lobbying_firmyear$issue_code, "\\|") + 1
 
@@ -146,9 +208,9 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 
 ## compustat doesnt have isin codes - there is NO WAY to merge w Sautner covars with compustat
 
-sum(!is.na(lobbying$gvkey)) / nrow(lobbying) # only 23% of lobbying obs have real GVKEYS
-sum(!is.na(lobbying$bvdid)) / nrow(lobbying) # no NA bvdids
-sum(lobbying$bvdid!="") / nrow(lobbying) # ~84% of lobbying obs have real bvdids
+#sum(!is.na(lobbying$gvkey)) / nrow(lobbying) # only 23% of lobbying obs have real GVKEYS
+#sum(!is.na(lobbying$bvdid)) / nrow(lobbying) # no NA bvdids
+#sum(lobbying$bvdid!="") / nrow(lobbying) # ~84% of lobbying obs have real bvdids
 
 firm_data <- read_dta("data/01_raw/exposure/SvLVZ_pseudo.dta") # sautner firm data annual only
 ## NO DUPLICATES IN SAUTNER FIRM DATA
@@ -169,28 +231,45 @@ mapping <- rbind(bvdid_map, isin_map) |>
   setNames(c("bvdid", "isin"))
 mapping <- mapping[!duplicated(mapping), ]
 
-df_wide <- merge(firm_data, mapping)
+df_wide <- merge(firm_data, mapping, all.x = T) # keeping ALL Sautner data - even if no isin that matches the bridge!
 
-sum(duplicated(lobbying_firmyear[, c("bvdid", "report_year", "report_uuid")]))
+## keepping all Sautner covar observations - even if they dont appear in LobbyView
+## we will assume that they didnt lobby AT ALL
+## consider using the "us" variable to drop non-American companies from the analysis
+df_wide <- merge(df_wide, lobbying_firmyear, by.x=c("bvdid", "year"), by.y = c("bvdid", "report_year"), all.x = T)
 
-df_wide <- merge(df_wide, lobbying_firmyear, by.x=c("bvdid", "year"),
-                        by.y = c("bvdid", "report_year"))
+## drop cases of actual report uuid duplicates. This is when we we able to match bvdid and isin, and a single 
+## isin corresponded to multiple bvdid (or vice versa). Either way, include these would result in some sort of
+## double counting. In some cases it is US company and their foreign subsidiary. ONLY ~36 cases
+duplicate_reportuuid <- (duplicated(df_wide$report_uuid) | duplicated(df_wide$report_uuid, fromLast=T)) & !is.na(df_wide$report_uuid)
+df_wide <- df_wide[!duplicate_reportuuid, ]
 
-sum(duplicated(df_wide[, c("bvdid", "year", "report_uuid")]))
+sum(duplicated(df_wide$report_uuid) & !is.na(df_wide$report_uuid)) # none!
 
-#View(df_wide[duplicated(df_wide[, c("bvdid", "year")]) | duplicated(df_wide[, c("bvdid", "year")], fromLast = T), c(1:3, 70:99)])
-#View(df_wide[duplicated(df_wide[, c("bvdid", "year", "report_uuid")]) | duplicated(df_wide[, c("bvdid", "year", "report_uuid")], fromLast = T), c(1:3, 70:99)])
+View(df_wide[duplicated(df_wide[, c("isin", "year")])|duplicated(df_wide[, c("isin", "year")], fromLast = T),])
+## a few cases (~50) where multiple isin codes to a single bvdid, but these seem ok to leave in because none of these
+## cases actually involve any lobbying. So were not really doing any double counting for these.
 
-n_firms_in_report <- aggregate(df_wide$isin, by=list(df_wide$bvdid, df_wide$year, df_wide$report_uuid),
-                               FUN = function(x) length(unique(x)))
-names(n_firms_in_report) <- c("bvdid", "year", "report_uuid", "n_firms_in_report")
 
-df_wide <- merge(df_wide, n_firms_in_report)
 
-## for cases where same lobbying report is attributed to two firms in out data,
-## assume they each contributed an equal amount and divide the amount of lobbying
-## dollars into equal shares
-df_wide$amount_num <- df_wide$amount_num / df_wide$n_firms_in_report
+View(df_wide[( (duplicated(df_wide[, c("bvdid", "year")]) | duplicated(df_wide[, c("bvdid", "year")], fromLast=T) ) & !is.na(df_wide$bvdid) ), ])
+## only 52 cases left where bvdid duplicated and there is ACTUALLY a bvdid associated. Drop these, because they mean firm data is
+## being double counted
+duplicate_bvdid <- (duplicated(df_wide[, c("bvdid", "year")]) | duplicated(df_wide[, c("bvdid", "year")], fromLast=T) ) & !is.na(df_wide$bvdid)
+df_wide <- df_wide[!duplicate_bvdid, ]
+
+
+## dont worry about the below code -- this is for when we were still allowing client_uuid to vary for the same bvdid. Not doing anymore
+# n_firms_in_report <- aggregate(df_wide$isin, by=list(df_wide$bvdid, df_wide$year),
+#                                FUN = function(x) length(unique(x)))
+# names(n_firms_in_report) <- c("bvdid", "year", "n_firms_in_report")
+# 
+# df_wide <- merge(df_wide, n_firms_in_report)
+# 
+# ## for cases where same lobbying report is attributed to two firms in our data,
+# ## assume they each contributed an equal amount and divide the amount of lobbying
+# ## dollars into equal shares
+# df_wide$amount_num <- df_wide$amount_num / df_wide$n_firms_in_report
 
 ## doesnt look like there are actually any missing cc_expo_ew
 cc <- df_wide |>

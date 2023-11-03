@@ -65,6 +65,10 @@ cm <- c("op_expo_ew_y" = "Opportunity Exposure",
 
 df$bvdid <- df$gvkey_n
 
+sum(is.na(df_REV$CLI))
+df_REV$CLI[is.na(df_REV$CLI)] <- 0
+df_REV$CLI_dollars[is.na(df_REV$CLI_dollars)] <- 0
+
 models <- list(
   "Orig" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
   "New" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df_REV)
