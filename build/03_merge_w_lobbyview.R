@@ -169,7 +169,7 @@ lobby_issuetext <- merge(lobby_issue, lobby_text)
 
 lobby_issuetext_nodup <- aggregate(lobby_issuetext[, c("issue_code", "gov_entity", "issue_text")], 
                                by=list(lobby_issuetext$report_uuid), 
-                               FUN=function(x) paste(x, collapse = "|")) |>
+                               FUN=function(x) paste(x, collapse = ";")) |>
   setNames(c("report_uuid", "issue_code", "gov_entity", "issue_text"))
 
 #####
@@ -182,12 +182,14 @@ lobbying <- merge(lobbying, lobby_client, by = "client_uuid", all.x = T)
 lobbying$amount_num <- gsub(",|\\$", "", lobbying$amount)
 lobbying$amount_num <- as.numeric(lobbying$amount_num)
 
+lobbying$report_quarter_code <- as.character(lobbying$report_quarter_code)
+
 
 ## we match with firm data based on BvDID, so all clients under the same bvdid are assigned a consistent name
 
 ## here I want to collapse the lobbying data to the FIRM-year level - which would mean no duplication of client_uuid-year-bvdid (remove client_uuid)
 
-collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name")],
+collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code")],
                   by=list(lobbying$report_year, lobbying$bvdid),
                   FUN = function(x) paste(x, collapse = "|"))
 
@@ -198,11 +200,44 @@ collapse.num <- aggregate(lobbying[, c("amount_num")],
 lobbying_firmyear <- merge(collapse.char, collapse.num)
 names(lobbying_firmyear) <- c("report_year", "bvdid", "client_uuid", "client_name", 
                               "report_uuid", "issue_code", "gov_entity", "issue_text", 
-                              "registrant_uuid", "registrant_name", "amount_num")
+                              "registrant_uuid", "registrant_name", "report_quarter_code", "amount_num")
 
 lobbying_firmyear$n_issue_codes <- str_count(lobbying_firmyear$issue_code, "\\|") + 1
 
+###
+
 rm(list = setdiff(ls(), "lobbying_firmyear"))
+
+#####
+
+lobbying_firmyear[1,]
+
+a <- strsplit(lobbying_firmyear$issue_code[1], "\\|")[[1]]
+b <- grepl("ENV|CAW|ENG|FUE", a)
+#b <- a %in% c("ENV", "CAW", "ENG", "FUE")
+quarters <- strsplit(lobbying_firmyear$report_quarter_code[1], "\\|")[[1]]
+
+q1 <- grepl("1", quarters)
+q2 <- grepl("2", quarters)
+q3 <- grepl("3", quarters)
+q4 <- grepl("4", quarters)
+
+q1 <- lapply(quarters, FUN = function(x) strsplit(x, split="")[[1]])[b]
+q1_T <- unlist(lapply(q1, FUN = function(x) "1" %in% x))
+#q1_T <- unlist(lapply(q1, FUN = function(x) "1" %in% x))
+
+
+
+
+
+
+
+
+unique(quarters)
+
+lobbying_firmyear$amount_num
+
+
 
 #####
 

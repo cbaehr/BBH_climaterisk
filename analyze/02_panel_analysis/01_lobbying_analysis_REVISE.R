@@ -18,6 +18,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
 df_REV <- fread("data/03_final/lobbying_df_wide_reduced_REVISE_normal.csv")
 
+View(df[, c("year_quarter", "gvkey", "CLI", "CLI_dollars")])
+
 # Specify covariate names
 cm <- c("op_expo_ew_y" = "Opportunity Exposure",
         "rg_expo_ew_y" = "Regulatory Exposure",
