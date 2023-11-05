@@ -1,7 +1,7 @@
 
-setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
-pacman::p_load(fastLink)
+pacman::p_load(fastLink, tidyverse)
 
 rm(list = ls())
 
@@ -32,6 +32,7 @@ exposure_cs <- exposure_cs[!(duplicate_gvkey | duplicate_isin), ]
 
 ## reshape main exposure data from long to wide - we want all the variables, but
 ## just for the subset of firms we identified above
+exposurey <- exposurey[, !names(exposurey) %in% c("gvkey", "hqcountrycode")] # omitting gvkey and hq code so they arent repeated
 exposurey_wide <- reshape(exposurey, idvar = "isin", timevar = "year", direction = "wide", sep = "_")
 exposurey_wide <- merge(exposurey_wide, exposure_cs) # only keep firms with isin in exposure_cs (legit candidates)
 
@@ -43,7 +44,7 @@ rm(list = setdiff(ls(), "exposurey_wide")) # exposurey_wide all we need to keep 
 #####
 
 ## read in orbis firm covariate data
-orbis <- read.csv("02_processed/orbis_11_03_2023.csv", stringsAsFactors = F)
+orbis <- read.csv("02_processed/orbis_11_05_2023.csv", stringsAsFactors = F)
 
 orbis <- orbis[!is.na(orbis$isin), ] # since merging with sautner on isin, no need for NA isin rows
 # sum(duplicated(orbis$isin))
@@ -125,7 +126,7 @@ duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | (duplica
 names(duplicates)
 duplicates <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016",
                              "gvkey", "hqcountrycode", "conm",
-                             "total_asset_year1", "client_uuid", "client_name")]
+                             "total_assets_usd_2016", "client_uuid", "client_name")]
 write.csv(duplicates, "/Users/christianbaehr/Desktop/orbis_lobbyview_match_duplicate.csv", row.names=F)
 ## these are the cases where we do have a match between orbis-lobbying (either gvkey or bvdid),
 ## but the relationship between gvkey/bvdid <-> isin is NOT one-to-one
@@ -205,12 +206,12 @@ sum(paste0(e$bvdid, "L") %in% lobby_client$bvdid & (!e$bvdid %in% duplicates$bvd
 
 ## no real luck
 
-e_us_nogvkeydups <- e_us[!is.na(e_us$gvkey), ]
-test <- lapply(e_us_nogvkeydups$gvkey, FUN = function(x) as.numeric(adist(x, lobby_client$gvkey)))
-test2 <- sapply(test, FUN = function(x) min(x, na.rm=T))
-
-sum(test2==0)
-sum(e_us_nogvkeydups$gvkey[test2==0] %in% duplicates$gvkey)
+## takes a LONG TIME
+#e_us_nogvkeydups <- e_us[!is.na(e_us$gvkey), ]
+#test <- lapply(e_us_nogvkeydups$gvkey, FUN = function(x) as.numeric(adist(x, lobby_client$gvkey)))
+#test2 <- sapply(test, FUN = function(x) min(x, na.rm=T))
+#sum(test2==0)
+#sum(e_us_nogvkeydups$gvkey[test2==0] %in% duplicates$gvkey) # all the zero distance matches are just duplicates
 
 ## no luck getting additional matches
 
@@ -219,11 +220,43 @@ sum(e_us_nogvkeydups$gvkey[test2==0] %in% duplicates$gvkey)
 ## the legit matches are stored in d -- rename
 exposure_orbis_lobby_wide <- d
 
-names(exposure_orbis_lobby_wide)
+timespan <- 1999:2023
 
-View(exposure_orbis_lobby_wide[, c("bvdid", "isin", "n_employees_lastavail",
-                                   "n_employees_1", "n_employees_2",
-                                   "lastavail")])
+time_varying <- c("cc_expo_ew_", "cc_risk_ew_", "cc_pos_ew_", "cc_neg_ew_",
+                  "cc_sent_ew_", "op_expo_ew_", "op_risk_ew_", "op_pos_ew_",
+                  "op_neg_ew_", "op_sent_ew_", "rg_expo_ew_", "rg_risk_ew_",
+                  "rg_pos_ew_", "rg_neg_ew_", "rg_sent_ew_", "ph_expo_ew_", 
+                  "ph_risk_ew_", "ph_pos_ew_", "ph_neg_ew_", "ph_sent_ew_",
+                  "total_assets_usd_", "n_employees_", "operating_rev_usd_",
+                  "P_L_b4tax_usd_")
+
+moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
+
+# adding columns with all missing values where necessary to get balanced 
+# time-dependent variables (needed for reshape function)
+missing_cols <- unlist(moving_list)[!(unlist(moving_list) %in% names(exposure_orbis_lobby_wide))]
+exposure_orbis_lobby_wide[, missing_cols] <- NA
+
+## reshape data from wide to long format
+exposure_orbis_lobby_long <- reshape(exposure_orbis_lobby_wide,
+                                     direction="long",
+                                     varying=moving_list,
+                                     times=timespan,
+                                     timevar="year",
+                                     idvar="isin")
+
+names(exposure_orbis_lobby_long) <- gsub("_1999", "", names(exposure_orbis_lobby_long))
+
+# summary(exposure_orbis_lobby_long$op_expo_ew[which(exposure_orbis_lobby_long$year==2010)])
+# summary(exposure_orbis_lobby_wide$op_expo_ew_2010)
+# 
+# exposure_orbis_lobby_long$n_employees <- as.numeric(exposure_orbis_lobby_long$n_employees)
+# exposure_orbis_lobby_wide$n_employees_2010 <- as.numeric(exposure_orbis_lobby_wide$n_employees_2010)
+# summary(exposure_orbis_lobby_long$n_employees[which(exposure_orbis_lobby_long$year==2010)])
+# summary(exposure_orbis_lobby_wide$n_employees_2010)
+## ^ all suggest that the reshape was successful
+
+write.csv(exposure_orbis_lobby_wide, "03_final/exposure_orbis_lobby_panel_REVISE.csv", row.names = F)
 
 
 
