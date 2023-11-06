@@ -55,6 +55,6 @@ df[, df_wide_cont_vars] <- df_wide_cont
 
 
 # write csv
-fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
+fwrite(df, file="data/03_final/lobbying_df_annual_REVISE_normal.csv")
 
 ### End
