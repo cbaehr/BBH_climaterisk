@@ -127,7 +127,7 @@ names(duplicates)
 duplicates <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016",
                              "gvkey", "hqcountrycode", "conm",
                              "total_assets_usd_2016", "client_uuid", "client_name")]
-write.csv(duplicates, "/Users/christianbaehr/Desktop/orbis_lobbyview_match_duplicate.csv", row.names=F)
+write.csv(duplicates, "xx_other/exposure_orbis_bvdidORgvkey_duplicated.csv", row.names=F)
 ## these are the cases where we do have a match between orbis-lobbying (either gvkey or bvdid),
 ## but the relationship between gvkey/bvdid <-> isin is NOT one-to-one
 
@@ -219,6 +219,9 @@ sum(paste0(e$bvdid, "L") %in% lobby_client$bvdid & (!e$bvdid %in% duplicates$bvd
 
 ## the legit matches are stored in d -- rename
 exposure_orbis_lobby_wide <- d
+duplicate_client_uuid <- duplicated(exposure_orbis_lobby_wide$client_uuid) | duplicated(exposure_orbis_lobby_wide$client_uuid, fromLast=T)
+exposure_orbis_lobby_wide <- exposure_orbis_lobby_wide[!duplicate_client_uuid, ]
+#View(exposure_orbis_lobby_wide[duplicated(exposure_orbis_lobby_wide$client_uuid) | duplicated(exposure_orbis_lobby_wide$client_uuid, fromLast=T),])
 
 timespan <- 1999:2023
 
@@ -256,14 +259,14 @@ names(exposure_orbis_lobby_long) <- gsub("_1999", "", names(exposure_orbis_lobby
 # summary(exposure_orbis_lobby_wide$n_employees_2010)
 ## ^ all suggest that the reshape was successful
 
-write.csv(exposure_orbis_lobby_wide, "02_processed/exposure_orbis_lobbyclient_wide_REVISE.csv", row.names = F)
-write.csv(exposure_orbis_lobby_long, "02_processed/exposure_orbis_lobbyclient_long_REVISE.csv", row.names = F)
+write.csv(exposure_orbis_lobby_wide, "02_processed/exposure_orbis_client_wide_REVISE.csv", row.names = F)
+write.csv(exposure_orbis_lobby_long, "02_processed/exposure_orbis_client_long_REVISE.csv", row.names = F)
 
 ## want to think about whether we want to assume that all firms in exposure-orbis, but 
 ## that cant be matched with LobbyView, are actually just all NON LOBBYING firms??? Do 
 ## we want to include these in our final dataset as such???
 
-
+## 6 cases of duplicated client_uuid in orbis wide data. Want to remove? YES. Done
 
 
 
