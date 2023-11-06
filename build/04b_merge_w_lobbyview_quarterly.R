@@ -257,6 +257,12 @@ exposure_orbis_lobbyview_long$ebit_at[exposure_orbis_lobbyview_long$ebit_at == (
 drop_clipper2011 <- exposure_orbis_lobbyview_long$conm=="CLIPPER WINDPOWER HOLDINGS LTD" & exposure_orbis_lobbyview_long$year==2011
 exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipper2011), ]
 
+exposure_orbis_lobbyview_long$CLI_quarterly <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarterly)
+exposure_orbis_lobbyview_long$CLI_quarterly[is.na(exposure_orbis_lobbyview_long$CLI_quarterly)] <- 0
+exposure_orbis_lobbyview_long$CLI_amount_quarterly[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarterly)] <- 0
+exposure_orbis_lobbyview_long$total_lobby_quarterly[is.na(exposure_orbis_lobbyview_long$total_lobby_quarterly)] <- 0
+
+
 #hist(exposure_orbis_lobbyview_long$ebit)
 #hist(exposure_orbis_lobbyview_long$at)
 #hist(exposure_orbis_lobbyview_long$ebit_at)
