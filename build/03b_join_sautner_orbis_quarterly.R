@@ -109,7 +109,12 @@ exposure_orbis_wide$gvkey[is.na(exposure_orbis_wide$gvkey)] <- (-2) # use differ
 ## have properly accounted for the possibility of NAs in merging variables.
 
 ## merge exposure_orbis and lobbyview by bvdid (drop gvkey from lobby to avoid multiple variables with same name)
-a <- merge(exposure_orbis_wide, lobby_client[,names(lobby_client)!="gvkey"], by="bvdid")
+a <- merge(exposure_orbis_wide, lobby_client[,names(lobby_client)!="gvkey"], by="bvdid", all.x = T)
+## we are keeping ALL exposure-orbis rows. This is based on our assumption that all firms which we cannot match
+## with lobbyview did NOT lobby at all. We still keep these data in our sample, and treat lobbying amount and
+## presence as all zeroes. Pretty confident there is no duplication of data here, because these guys get no
+## lobbying data, and we are dealing with duplicated bvdid or gvkeys already.
+
 ## merge exposure_orbis and lobbyview by gvkey
 b <- merge(exposure_orbis_wide, lobby_client[,names(lobby_client)!="bvdid"], by="gvkey")
 ## align column names in gvkey matches with those of bvdid matches -> for merging
@@ -221,9 +226,17 @@ sum(paste0(e$bvdid, "L") %in% lobby_client$bvdid & (!e$bvdid %in% duplicates$bvd
 
 ## the legit matches are stored in d -- rename
 exposure_orbis_lobby_wide <- d
-duplicate_client_uuid <- duplicated(exposure_orbis_lobby_wide$client_uuid) | duplicated(exposure_orbis_lobby_wide$client_uuid, fromLast=T)
-exposure_orbis_lobby_wide <- exposure_orbis_lobby_wide[!duplicate_client_uuid, ]
 #View(exposure_orbis_lobby_wide[duplicated(exposure_orbis_lobby_wide$client_uuid) | duplicated(exposure_orbis_lobby_wide$client_uuid, fromLast=T),])
+duplicate_client_uuid <- (duplicated(exposure_orbis_lobby_wide$client_uuid) | duplicated(exposure_orbis_lobby_wide$client_uuid, fromLast=T)) & !is.na(exposure_orbis_lobby_wide$client_uuid)
+## we ignore cases where client_uuid is NA because these are precisely the rows which
+## we assume did NO lobbying whatsoever, and we assume they are zeroes for lobbying measures.
+
+exposure_orbis_lobby_wide <- exposure_orbis_lobby_wide[!duplicate_client_uuid, ]
+exposure_orbis_lobby_wide$client_uuid[is.na(exposure_orbis_lobby_wide$client_uuid)] <- (-1) # for convenience. Ensures no merges screwed up b/c no client_uuids =(-1)
+
+
+sum(duplicated(exposure_orbis_lobby_wide$isin))
+sum(duplicated(exposure_orbis_lobby_wide$bvdid))
 
 #timespan <- 1999:2023
 timespan <- apply(expand.grid(c(1999:2023), c(1:4)), 1, paste, collapse="_")

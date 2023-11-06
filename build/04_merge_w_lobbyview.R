@@ -206,7 +206,7 @@ exposure_orbis_lobbyview_long <- merge(exposure_orbis_long, lobbying_firmyear, b
 sum(duplicated(exposure_orbis_lobbyview_long[, c("isin", "year")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("gvkey", "year")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("bvdid", "year")]))
-sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year")]))
+sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1))
 
 ## need to double check about the duplication situation with "client_uuid". Assume
 ## this means a single company, but maybe not? What exactly is client_uuid versus
@@ -216,7 +216,7 @@ sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year")]))
 ## about 1/3 of our firm-years from exposure_orbis actually getting a companion in LobbyView
 
 exposure_orbis_lobbyview_long$us_dummy <- ifelse(exposure_orbis_lobbyview_long$hqcountrycode=="US", 1, 0)
-exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$sic_core_3digit
+exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$bvdsector
 exposure_orbis_lobbyview_long$industry_year <- paste(exposure_orbis_lobbyview_long$industry, exposure_orbis_lobbyview_long$year)
 
 exposure_orbis_lobbyview_long$ebit <- as.numeric(exposure_orbis_lobbyview_long$P_L_b4tax_usd) # some "n.a."s drop out
