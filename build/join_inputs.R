@@ -1,5 +1,5 @@
 
-if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data")}
 
 pacman::p_load(fastLink, tidyverse)
 
@@ -256,7 +256,12 @@ names(exposure_orbis_lobby_long) <- gsub("_1999", "", names(exposure_orbis_lobby
 # summary(exposure_orbis_lobby_wide$n_employees_2010)
 ## ^ all suggest that the reshape was successful
 
-write.csv(exposure_orbis_lobby_wide, "03_final/exposure_orbis_lobby_panel_REVISE.csv", row.names = F)
+write.csv(exposure_orbis_lobby_wide, "02_processed/exposure_orbis_lobbyclient_wide_REVISE.csv", row.names = F)
+write.csv(exposure_orbis_lobby_long, "02_processed/exposure_orbis_lobbyclient_long_REVISE.csv", row.names = F)
+
+## want to think about whether we want to assume that all firms in exposure-orbis, but 
+## that cant be matched with LobbyView, are actually just all NON LOBBYING firms??? Do 
+## we want to include these in our final dataset as such???
 
 
 
