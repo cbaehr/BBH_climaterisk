@@ -175,12 +175,29 @@ lobbying_firmyear$CLI_amount_q2 <- climate_amount_q2
 lobbying_firmyear$CLI_amount_q3 <- climate_amount_q3
 lobbying_firmyear$CLI_amount_q4 <- climate_amount_q4
 
+#####
+
+total_lobby_annual <- sapply(amount_split, FUN = function(x) sum(as.numeric(x), na.rm=T))
+lobbying_firmyear$total_lobby_annual <- total_lobby_annual
+
+total_lobby_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, q1_proportion)
+total_lobby_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, q2_proportion)
+total_lobby_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, q3_proportion)
+total_lobby_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, q4_proportion)
+
+lobbying_firmyear$total_lobby_q1 <- total_lobby_q1
+lobbying_firmyear$total_lobby_q2 <- total_lobby_q2
+lobbying_firmyear$total_lobby_q3 <- total_lobby_q3
+lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
+
+#####
+
 rm(list = setdiff(ls(), "lobbying_firmyear"))
 
 #####
 
 timespan <- paste0("q", 1:4)
-time_varying <- c("CLI_", "CLI_amount_")
+time_varying <- c("CLI_", "CLI_amount_", "total_lobby_")
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 ## reshape data from wide to long format
 
@@ -196,6 +213,7 @@ lobbying_firmquarter <- reshape(lobbying_firmyear,
 
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarterly"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarterly"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="total_lobby_q1"] <- "total_lobby_quarterly"
 
 lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 

@@ -12,14 +12,15 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 pacman::p_load(data.table, tidyverse)
 
 #Load data
-df <- fread("data/03_final/lobbying_df_wide_reduced_REVISE.csv")
+df <- fread("data/03_final/lobbying_df_quarterly_REVISE.csv")
 df <- data.frame(df)
 
 #Normalize variables for interpretation 
 
 ## continuous variables in regression models
-df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew",
-                       "ebit_at", "total_lobby")
+# df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew",
+#                        "ebit_at", "total_lobby_quarterly")
+df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
 ## pull from main data
 df_wide_cont <- df[, df_wide_cont_vars]
 ## rescale to standard normal
@@ -29,6 +30,31 @@ df[, df_wide_cont_vars] <- df_wide_cont
 
 
 # write csv
-fwrite(df, file="data/03_final/lobbying_df_wide_reduced_REVISE_normal.csv")
+fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
+
+### End
+
+
+#Load data
+df <- fread("data/03_final/lobbying_df_REVISE.csv")
+df <- data.frame(df)
+#Normalize variables for interpretation 
+
+## continuous variables in regression models
+df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
+# df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew",
+#                        "ebit_at", "total_lobby_annual")
+## pull from main data
+df_wide_cont <- df[, df_wide_cont_vars]
+df_wide_cont <- data.frame(apply(df_wide_cont, 2, as.numeric))
+
+## rescale to standard normal
+df_wide_cont <- scale(df_wide_cont)
+## slot back into main df_wide
+df[, df_wide_cont_vars] <- df_wide_cont
+
+
+# write csv
+fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
 ### End
