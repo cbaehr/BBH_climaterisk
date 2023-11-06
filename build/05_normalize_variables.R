@@ -36,7 +36,7 @@ fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
 
 #Load data
-df <- fread("data/03_final/lobbying_df_REVISE.csv")
+df <- fread("data/03_final/lobbying_df_annual_REVISE.csv")
 df <- data.frame(df)
 #Normalize variables for interpretation 
 

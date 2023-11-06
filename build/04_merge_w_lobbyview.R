@@ -241,7 +241,7 @@ exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_
 
 
 ## write csv
-write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_REVISE.csv", row.names=F)
+write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)
 
 
 

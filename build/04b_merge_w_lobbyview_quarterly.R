@@ -243,7 +243,7 @@ sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")])
 ## about 1/3 of our firm-years from exposure_orbis actually getting a companion in LobbyView
 
 exposure_orbis_lobbyview_long$us_dummy <- ifelse(exposure_orbis_lobbyview_long$hqcountrycode=="US", 1, 0)
-exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$sic_core_3digit
+exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$bvdsector
 exposure_orbis_lobbyview_long$industry_year <- paste(exposure_orbis_lobbyview_long$industry, exposure_orbis_lobbyview_long$year)
 
 exposure_orbis_lobbyview_long$ebit <- as.numeric(exposure_orbis_lobbyview_long$P_L_b4tax_usd) # some "n.a."s drop out
