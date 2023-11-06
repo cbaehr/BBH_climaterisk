@@ -34,6 +34,7 @@ fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
 ### End
 
+rm(list = ls())
 
 #Load data
 df <- fread("data/03_final/lobbying_df_annual_REVISE.csv")

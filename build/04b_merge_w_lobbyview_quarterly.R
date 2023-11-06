@@ -233,7 +233,7 @@ exposure_orbis_lobbyview_long <- merge(exposure_orbis_long, lobbying_firmquarter
 sum(duplicated(exposure_orbis_lobbyview_long[, c("isin", "year", "qtr")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("gvkey", "year", "qtr")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("bvdid", "year", "qtr")]))
-sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")])) #good
+sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1)) #good
 
 ## need to double check about the duplication situation with "client_uuid". Assume
 ## this means a single company, but maybe not? What exactly is client_uuid versus
