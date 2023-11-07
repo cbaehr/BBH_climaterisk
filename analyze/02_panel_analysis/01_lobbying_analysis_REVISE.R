@@ -17,6 +17,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # load data
 df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
 df_REV <- fread("data/03_final/lobbying_df_annual_REVISE_normal.csv")
+df_quarterly <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
 #View(df[, c("year_quarter", "gvkey", "CLI", "CLI_dollars")])
 
@@ -34,7 +35,9 @@ cm <- c("op_expo_ew_y" = "Opportunity Exposure",
         "ebit_at" = "EBIT/Assets",
         "log_co2_l1" = "Log(Total CO2 Emissions)",
         "us_dummy" = "US HQ",
-        "total_lobby" = "Total Lobbying ($)"
+        "total_lobby" = "Total Lobbying ($)",
+        "total_lobby_annual" = "Total Lobbying ($)",
+        "total_lobby_quarterly" = "Total Lobbying ($)"
 )
 
 
@@ -67,13 +70,17 @@ cm <- c("op_expo_ew_y" = "Opportunity Exposure",
 
 df$bvdid <- df$gvkey_n
 
-sum(is.na(df_REV$CLI))
-df_REV$CLI[is.na(df_REV$CLI)] <- 0
-df_REV$CLI_dollars[is.na(df_REV$CLI_dollars)] <- 0
+sum(is.na(df_REV$CLI_annual))
+
+table(df_REV$CLI_annual)
+
+summary(df$total_lobby)
+summary(df_REV$total_lobby_annual)
 
 models <- list(
   "Orig" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
-  "New" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df_REV)
+  "New" = feglm(CLI_annual ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby_annual | year + industry + industry_year, family = "binomial", df_REV),
+  "New Q" = feglm(CLI_quarterly ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby_quarterly | year + industry + industry_year, family = "binomial", df_quarterly)
 )
 
 modelsummary(
@@ -83,7 +90,7 @@ modelsummary(
   ,coef_map = cm
   ,vcov = ~ year + bvdid
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  ,output = "results/tables/climate_logit_year_COMPARE.tex"
+  # ,output = "results/tables/climate_logit_year_COMPARE.tex"
 )
 
 
@@ -96,7 +103,8 @@ modelsummary(
 ## Overall climate lobbying (DOLLARS), overall exposure for annual
 models <- list(
   "Old" = feols(log(CLI_dollars +1) ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, df),
-  "New" = feols(log(CLI_dollars +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby | year + industry + industry_year, df_REV)
+  "New" = feols(log(CLI_amount_annual +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby_annual | year + industry + industry_year, df_REV),
+  "New Q" = feols(log(CLI_amount_quarterly+1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at + us_dummy + total_lobby_quarterly | year + industry + industry_year, family = "binomial", df_quarterly)
 )
 
 # Tobit model
@@ -110,7 +118,7 @@ modelsummary(
   ,coef_map = cm
   ,vcov = ~ year + bvdid
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  ,output = "results/tables/climate_ols_dollars_year_COMPARE.tex"
+  # ,output = "results/tables/climate_ols_dollars_year_COMPARE.tex"
 )
 
 
