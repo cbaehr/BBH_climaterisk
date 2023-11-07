@@ -9,7 +9,7 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
 
 # load packages
-pacman::p_load(data.table, tidyverse)
+pacman::p_load(data.table, tidyverse, haven)
 
 #Load data
 df <- fread("data/03_final/lobbying_df_quarterly_REVISE.csv")
@@ -31,6 +31,14 @@ df[, df_wide_cont_vars] <- df_wide_cont
 
 # write csv
 fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
+
+df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue_text",
+                                  "report_uuid", "report_quarter_code", "registrant_uuid", "registrant_name",
+                                  "naics_2022_primary", "naics_2022_secondary", "naics_2017_primary",
+                                  "naics_2017_secondary", "bvdaccount", "client_name", "nace_primary",
+                                  "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
+                                  "bvdsector", "primary_naics", "amount_num")]
+write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata.dta")
 
 ### End
 
@@ -58,4 +66,11 @@ df[, df_wide_cont_vars] <- df_wide_cont
 # write csv
 fwrite(df, file="data/03_final/lobbying_df_annual_REVISE_normal.csv")
 
+df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue_text",
+                                  "report_uuid", "report_quarter_code", "registrant_uuid", "registrant_name",
+                                  "naics_2022_primary", "naics_2022_secondary", "naics_2017_primary",
+                                  "naics_2017_secondary", "bvdaccount", "client_name", "nace_primary",
+                                  "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
+                                  "bvdsector", "primary_naics", "amount_num")]
+write_dta(df_dta, path="data/03_final/lobbying_df_annual_REVISE_normal_stata.dta")
 ### End
