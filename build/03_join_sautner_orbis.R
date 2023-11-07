@@ -178,6 +178,99 @@ write.csv(duplicates_out, "xx_other/exposure_orbis_bvdidORgvkey_duplicated.csv",
 ## these are the cases where we do have a match between orbis-lobbying (either gvkey or bvdid),
 ## but the relationship between gvkey/bvdid <-> isin is NOT one-to-one
 
+#####
+
+## these are the remaining rows that have multiple client_uuid's associated with a single
+## isin code. This is overwhelmingly because the company name in Lobbyview is marginally screwed
+## up, but nonetheless LobbyView codes them as separate companies.
+
+## note there are a few problem cases that actually have duplicated client_uuids - will need
+## to deal with these separately
+clientnm_issues <- duplicates[which(!duplicates$NA_col & !is.na(duplicates$client_name)), ]
+
+report <- read.csv("01_raw/lobbyview/dataset___report_level.csv", stringsAsFactors = F)
+report <- report[which(report$client_uuid %in% clientnm_issues$client_uuid), ]
+sum(duplicated(report$client_uuid))
+sum(duplicated(report[, c("client_uuid", "report_uuid")])) #no report IDs duplicated
+
+## want to create new variables for each row that contain 1) all the rows OWN lobbying years 
+## and 2) all lobbying years for different rows with the SAME isin. We will then check
+## whether row i shares any lobbying years with its other isin brethren. If NOT,
+## then we feel comfortable folding row i back into the main dataframe
+for(i in 1:nrow(clientnm_issues)) {
+  if(i==1) {
+    ## empty vectors for storage
+    client_uuid_yrs <- c()
+    isin_yrs <- c()
+    
+  }
+  ## retrieve all the reporting years for a given client_uuid
+  self <- which(report$client_uuid==clientnm_issues$client_uuid[i])
+  self_yrs <- unique(report$report_year[which(report$client_uuid==clientnm_issues$client_uuid[i])])
+  
+  ## retrieve all reporting years for OTHER client_uuids under the SAME isin
+  others <- which(clientnm_issues$isin == clientnm_issues$isin[i])
+  others <- setdiff(others, i) # remove self (want to see if i has same or different years as all OTHERS)
+  others_yrs <- unique(report$report_year[which(report$client_uuid %in% clientnm_issues$client_uuid[others])])
+  
+  ## stash as new elements
+  client_uuid_yrs <- c(client_uuid_yrs, list(self_yrs))
+  isin_yrs <- c(isin_yrs, list(others_yrs))
+}
+
+distinctyear_test <- mapply(FUN = function(x1, x2) {!any(x1 %in% x2)}, client_uuid_yrs, isin_yrs)
+sum(distinctyear_test)
+## these are the ones where we can easily fold these back into the main data.
+## Because if they fail this test, it means that these client_uuids all falling under
+## the same isin code do NOT have any years in common. So there is no concern of double
+## counting or anything like that
+
+
+overlapping_years <- clientnm_issues[!distinctyear_test,]
+## these are the cases where years from one client_uuid overlap with years from another client_uuid
+## all under the same isin umbrella. These cases could be a problem if e.g. the lobbying dollars
+## for a given year are double counted
+
+## this is all to produce years and dollar amounts for lobbying by each client_uuid,
+## so Vincent can analyze for potential duplications. 
+for(i in 1:nrow(overlapping_years)) {
+  if(i==1) {
+    client_uuid_amt <- c()
+    client_uuid_yrs <- c()
+  }
+  self <- which(report$client_uuid==overlapping_years$client_uuid[i])
+  self_amt <- report$amount[which(report$client_uuid==overlapping_years$client_uuid[i])]
+  self_yrs <- report$report_year[which(report$client_uuid==overlapping_years$client_uuid[i])]
+  
+  client_uuid_amt <- c(client_uuid_amt, list(self_amt))
+  client_uuid_yrs <- c(client_uuid_yrs, list(self_yrs))
+}
+
+overlapping_years$client_uuid_amounts <- client_uuid_amt
+overlapping_years$client_uuid_years <- client_uuid_yrs
+
+## function to make the df long (currently all years/amounts housed in lists)
+rowtodf <- function(x) {
+  out <- data.frame(bvdid=x["bvdid"],
+                    isin=x["isin"],
+                    gvkey=x["gvkey"],
+                    hqcountrycode=x["hqcountrycode"],
+                    conm=x["conm"],
+                    client_uuid=x["client_uuid"],
+                    client_name=x["client_name"],
+                    year=x["client_uuid_years"],
+                    amount=x["client_uuid_amounts"])
+  return(out)
+}
+
+overlapping_yrs_long <- apply(overlapping_years, 1, rowtodf)
+out <- do.call(rbind, overlapping_yrs_long)
+write.csv(out, "xx_other/duplicates_reportyears_overlap.csv", row.names = F)
+
+#####
+
+
+
 # get columns with different values
 get_col <- d %>% 
   group_by(bvdid) %>%
@@ -194,6 +287,7 @@ d <- d[!( (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)) & d$gvkey!=(-1) 
 ## want to incorporate rows from duplicates where keep_override is TRUE back into d. These are the rows
 ## which have lobbyview data and are not truly duplicated in the main data.
 d <- rbind(d, duplicates[which(duplicates$keep_override), names(d)])
+d <- rbind(d, clientnm_issues[distinctyear_test, names(d)]) # keep those rows with duplicate isins that pass the "distinct years"
 
 unique(d$gvkey[duplicated(d$gvkey)]) # only -1 is duplicated for gvkey. This is ok because these are all essentially rows
                                      # with no corresponding lobbyview row. They will get 0's for lobbyview variables.
