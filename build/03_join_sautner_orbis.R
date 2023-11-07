@@ -152,7 +152,7 @@ d <- d[!duplicated(d), ]
 #View(d[duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T), ]) # bunch of duplicate gvkeys, single isin
 
 
-duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)), ]
+duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | ((duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T))&d$gvkey!=(-1)), ]
 names(duplicates)
 duplicates <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016",
                              "gvkey", "hqcountrycode", "conm",
