@@ -58,6 +58,7 @@ lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
 ## just treat lobbying amount as zero if missing -> wont affect the amount calculations, because
 ## missing would just be dropped. But makes the mapply easier
 lobbying$amount[which(lobbying$amount=="")] <- 0
+lobbying$gov_entity[lobbying$gov_entity==""] <- NA
 
 # collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
 #                   by=list(lobbying$report_year, lobbying$bvdid),
@@ -116,10 +117,32 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 ## for each row, we compute whether for any lobbying reports A) the report is about a climate issue
 ## AND B) the report is for qX . If any reports for that firm-year meet this criteria, they get a TRUE; else FALSE.
 
+gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
+
+doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
+epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
+
+lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
+lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
+
+lobbying_firmyear$CLI_DOE_q1 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q1)
+lobbying_firmyear$CLI_EPA_q1 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q1)
+
+lobbying_firmyear$CLI_DOE_q2 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q2)
+lobbying_firmyear$CLI_EPA_q2 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q2)
+
+lobbying_firmyear$CLI_DOE_q3 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q3)
+lobbying_firmyear$CLI_EPA_q3 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q3)
+
+lobbying_firmyear$CLI_DOE_q4 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q4)
+lobbying_firmyear$CLI_EPA_q4 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q4)
 
 #summary(lobbying_firmyear$CLI_annual)
 #summary(lobbying_firmyear$CLI_q1 | lobbying_firmyear$CLI_q2 | lobbying_firmyear$CLI_q3 | lobbying_firmyear$CLI_q4)
 ## same distro of T/F values as should be
+
+#summary(lobbying_firmyear$CLI_DOE_annual)
+#summary(lobbying_firmyear$CLI_DOE_q1 | lobbying_firmyear$CLI_DOE_q2 | lobbying_firmyear$CLI_DOE_q3 | lobbying_firmyear$CLI_DOE_q4)
 
 ## now move on to AMOUNT
 
@@ -175,6 +198,35 @@ lobbying_firmyear$CLI_amount_q2 <- climate_amount_q2
 lobbying_firmyear$CLI_amount_q3 <- climate_amount_q3
 lobbying_firmyear$CLI_amount_q4 <- climate_amount_q4
 
+
+doe_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("DEPARTMENT OF ENERGY", y))}[[1]])})
+epa_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENVIRONMENTAL PROTECTION AGENCY", y))}[[1]])})
+
+## product of q1 * "climate issue" proportion
+total_proportion_doe_q1 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q1_proportion, climate_issue_proportion, doe_proportion)
+total_proportion_doe_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_proportion, climate_issue_proportion, doe_proportion)
+total_proportion_doe_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, doe_proportion)
+total_proportion_doe_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, doe_proportion)
+
+## scale report amount by the product of a) proportion of issues in the report that are climate
+## and b) proportion of gov entities in the report that are DOE (EPA)
+doe_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q1)
+epa_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, epa_proportion)
+
+lobbying_firmyear$CLI_DOE_amount_annual <- doe_amount
+lobbying_firmyear$CLI_EPA_amount_annual <- epa_amount
+
+# amount_split[900]
+# climate_issue[900]
+# climate_issue_proportion[900]
+# epa_proportion[900]
+# epa_amount[900]
+# doe_amount[900]
+
+
+
+
+
 #####
 
 total_lobby_annual <- sapply(amount_split, FUN = function(x) sum(as.numeric(x), na.rm=T))
@@ -197,7 +249,7 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 #####
 
 timespan <- paste0("q", 1:4)
-time_varying <- c("CLI_", "CLI_amount_", "total_lobby_")
+time_varying <- c("CLI_", "CLI_amount_", "CLI_DOE_", "CLI_EPA_", "total_lobby_")
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 ## reshape data from wide to long format
 
@@ -213,6 +265,8 @@ lobbying_firmquarter <- reshape(lobbying_firmyear,
 
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarterly"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarterly"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarterly"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarterly"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="total_lobby_q1"] <- "total_lobby_quarterly"
 
 lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)

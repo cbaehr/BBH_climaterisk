@@ -58,6 +58,7 @@ lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
 ## just treat lobbying amount as zero if missing -> wont affect the amount calculations, because
 ## missing would just be dropped. But makes the mapply easier
 lobbying$amount[which(lobbying$amount=="")] <- 0
+lobbying$gov_entity[lobbying$gov_entity==""] <- NA
 
 # collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
 #                   by=list(lobbying$report_year, lobbying$bvdid),
@@ -116,6 +117,28 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 ## for each row, we compute whether for any lobbying reports A) the report is about a climate issue
 ## AND B) the report is for qX . If any reports for that firm-year meet this criteria, they get a TRUE; else FALSE.
 
+gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
+doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
+epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
+
+lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
+lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
+
+# lobbying_firmyear$gov_entity[900]
+# gov_entity_split[900]
+# doe[900]
+# epa[900]
+# issue_code_split[900]
+# climate_issue[900]
+# lobbying_firmyear$CLI_DOE_annual[900]
+# lobbying_firmyear$CLI_EPA_annual[900]
+# lobbying_firmyear$CLI_EPA_annual[180]
+
+# test <- mapply(FUN = function(x1, x2) {any(length(x1) != length(x2))}, climate_issue, epa)
+# which(test)[1:10]
+# lobbying_firmyear$gov_entity[1]
+# lobbying_firmyear$issue_code[1]
+
 
 #summary(lobbying_firmyear$CLI_annual)
 #summary(lobbying_firmyear$CLI_q1 | lobbying_firmyear$CLI_q2 | lobbying_firmyear$CLI_q3 | lobbying_firmyear$CLI_q4)
@@ -140,6 +163,43 @@ lobbying_firmyear$CLI_amount_annual <- climate_amount
 
 ## to do for annual was easy - just needed to compute the proportion of issues that
 ## were climate for each report, then scale it by the dollar amount.
+
+#gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
+#doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
+#epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
+#lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
+#lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
+
+doe_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("DEPARTMENT OF ENERGY", y))}[[1]])})
+epa_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENVIRONMENTAL PROTECTION AGENCY", y))}[[1]])})
+
+## scale report amount by the product of a) proportion of issues in the report that are climate
+## and b) proportion of gov entities in the report that are DOE (EPA)
+doe_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, doe_proportion)
+epa_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, epa_proportion)
+
+lobbying_firmyear$CLI_DOE_amount_annual <- doe_amount
+lobbying_firmyear$CLI_EPA_amount_annual <- epa_amount
+
+# amount_split[900]
+# climate_issue[900]
+# climate_issue_proportion[900]
+# epa_proportion[900]
+# epa_amount[900]
+# doe_amount[900]
+
+# lobbying_firmyear$gov_entity[900]
+# gov_entity_split[900]
+# doe[900]
+# epa[900]
+# issue_code_split[900]
+# climate_issue[900]
+# lobbying_firmyear$CLI_DOE_annual[900]
+# lobbying_firmyear$CLI_EPA_annual[900]
+# lobbying_firmyear$CLI_EPA_annual[180]
+
+
+
 
 ## it is trickier to do for quarterly, because now we need to break down by report
 ## and determine if each report is in the quarter of interest
