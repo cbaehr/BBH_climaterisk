@@ -121,6 +121,28 @@ b <- merge(exposure_orbis_wide, lobby_client[,names(lobby_client)!="bvdid"], by=
 b <- b[,names(a)]
 
 d <- rbind(a, b) # stack the two datasets together - then drop duplicates
+
+
+### Inspect duplicates
+# inspect
+# This id comes up in duplicates data, but it comes up only once in the original data
+# WHY DUPLICATE?
+inspect_a <- a |> filter(bvdid == "AEFEB33018") 
+inspect_b <- b |> filter(bvdid == "AEFEB33018")
+inspect_d <- d |> filter(bvdid == "AEFEB33018")
+
+
+## Function that creates column that lists all columns for which values across rows are different
+func <- function(X) {
+  paste(names(
+    Filter(function(z) length(z) > 1,
+           lapply(X, unique))
+  ), collapse = ";")
+}
+
+# get columns with different values
+get_col_insp <- inspect_d %>% mutate(col_diff = func(cur_data()))
+
 d <- d[!duplicated(d), ]
 
 #sum(duplicated(d$bvdid))
@@ -128,6 +150,7 @@ d <- d[!duplicated(d), ]
 
 #sum(duplicated(d$gvkey))
 #View(d[duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T), ]) # bunch of duplicate gvkeys, single isin
+
 
 duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)), ]
 names(duplicates)
@@ -137,6 +160,16 @@ duplicates <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016",
 write.csv(duplicates, "xx_other/exposure_orbis_bvdidORgvkey_duplicated.csv", row.names=F)
 ## these are the cases where we do have a match between orbis-lobbying (either gvkey or bvdid),
 ## but the relationship between gvkey/bvdid <-> isin is NOT one-to-one
+
+# get columns with different values
+get_col <- d %>% 
+  group_by(bvdid) %>%
+  mutate(col_diff = func(cur_data())) %>%
+  ungroup() %>%
+  filter(bvdid %in% duplicates$bvdid)
+
+table(get_col$col_diff)
+
 
 d <- d[!(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)), ]## need to OMIT for now those cases which have multiple bvdids to a single isin
 d <- d[!(duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)), ]## need to OMIT for now those cases which have multiple gvkeys to a single isin
