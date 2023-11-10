@@ -46,6 +46,7 @@ rm(list = setdiff(ls(), "exposurey_wide")) # exposurey_wide all we need to keep 
 
 ## read in orbis firm covariate data
 orbis <- read.csv("02_processed/orbis_11_06_2023.csv", stringsAsFactors = F)
+orbis$total_assets_usd_2019[which(orbis$conm=="GRUPO COMERCIAL CHEDRAUI")] <- NA
 
 orbis <- orbis[!is.na(orbis$isin), ] # since merging with sautner on isin, no need for NA isin rows
 # sum(duplicated(orbis$isin))
