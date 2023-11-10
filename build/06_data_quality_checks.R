@@ -10,27 +10,25 @@ df <- read.csv("data/03_final/lobbying_df_annual_REVISE_normal.csv", stringsAsFa
 
 df$ph_expo_ew <- as.numeric(df$ph_expo_ew)
 df$op_expo_ew <- as.numeric(df$op_expo_ew)
-df$total_assets_usd <- as.numeric(df$total_assets_usd)
-df$ebit <- as.numeric(df$ebit)
 
-hist(df$total_assets_usd)
-unique(df$conm[which(df$total_assets_usd>3000000000)])
+hist(df$at)
+unique(df$conm[which(df$at>3000000000)])
 ## these seem like reasonable companies
-hist(df$total_assets_usd[which(df$total_assets_usd<300000000)])
+hist(df$at[which(df$at<300000000)])
 ## see a bit more expected gradation when omitting the major firms
 
 hist(df$ebit)
 unique(df$conm[which(df$ebit>50000000)])
 ## again, seem like reasonable companies
 
-df$ebit_at <- df$ebit / df$at
+df$ebit_at
 hist(df$ebit_at)
 unique(df$conm[which(df$ebit_at>40000)])
 ## no strong expectations here
 
 ## generating COMPANY level z-scores for total assets - values further away from
 ## zero suggest increasingly UNLIKELY values to be realized for a company
-test <- tapply(df$total_assets_usd, INDEX = list(df$conm), FUN = function(x) scale(x))
+test <- tapply(df$at, INDEX = list(df$conm), FUN = function(x) scale(x))
 test <- unlist(test)
 hist(test)
 summary(test)
