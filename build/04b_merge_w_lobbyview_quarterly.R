@@ -44,6 +44,42 @@ lobby_issuetext_nodup <- aggregate(lobby_issuetext[, c("issue_code", "gov_entity
 
 #####
 
+## there are some cases in the exposure_orbis data with multiple client_uuids for 
+## a single isin code. These are ok to include -- we already made sure we arent duplicating
+## data. However, to properly merge the lobbyview data with the exposure_orbis data,
+## we need to treat the various members of the same isin with the same client_uuid. 
+## this will ensure they all get fed into the same aggregation process. I reassign
+## new client_uuids that are unique at the isin level -- they are just
+## "client_uuid1|client_uuid2|client_uuid3|..."
+
+exposure_orbis_wide <- read.csv("data/02_processed/exposure_orbis_client_quarter_wide_REVISE.csv", stringsAsFactors = F)
+relevant <- exposure_orbis_wide[grepl("\\|", exposure_orbis_wide$client_uuid), ] # these are the only client_uuids we need to worry about
+
+getid <- function(x) {
+  id <- grep(x, relevant$client_uuid)
+  if(length(id)>0) {
+    return(id)
+  } else {
+    return(NA)
+  }
+}
+
+## identify which members in lobby_client have a client_uuid that falls into one
+## of the "new" client_uuids I define. I also identify the index of the corresponding
+## "new" client_uuid in exposure_orbis.
+alt_ids <- sapply(lobby_client$client_uuid, FUN=function(x) getid(x))
+table(length(alt_ids)) # they all match with at most one client_uuid in exposure_orbis
+
+## now create a new variable in lobby_client that is an "alternative" client_uuid
+## it is either the "new" client_uuid from exposure_orbis, or if there is no need for 
+## a "new" id, it is just the original (same) client_uuid as before
+client_uuid_alt <- relevant$client_uuid[alt_ids]
+lobby_client$client_uuid_alt <- ifelse(is.na(client_uuid_alt), lobby_client$client_uuid, client_uuid_alt)
+
+#View(lobby_client[1:1000, ])
+
+#####
+
 lobbying <- merge(lobby_report, lobby_issuetext_nodup, all.x = T)
 lobbying <- merge(lobbying, lobby_client, by = "client_uuid", all.x = T)
 
@@ -63,9 +99,11 @@ lobbying$gov_entity[lobbying$gov_entity==""] <- NA
 # collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
 #                   by=list(lobbying$report_year, lobbying$bvdid),
 #                   FUN = function(x) paste(x, collapse = "|"))
-
+# collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
+#                            by=list(lobbying$report_year, lobbying$client_uuid),
+#                            FUN = function(x) paste(x, collapse = "|"))
 collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
-                           by=list(lobbying$report_year, lobbying$client_uuid),
+                           by=list(lobbying$report_year, lobbying$client_uuid_alt),
                            FUN = function(x) paste(x, collapse = "|"))
 lobbying_firmyear <- collapse.char
 # names(lobbying_firmyear) <- c("report_year", "bvdid", "client_uuid", "client_name", 
@@ -208,13 +246,32 @@ total_proportion_doe_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_prop
 total_proportion_doe_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, doe_proportion)
 total_proportion_doe_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, doe_proportion)
 
+total_proportion_epa_q1 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q1_proportion, climate_issue_proportion, epa_proportion)
+total_proportion_epa_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_proportion, climate_issue_proportion, epa_proportion)
+total_proportion_epa_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, epa_proportion)
+total_proportion_epa_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, epa_proportion)
+
 ## scale report amount by the product of a) proportion of issues in the report that are climate
 ## and b) proportion of gov entities in the report that are DOE (EPA)
 doe_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q1)
-epa_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, epa_proportion)
+doe_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q2)
+doe_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q3)
+doe_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q4)
 
-lobbying_firmyear$CLI_DOE_amount_annual <- doe_amount
-lobbying_firmyear$CLI_EPA_amount_annual <- epa_amount
+epa_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q1)
+epa_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q2)
+epa_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q3)
+epa_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q4)
+
+lobbying_firmyear$CLI_DOE_amount_q1 <- doe_amount_q1
+lobbying_firmyear$CLI_DOE_amount_q2 <- doe_amount_q2
+lobbying_firmyear$CLI_DOE_amount_q3 <- doe_amount_q3
+lobbying_firmyear$CLI_DOE_amount_q4 <- doe_amount_q4
+
+lobbying_firmyear$CLI_EPA_amount_q1 <- epa_amount_q1
+lobbying_firmyear$CLI_EPA_amount_q2 <- epa_amount_q2
+lobbying_firmyear$CLI_EPA_amount_q3 <- epa_amount_q3
+lobbying_firmyear$CLI_EPA_amount_q4 <- epa_amount_q4
 
 # amount_split[900]
 # climate_issue[900]
@@ -288,6 +345,13 @@ sum(duplicated(exposure_orbis_lobbyview_long[, c("isin", "year", "qtr")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("gvkey", "year", "qtr")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("bvdid", "year", "qtr")]))
 sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1)) #good
+
+test <- (duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1)) | (duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")], fromLast=T) & exposure_orbis_lobbyview_long$client_uuid!=(-1))
+if(sum(test)>0) {
+  exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!test), ]
+  stop("Still need to deal with these additional duplicates!")
+}
+#View(exposure_orbis_lobbyview_long[duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1),])
 
 ## need to double check about the duplication situation with "client_uuid". Assume
 ## this means a single company, but maybe not? What exactly is client_uuid versus
