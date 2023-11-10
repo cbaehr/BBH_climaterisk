@@ -169,6 +169,30 @@ report <- report[which(report$client_uuid %in% clientnm_issues$client_uuid), ]
 sum(duplicated(report$client_uuid))
 sum(duplicated(report[, c("client_uuid", "report_uuid")])) #no report IDs duplicated
 
+#####
+
+## dealing with the duplicated client_uuids - only a few, can do manually
+
+dups <- clientnm_issues[duplicated(clientnm_issues$client_uuid) | duplicated(clientnm_issues$client_uuid, fromLast=T), ]
+
+View(dups[, c("bvdid", "isin", "cc_expo_ew_2016_1",
+              "gvkey", "hqcountrycode", "conm",
+              "total_assets_usd_2016", "client_uuid", "client_name", "keep_override", "NAs", "NA_col")])
+dupnames <- c("bvdid", "isin", "cc_expo_ew_2016_1",
+              "gvkey", "hqcountrycode", "conm",
+              "total_assets_usd_2016", "client_uuid", "client_name")
+# write.csv(dups[, c(dupnames)], "xx_other/exposure_orbis_clientuuid_duplicated_quarterly.csv", row.names=F)
+
+## might need to define a rule for dealing with these - we definitely need to keep them in the data in some
+## regard, as this list includes BP and Hilton Hotels
+
+dups2 <- merge(dups[, c(dupnames)], report)
+write.csv(dups2, "xx_other/exposure_orbis_clientuuid_duplicated_withlobbying_quarterly.csv", row.names=F)
+View(report[which(report$client_uuid=="7dbf1f9a-8515-5b2d-8cb4-895d3df422c8"), ])
+View(report[which(report$client_uuid=="16b5ce58-9351-58e6-a4d7-a9233a4f441d"), ])
+
+#####
+
 ## want to create new variables for each row that contain 1) all the rows OWN lobbying years 
 ## and 2) all lobbying years for different rows with the SAME isin. We will then check
 ## whether row i shares any lobbying years with its other isin brethren. If NOT,
@@ -241,7 +265,7 @@ rowtodf <- function(x) {
 
 overlapping_yrs_long <- apply(overlapping_years, 1, rowtodf)
 out <- do.call(rbind, overlapping_yrs_long)
-write.csv(out, "xx_other/duplicates_reportyears_overlap.csv", row.names = F)
+write.csv(out, "xx_other/duplicates_reportyears_overlap_quarterly.csv", row.names = F)
 
 #####
 
