@@ -24,6 +24,7 @@ df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
 ## pull from main data
 df_wide_cont <- df[, df_wide_cont_vars]
 ## rescale to standard normal
+df_wide_cont <- data.frame(apply(df_wide_cont, 2, as.numeric))
 df_wide_cont <- scale(df_wide_cont)
 ## slot back into main df_wide
 df[, df_wide_cont_vars] <- df_wide_cont
@@ -58,6 +59,7 @@ df_wide_cont <- df[, df_wide_cont_vars]
 df_wide_cont <- data.frame(apply(df_wide_cont, 2, as.numeric))
 
 ## rescale to standard normal
+
 df_wide_cont <- scale(df_wide_cont)
 ## slot back into main df_wide
 df[, df_wide_cont_vars] <- df_wide_cont
