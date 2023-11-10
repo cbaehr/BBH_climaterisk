@@ -306,7 +306,7 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 #####
 
 timespan <- paste0("q", 1:4)
-time_varying <- c("CLI_", "CLI_amount_", "CLI_DOE_", "CLI_EPA_", "total_lobby_")
+time_varying <- c("CLI_", "CLI_amount_", "CLI_DOE_", "CLI_EPA_", "CLI_DOE_amount_", "CLI_EPA_amount_",  "total_lobby_")
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 ## reshape data from wide to long format
 
@@ -320,11 +320,13 @@ lobbying_firmquarter <- reshape(lobbying_firmyear,
                                 timevar="qtr",
                                 idvar="unique_id")
 
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarterly"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarterly"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarterly"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarterly"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="total_lobby_q1"] <- "total_lobby_quarterly"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_amount_q1"] <- "CLI_DOE_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_amount_q1"] <- "CLI_EPA_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="total_lobby_q1"] <- "total_lobby_quarter"
 
 lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 
@@ -375,10 +377,19 @@ exposure_orbis_lobbyview_long$ebit_at[exposure_orbis_lobbyview_long$ebit_at == (
 drop_clipper2011 <- exposure_orbis_lobbyview_long$conm=="CLIPPER WINDPOWER HOLDINGS LTD" & exposure_orbis_lobbyview_long$year==2011
 exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipper2011), ]
 
-exposure_orbis_lobbyview_long$CLI_quarterly <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarterly)
-exposure_orbis_lobbyview_long$CLI_quarterly[is.na(exposure_orbis_lobbyview_long$CLI_quarterly)] <- 0
-exposure_orbis_lobbyview_long$CLI_amount_quarterly[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarterly)] <- 0
-exposure_orbis_lobbyview_long$total_lobby_quarterly[is.na(exposure_orbis_lobbyview_long$total_lobby_quarterly)] <- 0
+exposure_orbis_lobbyview_long$CLI_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarter)
+exposure_orbis_lobbyview_long$CLI_quarter[is.na(exposure_orbis_lobbyview_long$CLI_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_DOE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_quarter)
+exposure_orbis_lobbyview_long$CLI_DOE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_EPA_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_EPA_quarter)
+exposure_orbis_lobbyview_long$CLI_EPA_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter)] <- 0
+exposure_orbis_lobbyview_long$total_lobby_quarter[is.na(exposure_orbis_lobbyview_long$total_lobby_quarter)] <- 0
 
 
 #hist(exposure_orbis_lobbyview_long$ebit)
