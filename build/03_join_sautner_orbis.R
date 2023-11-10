@@ -595,3 +595,5 @@ write.csv(exposure_orbis_lobby_long, "02_processed/exposure_orbis_client_long_RE
 
 ## 6 cases of duplicated client_uuid in orbis wide data. Want to remove? YES. Done
 
+## in exposure_lobby_orbis_wide, all firms have at least two non-missing cc_expo_ew observations
+## over the years

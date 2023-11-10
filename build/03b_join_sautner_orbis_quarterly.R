@@ -104,7 +104,7 @@ lobby_client$bvdid[is.na(lobby_client$bvdid)] <- "-1"
 
 ## same logic for gvkeys
 exposure_orbis_wide$gvkey[is.na(exposure_orbis_wide$gvkey)] <- (-1)
-exposure_orbis_wide$gvkey[is.na(exposure_orbis_wide$gvkey)] <- (-2) # use different value for NAs - otherwise would match on this
+#exposure_orbis_wide$gvkey[is.na(exposure_orbis_wide$gvkey)] <- (-2) # use different value for NAs - otherwise would match on this
 
 ## have properly accounted for the possibility of NAs in merging variables.
 
@@ -129,17 +129,40 @@ d <- d[!duplicated(d), ]
 #sum(duplicated(d$gvkey))
 #View(d[duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T), ]) # bunch of duplicate gvkeys, single isin
 
-duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)), ]
+## first identify the duplicated bvdid or gvkeys
+duplicates <- d[(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)) | ((duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)) & d$gvkey!=(-1)), ]
+
+## this aggregation is intended to identify the NUMBER OF ROWS in the duplication dataset that share
+## a single, gvkey, bvdid, and isin combination (and if one of them contains an NA). If this number is two, and one has non-NA lobbyview,
+## then we will put that row back into the main data and discard the NA row.
+numrows <- aggregate(duplicates$client_uuid, by=list(duplicates$bvdid, duplicates$isin, duplicates$gvkey), FUN=function(x) is.na(x))
+names(numrows) <- c("bvdid", "isin", "gvkey", "NAs") # give meaningful names
+
+duplicates <- merge(duplicates, numrows) # fold back into the duplicates data -- without specifying a merge variable, this will use all three of the IDs to merge
+duplicates$NA_col <- sapply(duplicates$NAs, FUN = function(x) {length(x)==2 & sum(x)==1}) # TRUE if exactly two rows with this ID combo AND one is NA
+duplicates$keep_override <- duplicates$NA_col & !is.na(duplicates$client_uuid) # if NA_col condition TRUE and this particular rows client_uuid is not NA, we want to keep it
+
+summary(duplicates$keep_override)
 names(duplicates)
-duplicates <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016_1",
-                             "gvkey", "hqcountrycode", "conm",
-                             "total_assets_usd_2016", "client_uuid", "client_name")]
-write.csv(duplicates, "xx_other/exposure_orbis_quarterly_bvdidORgvkey_duplicated.csv", row.names=F)
+
+duplicates_out <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016_1",
+                                 "gvkey", "hqcountrycode", "conm",
+                                 "total_assets_usd_2016", "client_uuid", "client_name", "keep_override", "NAs", "NA_col")]
+View(duplicates_out)
+duplicates_out <- duplicates_out[,names(duplicates_out)!="NAs"]
+#write.csv(duplicates_out, "xx_other/exposure_orbis_bvdidORgvkey_duplicated_quarterly.csv", row.names=F)
 ## these are the cases where we do have a match between orbis-lobbying (either gvkey or bvdid),
 ## but the relationship between gvkey/bvdid <-> isin is NOT one-to-one
 
 d <- d[!(duplicated(d$bvdid)|duplicated(d$bvdid, fromLast=T)), ]## need to OMIT for now those cases which have multiple bvdids to a single isin
-d <- d[!(duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)), ]## need to OMIT for now those cases which have multiple gvkeys to a single isin
+d <- d[!( (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)) & d$gvkey!=(-1) ), ]## need to OMIT for now those cases which have multiple gvkeys to a single isin
+
+## want to incorporate rows from duplicates where keep_override is TRUE back into d. These are the rows
+## which have lobbyview data and are not truly duplicated in the main data.
+d <- rbind(d, duplicates[which(duplicates$keep_override), names(d)])
+
+unique(d$gvkey[duplicated(d$gvkey)]) # only -1 is duplicated for gvkey. This is ok because these are all essentially rows
+# with no corresponding lobbyview row. They will get 0's for lobbyview variables.
 
 ## now lets see if we can push up the matches for exposure_orbis_wide with lobby_client
 ## for those lobby firms NOT in d (which are already matched)
