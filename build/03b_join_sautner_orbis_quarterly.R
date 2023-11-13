@@ -49,6 +49,10 @@ rm(list = setdiff(ls(), "exposureq_wide")) # exposureq_wide all we need to keep 
 orbis <- read.csv("02_processed/orbis_11_06_2023.csv", stringsAsFactors = F)
 orbis$total_assets_usd_2019[which(orbis$conm=="GRUPO COMERCIAL CHEDRAUI")] <- NA
 
+## drop orbis data outside [2001, 2021] because this is outside the bounds of exposure data
+dropnames <- !(grepl("1999|2000|2022|2023", names(orbis)) & !grepl("naics", names(orbis)))
+orbis <- orbis[ , dropnames]
+
 orbis <- orbis[!is.na(orbis$isin), ] # since merging with sautner on isin, no need for NA isin rows
 # sum(duplicated(orbis$isin))
 ## no duplicated isins in orbis
@@ -382,6 +386,244 @@ d <- rbind(d, clientuuid_dups[ , names(d)]) # we manually fixed these firms -- t
 d <- rbind(d, clientnm_issues[which(distinctyear_test), names(d)]) # keep those rows with duplicate isins that pass the "distinct years" test
 d <- rbind(d, clientnm_issues[which(!distinctyear_test), names(d)]) # keep those rows with duplicate isins that FAIL the "distinct years" test
 
+################################################################################
+
+## dealing with some additional duplicate client_uuids that only emerge once I bring
+## the problem rows back into "d". The rulebook on how to deal with these cases
+## is "Notes_exposure_orbis_clientuuid_duplicated.txt"
+
+## some duplicate client_uuids still (and not just NAs)
+sum(duplicated(d$client_uuid) & !is.na(d$client_uuid))
+
+##get the indices of these problem cases
+newdups_ind <- ( duplicated(d$client_uuid) | duplicated(d$client_uuid, fromLast=T) ) & !is.na(d$client_uuid)
+
+## store them in a new df
+newdups <- d[which(newdups_ind), ]
+View(newdups[ , c("bvdid", "isin", "cc_expo_ew_2016", "gvkey", "hqcountrycode", "conm", "total_assets_usd_2016", "client_uuid", "client_name")])
+
+###
+
+## dealing with Steris corp. -- drop Steris PLC
+newdups <- newdups[which(newdups$isin != "IE00BFY8C754"), ]
+
+## drop ESTERLINE TECHNOLOGIES CORP 
+newdups <- newdups[which(newdups$isin != "US2974251009"), ]
+
+
+## define a couple functions to help collapse duplicated rows down to one, using a weighted average based on total assets
+mean.weighted <- function(x, weight) {
+  # if only NA values, return NA
+  if(all(is.na(x))) {
+    return(NA)
+  } else if(any(is.na(x))) {
+    # if one NA value, return only the real value (unweighted)
+    return(x[!is.na(x)])
+  } else {
+    # if both real values, return the weighted average of the two
+    return(weighted.mean(x, c(weight, 1-weight)))
+  }
+}
+
+collapse.rows <- function(out, years=c(2001:2021), inp=newdups) {
+  for(i in years) {
+    # rows under consideration
+    if(i==years[1]) {ind <- which(inp$client_uuid==out$client_uuid)}
+    
+    at <- as.numeric(inp[ind, paste0("total_assets_usd_", i)]) # assets for year i
+    wt <- ifelse(any(is.na(at)), 0.5, at[1] / sum(at))
+    ## We want to weight by total assets when collapsing two rows into one.
+    ## if total assets empty for either, I just set the weights to (0.5, 0.5)
+    
+    ## columns to aggregate over
+    wtmean.cols <- paste0(c("cc_expo_ew_", "op_expo_ew_", "rg_expo_ew_", "ph_expo_ew_", 
+                            "cc_risk_ew_", "op_risk_ew_", "rg_risk_ew_", "ph_risk_ew_", 
+                            "cc_pos_ew_", "op_pos_ew_", "rg_pos_ew_", "ph_pos_ew_", 
+                            "cc_neg_ew_", "op_neg_ew_", "rg_neg_ew_", "ph_neg_ew_", 
+                            "cc_sent_ew_", "op_sent_ew_", "rg_sent_ew_", "ph_sent_ew_"),
+                          i)
+    wtmean.cols <- apply(expand.grid(wtmean.cols, c(1:4)), 1, paste, collapse="_")
+    ## do the computation and replace old with new
+    out[ , wtmean.cols] <- apply(inp[ind, wtmean.cols], 2, FUN = function(x) {mean.weighted(as.numeric(x), wt)})
+    
+    ## some columns we just sum over
+    sum.cols <- paste0(c("total_assets_usd_", "n_employees_", "operating_rev_usd_", "P_L_b4tax_usd_"), 
+                       i)
+    out[ , sum.cols] <- apply(inp[ind, sum.cols], 2, FUN = function(x) {sum(as.numeric(x), na.rm=T)})
+  }
+  return(out)
+}
+
+## collapse values for dover with the weighted average. This works because we select a 
+## SINGLE row out of the two duplicates. This is the row we will fold back into the dataset.
+## We then replace the exposure/orbis values of this single-row dataset with the weighted
+## averages (in the exposure case) or the sum of the variable over the two duplicated rows
+## (in the orbis case). This single collapsed row then summarizes the information of the 
+## previous two rows without duplicating lobbyview info
+dover <- newdups[which(newdups$isin=="US2601741075"), ]
+dover <- collapse.rows(out = dover)
+newdups[which(newdups$isin == dover$isin) , ] <- dover
+newdups <- newdups[which(newdups$isin != "US2600951048") , ] #drop duplicate
+
+## elevance
+elevance <- newdups[which(newdups$isin == "US0367521038"), ]
+elevance <- collapse.rows(out = elevance)
+newdups[which(newdups$isin == elevance$isin) , ] <- elevance
+newdups <- newdups[which(newdups$isin != "US03073T1025") , ]
+#View(rbind(newdups[which(newdups$client_uuid==elevance$client_uuid), ], test))
+
+## great elm
+greatelm <- newdups[which(newdups$isin == "US39037G1094") , ]
+greatelm <- collapse.rows(greatelm)
+newdups[which(newdups$isin == greatelm$isin) , ] <- greatelm
+newdups <- newdups[which(newdups$isin != "US39036P2092") , ]
+
+## arris
+arris <- newdups[which(newdups$isin == "US04270V1061") , ]
+arris <- collapse.rows(arris)
+newdups[which(newdups$isin == arris$isin) , ] <- arris
+newdups <- newdups[which(newdups$isin != "GB00BZ04Y379") , ]
+
+## tetra
+tetra <- newdups[which(newdups$isin == "US88162G1031") , ]
+tetra <- collapse.rows(tetra)
+newdups[which(newdups$isin == tetra$isin) , ] <- tetra
+newdups <- newdups[which(newdups$isin != "US88162F1057") , ]
+
+## qwest (drop one completely)
+newdups$client_uuid[which(newdups$bvdid=="US271341991" & newdups$client_uuid=="652bf2ff-7036-5657-901f-3fc7f7355c6d")] <- "2f78c758-d460-5962-a556-db2c3e2f61a7"
+
+## Massey energy
+newdups$client_uuid[which(newdups$conm=="FLUOR CORP" & newdups$client_uuid=="4e60d5c3-97de-55de-accc-3bd5fb60034e")] <- "a8c8686e-2f53-51e1-840e-edf3a58f53e3"
+
+## neustar
+newdups$client_uuid[which(newdups$conm=="CLEARWIRE CORPORATION" & newdups$client_uuid=="43492c1a-3529-58d1-9a98-a320dd031b59")] <- "0e75fb55-06d2-5787-8683-b5d07d1f2da5"
+
+## l1 identity solutions
+newdups$client_uuid[which(newdups$conm=="DIGIMARC CORPORATION" & newdups$client_uuid=="3897efc7-98d1-5d3c-aeb7-64380743b0d9")] <- "469e9fe9-f05b-5b77-8502-039de9380e3b"
+
+## first energy -- ONLY want to join these two between 2001 and 2010 when they
+## were the same company. Thereafter want to attribute lobbying purely to first energy,
+## so we drop allegheny. All this does is remove attribution of THIS SPECIFIC LOBBYING
+## from Allegheny for 2011-21. Its possible Allegheny also lobbied under a diff. client_uuid
+## and they would still get credit for that lobbying
+firstenergy <- newdups[which(newdups$isin == "US3379321074") , ]
+firstenergy <- collapse.rows(firstenergy, years = c(2001:2010))
+newdups[which(newdups$isin == firstenergy$isin) , ] <- firstenergy
+newdups <- newdups[which(newdups$isin != "US0173611064") , ]
+
+
+## dow/dupont
+dow <- newdups[which(newdups$isin == "US2605431038") , ]
+dow <- collapse.rows(dow, years = c(2015:2021))
+newdups[which(newdups$isin == dow$isin) , ] <- dow
+newdups <- newdups[which(newdups$isin != "US26614N1028") , ] 
+# drop dupont - this was either post merger (2015) lobbying, or pure Dow
+
+## tivo
+tivo <- newdups[which(newdups$isin == "US88870P1066") , ]
+tivo <- collapse.rows(tivo)
+newdups[which(newdups$isin == tivo$isin) , ] <- tivo
+newdups <- newdups[which(newdups$isin != "US8887061088") , ]
+
+## Broadcom/CA
+CA <- newdups[which(newdups$isin == "US12673P1057") , ]
+CA <- collapse.rows(CA, years = c(2018:2021))
+newdups[which(newdups$isin == CA$isin) , ] <- CA
+newdups <- newdups[which(newdups$isin != "US11135F1012") , ] 
+# drop broadcom - this was either post merger (2018) lobbying, or pure CA
+
+###
+
+## Duke Energy
+
+duke <- newdups[which(newdups$isin == "US26441C2044") , ]
+duke <- collapse.rows(duke, years = c(2012:2021))
+newdups[which(newdups$isin == duke$isin) , ] <- duke
+newdups <- newdups[which(newdups$isin != "US7432631056") , ] 
+# drop progress - this was either post merger (2012) lobbying, or pure duke
+
+## Broadcom 2
+broadcom <- newdups[which(newdups$isin == "US1113201073") , ]
+broadcom <- collapse.rows(broadcom, years = c(2016:2021))
+newdups[which(newdups$isin == broadcom$isin) , ] <- broadcom
+newdups <- newdups[which(newdups$isin != "US11135F1012") , ] 
+# drop broadcom inc - this was either post split (2016) lobbying, or pure broadcom corp
+
+## pozen
+pozen <- newdups[which(newdups$isin == "US73941U1025") , ]
+pozen <- collapse.rows(pozen, years = c(2016:2021))
+newdups[which(newdups$isin == pozen$isin) , ] <- pozen
+newdups <- newdups[which(newdups$isin != "CA03852X1006") , ] 
+# drop old api - this was either post split (2016) lobbying, or pure pozen corp
+
+## cal dive
+cal <- newdups[which(newdups$isin == "US12802T1016") , ]
+cal <- collapse.rows(cal, years = c(2006:2021))
+newdups[which(newdups$isin == cal$isin) , ] <- cal
+newdups <- newdups[which(newdups$isin != "US42330P1075") , ] 
+# drop helix - this was either post split (2016) lobbying, or pure cal dive
+
+## itt corp
+itt <- newdups[which(newdups$isin == "US45073V1089") , ]
+itt <- collapse.rows(itt, years = c(2011:2021))
+newdups[which(newdups$isin == itt$isin) , ] <- itt
+newdups <- newdups[which(newdups$isin != "US30162A1088") , ] 
+# drop helix - this was either post split (2016) lobbying, or pure cal dive
+
+## rf micro
+rf <- newdups[which(newdups$isin == "US7499411004") , ]
+rf <- collapse.rows(rf, years = c(2015:2021))
+newdups[which(newdups$isin == rf$isin) , ] <- rf
+newdups <- newdups[which(newdups$isin != "US74736K1016") , ] 
+
+## john bean
+johnbean <- newdups[which(newdups$isin == "US4778391049") , ]
+johnbean <- collapse.rows(johnbean, years = c(2008:2021))
+newdups[which(newdups$isin == johnbean$isin) , ] <- johnbean
+newdups <- newdups[which(newdups$isin != "US30249U1016") , ] 
+
+## ihs
+ihs <- newdups[which(newdups$isin == "US4517341073") , ]
+ihs <- collapse.rows(ihs, years = c(2016:2021))
+newdups[which(newdups$isin == ihs$isin) , ] <- ihs
+newdups <- newdups[which(newdups$isin != "BMG475671050") , ] 
+
+## kerr mcgee
+kerr <- newdups[which(newdups$isin == "US4923861078") , ]
+kerr <- collapse.rows(kerr, years = c(2006:2021))
+newdups[which(newdups$isin == kerr$isin) , ] <- kerr
+newdups <- newdups[which(newdups$isin != "US0325111070") , ] 
+
+## linde
+linde <- newdups[which(newdups$isin == "US74005P1049") , ]
+linde <- collapse.rows(linde, years = c(2018:2021))
+newdups[which(newdups$isin == linde$isin) , ] <- linde
+newdups <- newdups[which(newdups$isin != "IE00BZ12WP82") , ] 
+
+## genzyme
+genzyme <- newdups[which(newdups$isin == "US3729171047") , ]
+genzyme <- collapse.rows(genzyme, years = c(2011:2021))
+newdups[which(newdups$isin == genzyme$isin) , ] <- genzyme
+newdups <- newdups[which(newdups$isin != "FR0000120578") , ] 
+
+## pepsico
+pepsico <- newdups[which(newdups$isin == "US7134481081") , ]
+pepsico <- collapse.rows(pepsico, years = c(2009:2021))
+newdups[which(newdups$isin == pepsico$isin) , ] <- pepsico
+newdups <- newdups[which(newdups$isin != "US71343P2002") , ] 
+
+###
+
+sum(duplicated(newdups$client_uuid)) # all duplication removed
+newdups$duplicate_flag <- 5
+
+d <- d[which(!newdups_ind), ] # first remove old "duplicate" rows
+## and remerge with just the "unduplicated" rows
+d <- rbind(d, newdups[ , names(d)])
+
+
+################################################################################
 
 unique(d$gvkey[duplicated(d$gvkey)]) # only -1 is duplicated for gvkey. This is ok because these are all essentially rows
 # with no corresponding lobbyview row. They will get 0's for lobbyview variables.
@@ -505,10 +747,16 @@ sum(duplicated(exposure_orbis_lobby_wide$client_uuid) & exposure_orbis_lobby_wid
 
 #which(d$exposure_orbis_lobby_wide=="054f36eb-b834-58b6-bf55-a0c89d6660eb")
 out <- exposure_orbis_lobby_wide[check, c("bvdid", "isin", "cc_expo_ew_2016_1", "gvkey", "hqcountrycode", "conm", "total_assets_usd_2016", "client_uuid", "client_name")]
+#write.csv(out, "xx_other/exposure_orbis_clientuuid_duplicated_additional_quarterly.csv", row.names = F)
 
-write.csv(out, "xx_other/exposure_orbis_clientuuid_duplicated_additional_quarterly.csv", row.names = F)
+## Fluor split off from Massey in 2000 - so for our sample, any lobbying Massey did should
+## not be attributed to Fluor. This code prevents that
+massey <- (exposure_orbis_lobby_wide$isin=="US3434121022" & exposure_orbis_lobby_wide$client_name=="MASSEY ENERGY COMPANY")
+exposure_orbis_lobby_wide <- exposure_orbis_lobby_wide[which(!massey), ]
 
-
+## dont see any real connection between Clearwire and Neustar
+neustar <- exposure_orbis_lobby_wide$isin == "US18538Q1058" & exposure_orbis_lobby_wide$client_name=="NEUSTAR"
+exposure_orbis_lobby_wide <- exposure_orbis_lobby_wide[which(!neustar) , ]
 
 ##########################################################
 
@@ -548,7 +796,7 @@ exposure_orbis_lobby_wide <- rbind(exposure_orbis_lobby_wide, process_fixed_isin
 ######
 
 #timespan <- 1999:2023
-timespan <- apply(expand.grid(c(1999:2023), c(1:4)), 1, paste, collapse="_")
+timespan <- apply(expand.grid(c(2001:2021), c(1:4)), 1, paste, collapse="_")
 
 time_varying <- c("cc_expo_ew_", "cc_risk_ew_", "cc_pos_ew_", "cc_neg_ew_",
                   "cc_sent_ew_", "op_expo_ew_", "op_risk_ew_", "op_pos_ew_",
@@ -561,7 +809,7 @@ moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 
 
 for(i in c("total_assets_usd_", "n_employees_", "operating_rev_usd_", "P_L_b4tax_usd_")) {
-  for(j in 1999:2023) {
+  for(j in 2001:2021) {
     nm <- paste0(i, j)
     exposure_orbis_lobby_wide[, paste0(nm, "_1")] <- exposure_orbis_lobby_wide[, nm]
     exposure_orbis_lobby_wide[, paste0(nm, "_2")] <- exposure_orbis_lobby_wide[, nm]
@@ -589,7 +837,7 @@ exposure_orbis_lobby_long <- reshape(exposure_orbis_lobby_wide,
 exposure_orbis_lobby_long <- exposure_orbis_lobby_long[,!grepl("year_", names(exposure_orbis_lobby_long))]
 exposure_orbis_lobby_long <- exposure_orbis_lobby_long[,!grepl("quarter_", names(exposure_orbis_lobby_long))]
 
-names(exposure_orbis_lobby_long) <- gsub("_1999_1", "", names(exposure_orbis_lobby_long))
+names(exposure_orbis_lobby_long) <- gsub("_2001_1", "", names(exposure_orbis_lobby_long))
 
 exposure_orbis_lobby_long$year <- sapply(exposure_orbis_lobby_long$yearqtr, FUN = function(x) strsplit(x, "_")[[1]][1])
 exposure_orbis_lobby_long$qtr <- sapply(exposure_orbis_lobby_long$yearqtr, FUN = function(x) strsplit(x, "_")[[1]][2])
