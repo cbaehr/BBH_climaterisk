@@ -15,7 +15,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/03_final/lobbying_df_annual_REVISE_normal.csv")
+df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
 # Specify covariate names
 cm <- c("op_expo_ew" = "Opportunity Exposure",
@@ -28,17 +28,17 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
         "ebit_at" = "EBIT/Assets",
         "log_co2_l1" = "Log(Total CO2 Emissions)",
         "us_dummy" = "US HQ",
-        "total_lobby_annual" = "Total Lobbying ($)"
+        "total_lobby_quarter" = "Total Lobbying ($)"
 )
 
-df$CLI <- as.numeric(df$CLI_annual)
-df$cc_expo_ew <- as.numeric(df$cc_expo_ew)
+df$CLI <- as.numeric(df$CLI_quarter)
+
 
 
 # Lobbying Occurrence ------------------------------------------------------
 
 
-## Overall exposure annual -------------------------------------------------
+## Overall exposure  -------------------------------------------------
 
 # models <- list(
 #   "(1)" = feglm(CLI ~ cc_expo_ew_y, family = "binomial", df),
@@ -66,8 +66,8 @@ models <- list(
   "(1)" = feglm(CLI ~ cc_expo_ew, family = "binomial", df),
   "(2)" = feglm(CLI ~ cc_expo_ew | year, family = "binomial", df),
   "(3)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) | year, family = "binomial", df),
-  "(4)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year, family = "binomial", df),
-  "(5)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year + gvkey, family = "binomial", df)
+  "(4)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year, family = "binomial", df),
+  "(5)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year + gvkey, family = "binomial", df)
 )
 modelsummary(
   models
@@ -83,15 +83,15 @@ modelsummary(
 
 ## Exposure components -----------------------------------------------------
 
-## Overall climate lobbying, overall exposure for annual by specific attention component
+## Overall climate lobbying, overall exposure for quarter by specific attention component
 models <- list(
   "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df),
   "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | year, family = "binomial", df),
   "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) | year, family = "binomial", df),
-  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year, family = "binomial", df),
-  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year + industry, family = "binomial", df),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year + industry + industry_year, family = "binomial", df),
-  "(7)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_annual | year + industry + industry_year, family = "binomial", df)
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year, family = "binomial", df),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year + industry, family = "binomial", df),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year + industry + industry_year, family = "binomial", df),
+  "(7)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year + industry + industry_year, family = "binomial", df)
 )
 
 modelsummary(
@@ -110,11 +110,11 @@ modelsummary(
 ### w/ firm fixed effecrs ---------------------------------------------------
 
 models <- list(
-  "(1)" = feglm(CLI_annual ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y, family = "binomial", df),
-  "(2)" = feglm(CLI_annual ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y | year, family = "binomial", df),
-  "(3)" = feglm(CLI_annual ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
-  "(4)" = feglm(CLI_annual ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df),
-  "(5)" = feglm(CLI_annual ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + gvkey, family = "binomial", df)
+  "(1)" = feglm(CLI_quarter ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y, family = "binomial", df),
+  "(2)" = feglm(CLI_quarter ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y | year, family = "binomial", df),
+  "(3)" = feglm(CLI_quarter ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) | year, family = "binomial", df),
+  "(4)" = feglm(CLI_quarter ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year, family = "binomial", df),
+  "(5)" = feglm(CLI_quarter ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + gvkey, family = "binomial", df)
 )
 
 modelsummary(
@@ -133,10 +133,10 @@ modelsummary(
 # Lobbying Expenditure ----------------------------------------------------
 
 
-# Overall exposure annual -------------------------------------------------
+# Overall exposure quarter -------------------------------------------------
 
 
-## Overall climate lobbying (DOLLARS), overall exposure for annual
+## Overall climate lobbying (DOLLARS), overall exposure for quarter
 models <- list(
   "(1)" = feols(log(CLI_dollars +1) ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y, df),
   "(4)" = feols(log(CLI_dollars +1) ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby, df),
@@ -180,7 +180,7 @@ dev.off()
 # Occurence by Issue Area -------------------------------------------------
 
 
-## Disaggregated lobby issues, overall climate exposure, annual
+## Disaggregated lobby issues, overall climate exposure, quarter
 models2 <- list(
   "(1)" = feglm(CAW ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
   "(2)" = feglm(ENG ~ cc_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
@@ -207,7 +207,7 @@ x <- modelsummary(
     "Fuel, Gas, and Oil" = 1))
 save_kable(x, file="results/tables/climate_logit_year_separateissues.tex", keep_tex = T)
 
-##Aggreate and disaggregated lobby issues, disaggregated exposure types, annual
+##Aggreate and disaggregated lobby issues, disaggregated exposure types, quarter
 models3 <- list(
   "(1)" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
   "(2)" = feglm(CAW ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
@@ -248,7 +248,7 @@ df$hqloc <- ifelse(df$country_name %in% us, "usa",
                           ifelse(df$country_name %in% asia, "asia", NA)))
 
 
-## Overall climate lobbying, overall exposure for annual by specific attention component
+## Overall climate lobbying, overall exposure for quarter by specific attention component
 models <- list(
   "USA" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df[which(df$hqloc=="usa"), ]),
   "Europe" = feglm(CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df[which(df$hqloc=="europe"), ]),
