@@ -130,6 +130,12 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 ## any appearance of climate issues in a year
 lobbying_firmyear$CLI_annual <- grepl("ENV|CAW|ENG|FUE", lobbying_firmyear$issue_code)
 
+## issue specific dummies
+lobbying_firmyear$CLI_ENV_annual <- grepl("ENV", lobbying_firmyear$issue_code)
+lobbying_firmyear$CLI_CAW_annual <- grepl("CAW", lobbying_firmyear$issue_code)
+lobbying_firmyear$CLI_ENG_annual <- grepl("ENG", lobbying_firmyear$issue_code)
+lobbying_firmyear$CLI_FUE_annual <- grepl("FUE", lobbying_firmyear$issue_code)
+
 ## now look by quarter -> first step is to break up the issue code and report_quarter_code
 ## for each lobbying report. Second step is to look for coincidences of quarter i and 
 ## climate-related issue codes in that quarter
@@ -317,6 +323,11 @@ if(sum(test)>0) {
 
 ## if we merge without all.x=T, we only get 18784 matches. This means that we have 
 ## about 1/3 of our firm-years from exposure_orbis actually getting a companion in LobbyView
+
+## new variable captures whether firms lobbied on NONCLIMATE issues in a year
+nonclimate <- !is.na(exposure_orbis_lobbyview_long$issue_code) & !exposure_orbis_lobbyview_long$CLI_annual
+exposure_orbis_lobbyview_long$nonCLI_annual <- F
+exposure_orbis_lobbyview_long$nonCLI_annual[which(nonclimate)] <- T
 
 exposure_orbis_lobbyview_long$us_dummy <- ifelse(exposure_orbis_lobbyview_long$hqcountrycode=="US", 1, 0)
 exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$bvdsector

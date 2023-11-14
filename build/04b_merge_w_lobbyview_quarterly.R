@@ -155,6 +155,16 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 ## for each row, we compute whether for any lobbying reports A) the report is about a climate issue
 ## AND B) the report is for qX . If any reports for that firm-year meet this criteria, they get a TRUE; else FALSE.
 
+env_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENV", x))
+caw_issue <- lapply(issue_code_split, FUN = function(x) grepl("CAW", x))
+eng_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENG", x))
+fue_issue <- lapply(issue_code_split, FUN = function(x) grepl("FUE", x))
+lobbying_firmyear$CLI_ENV_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q1)
+lobbying_firmyear$CLI_CAW_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q2)
+lobbying_firmyear$CLI_ENG_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q3)
+lobbying_firmyear$CLI_FUE_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q4)
+
+
 gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
 
 doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
@@ -361,6 +371,12 @@ if(sum(test)>0) {
 
 ## if we merge without all.x=T, we only get 18784 matches. This means that we have 
 ## about 1/3 of our firm-years from exposure_orbis actually getting a companion in LobbyView
+
+## new variable captures whether firms lobbied on NONCLIMATE issues in a year
+nonclimate <- !is.na(exposure_orbis_lobbyview_long$n_issue_codes) & !exposure_orbis_lobbyview_long$CLI_quarter
+exposure_orbis_lobbyview_long$nonCLI_quarter <- F
+exposure_orbis_lobbyview_long$nonCLI_quarter[which(nonclimate)] <- T
+
 
 exposure_orbis_lobbyview_long$us_dummy <- ifelse(exposure_orbis_lobbyview_long$hqcountrycode=="US", 1, 0)
 exposure_orbis_lobbyview_long$industry <- exposure_orbis_lobbyview_long$bvdsector
