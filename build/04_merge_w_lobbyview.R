@@ -327,7 +327,9 @@ exposure_orbis_lobbyview_long$at <- as.numeric(exposure_orbis_lobbyview_long$tot
 exposure_orbis_lobbyview_long$ebit_at <- exposure_orbis_lobbyview_long$ebit / exposure_orbis_lobbyview_long$at
 
 ## few cases with zero denominator
-exposure_orbis_lobbyview_long$ebit_at[exposure_orbis_lobbyview_long$ebit_at == (-Inf)] <- NA
+invalid_orbis <- which(exposure_orbis_lobbyview_long$ebit_at %in% c(-Inf, Inf))
+exposure_orbis_lobbyview_long$at[invalid_orbis] <- NA
+exposure_orbis_lobbyview_long$ebit_at[invalid_orbis] <- NA
 
 #View(exposure_orbis_lobbyview_long[which(exposure_orbis_lobbyview_long$ebit_at<(-1000)), ])
 drop_clipper2011 <- exposure_orbis_lobbyview_long$conm=="CLIPPER WINDPOWER HOLDINGS LTD" & exposure_orbis_lobbyview_long$year==2011
@@ -337,11 +339,6 @@ exposure_orbis_lobbyview_long$CLI_annual <- as.numeric(exposure_orbis_lobbyview_
 exposure_orbis_lobbyview_long$CLI_annual[is.na(exposure_orbis_lobbyview_long$CLI_annual)] <- 0
 exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
 exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_long$total_lobby_annual)] <- 0
-
-#hist(exposure_orbis_lobbyview_long$ebit)
-#hist(exposure_orbis_lobbyview_long$at)
-#hist(exposure_orbis_lobbyview_long$ebit_at)
-
 
 ## write csv
 write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)
