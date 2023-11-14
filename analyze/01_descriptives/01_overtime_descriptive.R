@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, janitor, cowplot)
+pacman::p_load(data.table, tidyverse, janitor, cowplot, haschaR)
 
 
 # set working directory
@@ -16,92 +16,148 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # load data
 df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
+names(df)
+
 
 ## Reports over time -------------------------------------------------------
 
-p1 <- df |>
+df |>
   count(yearqtr, CLI_quarter) |>
-  ggplot(aes(x = factor(yearqtr), y = n, group = factor(CLI_quarter))) +
-  geom_line(aes(linetype = factor(CLI_quarter))) +
-  theme_bw() +
+  filter(CLI_quarter == 1) |>
+  select(yearqtr, CLI = n) |>
+  left_join(
+    df |>
+      count(yearqtr, nonCLI_quarter)  |>
+      filter(nonCLI_quarter == 1) |>
+      select(yearqtr, Other = n),
+    by = "yearqtr"
+    ) |>
+  pivot_longer(CLI:Other, names_to = "Issue", values_to = "n") |>
+  ggplot(aes(x = factor(yearqtr), y = n, group = factor(Issue))) +
+  geom_line(aes(linetype = factor(Issue))) +
+  theme_hanno() +
   labs(x = "Year", y = "Number of Lobbying Reports", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
-                        labels = c("Other Issues", "CLI_quartermate Issues"),
+                        labels = c("Climate Issues", "Other Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
-df |> tabyl(yearqtr, CLI_quarter) |>
-  mutate(share = `1` / (`1` + `0`) * 100)
-
 ## Save this
-ggsave(plot = p1, "results/figures/descriptives/CLI_quartermate_lobbying_overtime.pdf", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
 # ggsave(plot = p1, "report/images/CLI_quartermate_lobbying_overtime.png", width = 9, height = 5.5)
 
 
-# By issues
-df |>
-  count(yearqtr, ENV) |> filter(ENV==1) |> select(-ENV) |> mutate(issue = "Environmental") |>
-  bind_rows(
-    df |> count(yearqtr, CAW) |> filter(CAW==1) |> select(-CAW) |> mutate(issue = "Clean Air & Water (Quality)"),
-    df |> count(yearqtr, ENG) |> filter(ENG==1) |> select(-ENG) |> mutate(issue = "Energy/Nuclear"),
-    df |> count(yearqtr, FUE) |> filter(FUE==1) |> select(-FUE) |> mutate(issue = "Fuel/Gas/Oil")
-    ) |>
-  ggplot(aes(x = factor(yearqtr), y = n, group = factor(issue))) +
-  geom_line(aes(color = factor(issue))) +
-  theme_bw() +
-  labs(x = "Year", y = "Number of Lobbying Reports") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
-                   labels = function(x) str_sub(x, end = -3)) +
-  expand_limits(y = 0) +
-  scale_color_brewer(type =  "qual", name = "", palette = 2) +
-  theme(legend.position = "bottom")
-
-## Save this
-ggsave("results/figures/descriptives/CLI_quartermate_lobbying_overtime_issues.pdf", width = 9, height = 5.5)
-# ggsave("report/images/CLI_quartermate_lobbying_overtime_issues.png", width = 9, height = 5.5)
-
-
-
+# # By issues
+# df |>
+#   count(yearqtr, ENV) |> filter(ENV==1) |> select(-ENV) |> mutate(issue = "Environmental") |>
+#   bind_rows(
+#     df |> count(yearqtr, CAW) |> filter(CAW==1) |> select(-CAW) |> mutate(issue = "Clean Air & Water (Quality)"),
+#     df |> count(yearqtr, ENG) |> filter(ENG==1) |> select(-ENG) |> mutate(issue = "Energy/Nuclear"),
+#     df |> count(yearqtr, FUE) |> filter(FUE==1) |> select(-FUE) |> mutate(issue = "Fuel/Gas/Oil")
+#     ) |>
+#   ggplot(aes(x = factor(yearqtr), y = n, group = factor(issue))) +
+#   geom_line(aes(color = factor(issue))) +
+#   theme_hanno() +
+#   labs(x = "Year", y = "Number of Lobbying Reports") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+#   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
+#                    labels = function(x) str_sub(x, end = -3)) +
+#   expand_limits(y = 0) +
+#   scale_color_brewer(type =  "qual", name = "", palette = 2) +
+#   theme(legend.position = "bottom")
+# 
+# ## Save this
+# ggsave("results/figures/descriptives/CLI_quartermate_lobbying_overtime_issues.pdf", width = 9, height = 5.5)
+# # ggsave("report/images/CLI_quartermate_lobbying_overtime_issues.png", width = 9, height = 5.5)
 
 
 ## Money over time ---------------------------------------------------------
 
+
+### By quarter --------------------------------------------------------------
 p2 <- df |>
-  group_by(yearqtr, CLI_quarter) |>
-  summarise(money = sum(amount_num, na.rm = TRUE)) |>
-  ggplot(aes(x = factor(yearqtr), y = money, group = factor(CLI_quarter))) +
-  geom_line(aes(linetype = factor(CLI_quarter))) +
-  theme_bw() +
-  labs(x = "Year", y = "Money Spent (Bio USD)") +
+  group_by(yearqtr) |>
+  summarise(CLI = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
+  left_join(
+    df |>
+      group_by(yearqtr) |>
+      summarise(Total = sum(total_lobby_quarter, na.rm = TRUE) / 10^6),
+    by = "yearqtr"
+  ) |>
+  mutate(
+    Other = Total - CLI,
+    Share = CLI / Total
+    )
+
+p2 |>
+  select(-c(Total, Share)) |>
+  pivot_longer(CLI:Other, names_to = "Issue", values_to = "money") |>
+  filter(money != 0) |>
+  ggplot(aes(x = factor(yearqtr), y = money, group = factor(Issue))) +
+  geom_line(aes(linetype = factor(Issue))) +
+  theme_hanno() +
+  labs(x = "Year", y = "Money Spent (Mio USD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   expand_limits(y = 0) +
   scale_linetype_manual(name = "", 
-                        labels = c("Other Issues", "CLI_quartermate Issues"),
+                        labels = c("Climate Issues", "Other Issues"),
                         values = c("solid", "dashed")) +
   theme(legend.position = "bottom")
 
-# Look at share
-print(n= 100, df |>
-  group_by(yearqtr, CLI_quarter) |>
-  summarise(money = sum(amount_num, na.rm = TRUE)) |>
-  pivot_wider(names_from =  "CLI_quarter", values_from = "money") |>
-  mutate(share = `1` / (`1` + `0`) * 100))
 
 ## Save this
-ggsave(plot = p2, "results/figures/descriptives/CLI_quartermate_spending_overtime.pdf", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
 # ggsave(plot = p2, "report/images/CLI_quartermate_spending_overtime.png", width = 9, height = 5.5)
 
 
-# By issues
+
+### By year -----------------------------------------------------------------
+
+p3 <- df |>
+  group_by(year) |>
+  summarise(CLI = sum(CLI_amount_annual, na.rm = TRUE) / 10^9) |>
+  left_join(
+    df |>
+      group_by(year) |>
+      summarise(Total = sum(total_lobby_annual, na.rm = TRUE) / 10^9),
+    by = "year"
+  ) |>
+  mutate(
+    Other = Total - CLI,
+    Share = CLI / Total
+  )
+
+p3 |>
+  select(-c(Total, Share)) |>
+  pivot_longer(CLI:Other, names_to = "Issue", values_to = "money") |>
+  filter(year < 2020) |>
+  ggplot(aes(x = factor(year), y = money, group = factor(Issue))) +
+  geom_line(aes(linetype = factor(Issue))) +
+  theme_hanno() +
+  labs(x = "Year", y = "Money Spent (Bio USD)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
+  scale_linetype_manual(name = "", 
+                        labels = c("Climate Issues", "Other Issues"),
+                        values = c("solid", "dashed")) +
+  theme(legend.position = "bottom")
+
+
+## Save this
+ggsave("results/figures/descriptives/climate_spending_overtime_annual.pdf", width = 9, height = 5.5)
+# ggsave(plot = p2, "report/images/CLI_quartermate_spending_overtime.png", width = 9, height = 5.5)
+
+
+## By issue -----------------------------------------------------------------
+
 df |>
-  group_by(yearqtr, ENV) |>
+  group_by(year, CLI_) |>
   summarise(money = sum(amount_num, na.rm = TRUE)) |>
   mutate(money = money / 10^9) |>
   filter(ENV==1) |> select(-ENV) |> mutate(issue = "Environmental") |>
@@ -124,7 +180,7 @@ df |>
     ) |>
   ggplot(aes(x = factor(yearqtr), y = money, group = factor(issue))) +
   geom_line(aes(color = factor(issue))) +
-  theme_bw() +
+  theme_hanno() +
   labs(x = "Year", y = "Money Spent (Bio USD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
@@ -151,7 +207,7 @@ df |>
   summarise(firms = n_distinct(gvkey)) |>
   ggplot(aes(x = factor(yearqtr), y = firms, group = factor(CLI_quarter))) +
   geom_line(aes(linetype = factor(CLI_quarter))) +
-  theme_bw() +
+  theme_hanno() +
   labs(x = "Year", y = "No. of firms lobbying") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
@@ -188,7 +244,7 @@ df |>
   ) |>
   ggplot(aes(x = factor(yearqtr), y = firms, group = factor(issue))) +
   geom_line(aes(color = factor(issue))) +
-  theme_bw() +
+  theme_hanno() +
   labs(x = "Year", y = "No. of firms lobbying") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
@@ -223,10 +279,10 @@ define_CLI_quartermate_attention <- function(df, variables) {
         !!paste0(variable, "_yqindustry_q3") := quantile(.data[[variable]], 0.75, na.rm = TRUE),
         !!paste0(variable, "_yqindustry_var") := var(.data[[variable]], na.rm = TRUE),
         !!paste0(variable, "_disc") := case_when(
-          .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q1")) ~ "q1",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q1")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_median")) ~ "q2",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_median")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q3")) ~ "q3",
-          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q3")) ~ "q4"
+          .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q1")) ~ "Q1",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q1")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_median")) ~ "Q2",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_median")) & .data[[variable]] < !!sym(paste0(variable, "_yqindustry_q3")) ~ "Q3",
+          .data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q3")) ~ "Q4"
         ),
         !!paste0(variable, "_yqindustry_above_mean") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqindustry_mean")), 1, 0),
         !!paste0(variable, "_yqindustry_above_75") := ifelse(.data[[variable]] >= !!sym(paste0(variable, "_yqindustry_q3")), 1, 0)
@@ -238,7 +294,7 @@ define_CLI_quartermate_attention <- function(df, variables) {
 }
 
 # Create variables
-df2 <- define_CLI_quartermate_attention(df, c("ccexp_q", "opexpo_q", "rgexpo_q", "phexpo_q"))
+df2 <- define_CLI_quartermate_attention(df, c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"))
 
 
 # inspect <- df |>
@@ -250,26 +306,27 @@ df_c <- df2 |> filter(CLI_quarter == 1)
 ## Reports over time -------------------------------------------------------
 
 df_c |>
-  count(yearqtr, opexpo_q_disc) |> rename(quantile = opexpo_q_disc) |> mutate(measure = "Opportunity") |>
+  count(yearqtr, op_expo_ew_disc) |> rename(quantile = op_expo_ew_disc) |> mutate(measure = "Opportunity") |>
   bind_rows(
-    df_c |> count(yearqtr, rgexpo_q_disc) |> rename(quantile = rgexpo_q_disc) |> mutate(measure = "Regulatory"),
-    df_c |> count(yearqtr, phexpo_q_disc) |> rename(quantile = phexpo_q_disc) |> mutate(measure = "Physical")
+    df_c |> count(yearqtr, rg_expo_ew_disc) |> rename(quantile = rg_expo_ew_disc) |> mutate(measure = "Regulatory"),
+    df_c |> count(yearqtr, ph_expo_ew_disc) |> rename(quantile = ph_expo_ew_disc) |> mutate(measure = "Physical")
   ) |>
+  filter(!is.na(quantile)) |>
   ggplot(aes(x = factor(yearqtr), y = n, group = factor(quantile))) +
   geom_line(aes(color = factor(quantile))) +
-  theme_bw() +
+  theme_hanno() +
   facet_wrap(~measure, ncol = 3) +
-  labs(x = "Year", y = "Number of Lobbying Reports", color = "Firm Quantile") +
+  labs(x = "Year", y = "Number of Lobbying Reports", color = "Firm Quartile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
   scale_color_brewer(type =  "qual", palette = 2) +
   # scale_linetype_discrete(name = "") +
-  theme(legend.position = "bottom", text = element_text(size = 15))
+  theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/figures/descriptives/CLI_quartermate_lobbying_overtime_variation.pdf", width = 10, height = 5.5)
+ggsave("results/figures/descriptives/climate_lobbying_overtime_variation.pdf", width = 10, height = 5.5)
 # ggsave("report/images/CLI_quartermate_lobbying_overtime_variation.png", width = 10, height = 5.5)
 
 
@@ -277,31 +334,24 @@ ggsave("results/figures/descriptives/CLI_quartermate_lobbying_overtime_variation
 ## Money over time ---------------------------------------------------------
 
 df_c |>
-  group_by(yearqtr, opexpo_q_disc) |>
-  summarise(money = sum(CLI_quarter_dollars, na.rm = TRUE)) |>
-  rename(quantile = opexpo_q_disc) |> mutate(measure = "Opportunity") |>
+  group_by(yearqtr, op_expo_ew_disc) |>
+  summarise(money = sum(CLI_amount_quarter, na.rm = TRUE)  / 10^6) |>
+  rename(quantile = op_expo_ew_disc) |> mutate(measure = "Opportunity") |>
   bind_rows(
-    df_c |> group_by(yearqtr, rgexpo_q_disc) |>
-      summarise(money = sum(CLI_quarter_dollars, na.rm = TRUE)) |>
-      rename(quantile = rgexpo_q_disc) |> mutate(measure = "Regulatory"),
-    df_c |> group_by(yearqtr, phexpo_q_disc) |>
-      summarise(money = sum(CLI_quarter_dollars, na.rm = TRUE)) |>
-      rename(quantile = phexpo_q_disc) |> mutate(measure = "Physical")
+    df_c |> group_by(yearqtr, rg_expo_ew_disc) |>
+      summarise(money = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
+      rename(quantile = rg_expo_ew_disc) |> mutate(measure = "Regulatory"),
+    df_c |> group_by(yearqtr, ph_expo_ew_disc) |>
+      summarise(money = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
+      rename(quantile = ph_expo_ew_disc) |> mutate(measure = "Physical")
     ) |>
   ungroup() |>
-  mutate(
-    quantile = case_when(
-      quantile == "q1" ~ 1,
-      quantile == "q2" ~ 2,
-      quantile == "q3" ~ 3,
-      quantile == "q4" ~ 4
-    )
-  ) |>
+  filter(!is.na(quantile)) |>
   ggplot(aes(x = factor(yearqtr), y = money, group = factor(quantile))) +
   geom_line(aes(color = factor(quantile), linetype = factor(quantile)), linewidth = 1.25) +
-  theme_bw() +
+  theme_hanno() +
   facet_wrap(~measure, ncol = 3) +
-  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quantile", linetype = "Firm Quantile") +
+  labs(x = "Year", y = "Money Spent (Mio USD)", color = "Firm Quartile", linetype = "Firm Quartile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 8)], labels = function(x) str_sub(x, end = -3)) +
@@ -315,7 +365,7 @@ df_c |>
         panel.grid.minor = element_blank())
 
 ## Save this
-ggsave("results/figures/descriptives/CLI_quartermate_spending_overtime_variation.pdf", width = 10, height = 7)
+ggsave("results/figures/descriptives/climate_spending_overtime_variation.pdf", width = 10, height = 7)
 # ggsave("report/images/CLI_quartermate_spending_overtime_variation.png", width = 10, height = 5.5)
 
 
@@ -336,7 +386,7 @@ df_c |>
   ungroup() |>
   ggplot(aes(x = factor(yearqtr), y = firms, group = factor(quantile))) +
   geom_line(aes(color = factor(quantile))) +
-  theme_bw() +
+  theme_hanno() +
   facet_wrap(~measure, ncol = 3) +
   labs(x = "Year", y = "No. of firms lobbying", color = "Firm Quantile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
