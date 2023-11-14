@@ -39,6 +39,19 @@ df$industry <- df$bvd_sector
 df <- df[which(df$industry!=""), ]
 df$industry_year <- paste(df$industry, df$year)
 
+df$ebit_at <- df$ebit / df$assets
+
+
+# remove all observations that have NA for any of these variables
+df <- df %>%
+  filter(
+    complete.cases(
+      op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y, ebit, I(ebit/assets), 
+      us_dummy, total_lobby, factor(year), factor(industry), factor(industry_year)
+    )
+  )
+
+
 
 # Only Climate Lobbying Reports -------------------------------------------
 
@@ -49,21 +62,38 @@ df <- df |>
 
 # set seed
 seed <- 1234
+seed
 set.seed(seed)
 
 # set number of topics
 k <- 5
+k
+
+# set formula: firms + quarter fixed effects
+formula.t <- as.formula("~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/assets) + us_dummy + total_lobby + factor(year) + factor(industry) + factor(industry_year)")
+formula.file.string <- "-firm-quarter"
+
+formula.t
+formula.file.string
+
+formula.est <- update(formula.t, 1:k ~ .)
+formula.est
 
 # set min threshold
 low.thres <- 100
+low.thres
 
 # Process text for STM
 processed <- textProcessor(
   df$issue_text,
   metadata = df,
   removenumbers = FALSE,
-  removepunctuation = TRUE
+  removepunctuation = TRUE,
+  removestopwords = TRUE
 )
+
+# Plot removed words
+# plotRemoved(processed$documents, lower.thresh = seq(1, 200, by = 100))
 
 # Prepare documents for STM
 out <- prepDocuments(processed$documents,
@@ -93,5 +123,6 @@ proc.time() - ptm
 
 # save
 save(prev.fit, file = "output/topicmodels.RData")
+save(out, file = "output/prepDocuments.RData")
 
 ### END

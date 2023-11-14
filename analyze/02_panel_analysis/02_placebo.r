@@ -185,10 +185,10 @@ tidied_results |>
   ) |>
   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
   facet_wrap(facets = ~term, scales = "free_x") +
-  geom_point(size = 2) + 
-  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1.25) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
+  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
+  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
+  geom_point(shape = 21, fill = "white", size = 2) +
   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
   labs(x = "Coefficient", y = "Issue") +
   theme(text = element_text(size = 15)) +
@@ -284,10 +284,10 @@ tidied_results_expenditure |>
   ) |>
   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
   facet_wrap(facets = ~term, scales = "free_x") +
-  geom_point(size = 2) + 
-  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1.25) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
+  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
+  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
+  geom_point(shape = 21, fill = "white", size = 2) +
   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
   labs(x = "Coefficient", y = "Issue") +
@@ -341,7 +341,7 @@ placebo_plot_df <- tidied_results |>
       dependent_var == "TAX" ~ "Taxation",
       dependent_var == "TRA" ~ "Transportation",
       dependent_var == "ROD" ~ "Roads",
-      dependent_var == "AUT" ~ "Automatives",
+      dependent_var == "AUT" ~ "Automotives",
       TRUE ~ dependent_var
     )
   )
@@ -356,10 +356,10 @@ placebo_plot_df |>
     ) |>
   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
   facet_grid(Category + Outcome ~ term, scales = "free") +
-  geom_point(size = 2) + 
-  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1.25) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
+  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
+  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
+  geom_point(shape = 21, fill = "white", size = 2) +
   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
   labs(x = "Coefficient", y = "Issue") +
@@ -370,13 +370,6 @@ placebo_plot_df |>
   
 
 ggsave("results/figures/regressions/placebos_sample.pdf", width = 8.5, height = 6.2)
-  
-  
-
-  
-  
-  
-  
 
 
 ### END
