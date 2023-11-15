@@ -208,6 +208,23 @@ lobbying_firmyear$CLI_amount_annual <- climate_amount
 ## to do for annual was easy - just needed to compute the proportion of issues that
 ## were climate for each report, then scale it by the dollar amount.
 
+env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
+caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
+eng_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENG", y))}[[1]])})
+fue_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("FUE", y))}[[1]])})
+
+
+env_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, env_issue_proportion)
+caw_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, caw_issue_proportion)
+eng_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, eng_issue_proportion)
+fue_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, fue_issue_proportion)
+
+lobbying_firmyear$CLI_ENV_amount_annual <- env_amount
+lobbying_firmyear$CLI_CAW_amount_annual <- caw_amount
+lobbying_firmyear$CLI_ENG_amount_annual <- eng_amount
+lobbying_firmyear$CLI_FUE_amount_annual <- fue_amount
+
+
 #gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
 #doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
 #epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
@@ -350,6 +367,8 @@ exposure_orbis_lobbyview_long$CLI_annual <- as.numeric(exposure_orbis_lobbyview_
 exposure_orbis_lobbyview_long$CLI_annual[is.na(exposure_orbis_lobbyview_long$CLI_annual)] <- 0
 exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
 exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_long$total_lobby_annual)] <- 0
+
+exposure_orbis_lobbyview_long$total_lobby_annual <- exposure_orbis_lobbyview_long$total_lobby_annual / 1000
 
 ## write csv
 write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)

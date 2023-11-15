@@ -27,6 +27,10 @@ df_wide_cont <- scale(df_wide_cont)
 ## slot back into main df_wide
 df[, df_wide_cont_vars] <- df_wide_cont
 
+to_numeric <- c("CLI_annual", "cc_expo_ew", "at", "n_employees")
+for(i in to_numeric) {
+  df[ , i] <- as.numeric(df[ , i])
+}
 
 # write csv
 fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
@@ -61,6 +65,10 @@ df_wide_cont <- scale(df_wide_cont)
 ## slot back into main df_wide
 df[, df_wide_cont_vars] <- df_wide_cont
 
+to_numeric <- c("CLI_annual", "cc_expo_ew", "at", "n_employees")
+for(i in to_numeric) {
+  df[ , i] <- as.numeric(df[ , i])
+}
 
 # write csv
 fwrite(df, file="data/03_final/lobbying_df_annual_REVISE_normal.csv")
