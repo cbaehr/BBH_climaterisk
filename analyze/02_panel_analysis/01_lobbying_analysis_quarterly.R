@@ -72,12 +72,11 @@ models <- list(
 modelsummary(
   models
   ,stars = c('*' = .1, '**' = .05, '***' = .01)
-  #,title = 'Effect of Climate Change Attention on Lobbying on Climate Issues'
   ,coef_map = cm
   ,vcov = ~ year + gvkey
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
   ,output = "latex_tabular"
-  ,output = "results/tables/climate_logit_qrt_bycomponent_FIRM.tex"
+  ,output = "results/tables/climate_logit_qrt_FIRM.tex"
 )
 
 
@@ -95,10 +94,12 @@ models <- list(
   "(7)" = feglm(CLI ~ cc_expo_ew + ebit + I(ebit/at) + us_dummy + total_lobby_quarter | year + industry + industry_year, family = "binomial", df)
 )
 
+### @Vincent: calculate F statistics for each model
+# fixstat
+
 modelsummary(
   models,
   stars = c('*' = .1, '**' = .05, '***' = .01),
-  #title = 'Effect of Climate Change Attention (components) on Lobbying on Climate Issues',
   coef_map = cm
   ,vcov = ~ year + industry
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
@@ -125,7 +126,7 @@ modelsummary(
   coef_map = cm
   ,vcov = ~ year + gvkey
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  output = "latex_tabular"
+  ,output = "latex_tabular"
   ,output = "results/tables/climate_logit_qrt_FIRM.tex"
 )
 
@@ -192,7 +193,6 @@ models2 <- list(
 x <- modelsummary(
   models2
   ,stars = c('*' = .1, '**' = .05, '***' = .01)
-  #title = 'Effect of Climate Change Attention on Lobbying Across Disaggregated Climate Issues',
   ,coef_map = cm
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
   ,output="latex"
