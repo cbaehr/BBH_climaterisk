@@ -133,10 +133,10 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 lobbying_firmyear$CLI_annual <- grepl("ENV|CAW|ENG|FUE", lobbying_firmyear$issue_code)
 
 ## issue specific dummies
-lobbying_firmyear$CLI_ENV_annual <- grepl("ENV", lobbying_firmyear$issue_code)
-lobbying_firmyear$CLI_CAW_annual <- grepl("CAW", lobbying_firmyear$issue_code)
-lobbying_firmyear$CLI_ENG_annual <- grepl("ENG", lobbying_firmyear$issue_code)
-lobbying_firmyear$CLI_FUE_annual <- grepl("FUE", lobbying_firmyear$issue_code)
+# lobbying_firmyear$CLI_ENV_annual <- grepl("ENV", lobbying_firmyear$issue_code)
+# lobbying_firmyear$CLI_CAW_annual <- grepl("CAW", lobbying_firmyear$issue_code)
+# lobbying_firmyear$CLI_ENG_annual <- grepl("ENG", lobbying_firmyear$issue_code)
+# lobbying_firmyear$CLI_FUE_annual <- grepl("FUE", lobbying_firmyear$issue_code)
 
 ## now look by quarter -> first step is to break up the issue code and report_quarter_code
 ## for each lobbying report. Second step is to look for coincidences of quarter i and 
@@ -210,22 +210,44 @@ lobbying_firmyear$CLI_amount_annual <- climate_amount
 ## to do for annual was easy - just needed to compute the proportion of issues that
 ## were climate for each report, then scale it by the dollar amount.
 
-env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
-caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
-eng_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENG", y))}[[1]])})
-fue_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("FUE", y))}[[1]])})
+# env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
+# caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
+# eng_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENG", y))}[[1]])})
+# fue_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("FUE", y))}[[1]])})
+# 
+# env_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, env_issue_proportion)
+# caw_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, caw_issue_proportion)
+# eng_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, eng_issue_proportion)
+# fue_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, fue_issue_proportion)
+# 
+# lobbying_firmyear$CLI_ENV_amount_annual <- env_amount
+# lobbying_firmyear$CLI_CAW_amount_annual <- caw_amount
+# lobbying_firmyear$CLI_ENG_amount_annual <- eng_amount
+# lobbying_firmyear$CLI_FUE_amount_annual <- fue_amount
+
+#####
+
+issues <- lapply(lobbying_firmyear$issue_code, FUN = function(x) unique(strsplit(x, ";|\\|")[[1]]))
+issues <- unique(unlist(issues))
+issues
+
+for(i in issues) {
+  
+  #lobbying_firmyear$CLI_ENV_annual <- grepl("ENV", lobbying_firmyear$issue_code)
+  lobbying_firmyear[ , sprintf("CLI_%s_annual", i)] <- grepl(i, lobbying_firmyear$issue_code)
+  
+  #env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
+  issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl(i, y))}[[1]])})
+  #env_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, env_issue_proportion)
+  issue_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, issue_proportion)
+  #lobbying_firmyear$CLI_ENV_amount_annual <- env_amount
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_annual", i)] <- issue_amount
+  print(i)
+}
 
 
-env_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, env_issue_proportion)
-caw_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, caw_issue_proportion)
-eng_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, eng_issue_proportion)
-fue_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, fue_issue_proportion)
 
-lobbying_firmyear$CLI_ENV_amount_annual <- env_amount
-lobbying_firmyear$CLI_CAW_amount_annual <- caw_amount
-lobbying_firmyear$CLI_ENG_amount_annual <- eng_amount
-lobbying_firmyear$CLI_FUE_amount_annual <- fue_amount
-
+#####
 
 #gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
 #doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
@@ -315,7 +337,7 @@ lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
 
 #####
 
-rm(list = setdiff(ls(), "lobbying_firmyear"))
+rm(list = setdiff(ls(), c("lobbying_firmyear", "issues")))
 
 #####
 
@@ -369,21 +391,29 @@ exposure_orbis_lobbyview_long$CLI_annual <- as.numeric(exposure_orbis_lobbyview_
 exposure_orbis_lobbyview_long$CLI_annual[is.na(exposure_orbis_lobbyview_long$CLI_annual)] <- 0
 exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
 
-exposure_orbis_lobbyview_long$CLI_CAW_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_annual)
-exposure_orbis_lobbyview_long$CLI_CAW_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_CAW_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_annual)] <- 0
+# exposure_orbis_lobbyview_long$CLI_CAW_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_annual)
+# exposure_orbis_lobbyview_long$CLI_CAW_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_annual)] <- 0
+# exposure_orbis_lobbyview_long$CLI_CAW_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_annual)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_ENG_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_annual)
+# exposure_orbis_lobbyview_long$CLI_ENG_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_annual)] <- 0
+# exposure_orbis_lobbyview_long$CLI_ENG_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_annual)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_ENV_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_annual)
+# exposure_orbis_lobbyview_long$CLI_ENV_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_annual)] <- 0
+# exposure_orbis_lobbyview_long$CLI_ENV_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_annual)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_FUE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_annual)
+# exposure_orbis_lobbyview_long$CLI_FUE_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_annual)] <- 0
+# exposure_orbis_lobbyview_long$CLI_FUE_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_annual)] <- 0
 
-exposure_orbis_lobbyview_long$CLI_ENG_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_annual)
-exposure_orbis_lobbyview_long$CLI_ENG_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_ENG_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_annual)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_ENV_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_annual)
-exposure_orbis_lobbyview_long$CLI_ENV_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_ENV_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_annual)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_FUE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_annual)
-exposure_orbis_lobbyview_long$CLI_FUE_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_FUE_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_annual)] <- 0
+for(i in issues) {
+  nm1 <- sprintf("CLI_%s_annual", i)
+  nm2 <- sprintf("CLI_%s_amount_annual", i)
+  exposure_orbis_lobbyview_long[ , nm1] <- as.numeric(exposure_orbis_lobbyview_long[ , nm1])
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[,nm1]) , nm1] <- 0
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[,nm2]) , nm2] <- 0
+}
 
 exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_long$total_lobby_annual)] <- 0
 

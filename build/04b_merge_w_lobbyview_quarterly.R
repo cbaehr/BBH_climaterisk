@@ -155,29 +155,29 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 ## for each row, we compute whether for any lobbying reports A) the report is about a climate issue
 ## AND B) the report is for qX . If any reports for that firm-year meet this criteria, they get a TRUE; else FALSE.
 
-env_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENV", x))
-caw_issue <- lapply(issue_code_split, FUN = function(x) grepl("CAW", x))
-eng_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENG", x))
-fue_issue <- lapply(issue_code_split, FUN = function(x) grepl("FUE", x))
-lobbying_firmyear$CLI_ENV_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q1)
-lobbying_firmyear$CLI_ENV_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q2)
-lobbying_firmyear$CLI_ENV_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q3)
-lobbying_firmyear$CLI_ENV_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q4)
-
-lobbying_firmyear$CLI_CAW_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q1)
-lobbying_firmyear$CLI_CAW_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q2)
-lobbying_firmyear$CLI_CAW_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q3)
-lobbying_firmyear$CLI_CAW_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q4)
-
-lobbying_firmyear$CLI_ENG_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q1)
-lobbying_firmyear$CLI_ENG_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q2)
-lobbying_firmyear$CLI_ENG_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q3)
-lobbying_firmyear$CLI_ENG_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q4)
-
-lobbying_firmyear$CLI_FUE_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q1)
-lobbying_firmyear$CLI_FUE_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q2)
-lobbying_firmyear$CLI_FUE_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q3)
-lobbying_firmyear$CLI_FUE_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q4)
+# env_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENV", x))
+# caw_issue <- lapply(issue_code_split, FUN = function(x) grepl("CAW", x))
+# eng_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENG", x))
+# fue_issue <- lapply(issue_code_split, FUN = function(x) grepl("FUE", x))
+# lobbying_firmyear$CLI_ENV_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q1)
+# lobbying_firmyear$CLI_ENV_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q2)
+# lobbying_firmyear$CLI_ENV_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q3)
+# lobbying_firmyear$CLI_ENV_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q4)
+# 
+# lobbying_firmyear$CLI_CAW_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q1)
+# lobbying_firmyear$CLI_CAW_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q2)
+# lobbying_firmyear$CLI_CAW_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q3)
+# lobbying_firmyear$CLI_CAW_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q4)
+# 
+# lobbying_firmyear$CLI_ENG_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q1)
+# lobbying_firmyear$CLI_ENG_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q2)
+# lobbying_firmyear$CLI_ENG_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q3)
+# lobbying_firmyear$CLI_ENG_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q4)
+# 
+# lobbying_firmyear$CLI_FUE_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q1)
+# lobbying_firmyear$CLI_FUE_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q2)
+# lobbying_firmyear$CLI_FUE_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q3)
+# lobbying_firmyear$CLI_FUE_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q4)
 
 
 
@@ -262,62 +262,128 @@ lobbying_firmyear$CLI_amount_q2 <- climate_amount_q2
 lobbying_firmyear$CLI_amount_q3 <- climate_amount_q3
 lobbying_firmyear$CLI_amount_q4 <- climate_amount_q4
 
-env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
-caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
-eng_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENG", y))}[[1]])})
-fue_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("FUE", y))}[[1]])})
+# env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
+# caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
+# eng_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENG", y))}[[1]])})
+# fue_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("FUE", y))}[[1]])})
+# 
+# env_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, env_issue_proportion)
+# env_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, env_issue_proportion)
+# env_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, env_issue_proportion)
+# env_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, env_issue_proportion)
+# env_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q1)
+# env_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q2)
+# env_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q3)
+# env_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q4)
+# lobbying_firmyear$CLI_ENV_amount_q1 <- env_amount_q1
+# lobbying_firmyear$CLI_ENV_amount_q2 <- env_amount_q2
+# lobbying_firmyear$CLI_ENV_amount_q3 <- env_amount_q3
+# lobbying_firmyear$CLI_ENV_amount_q4 <- env_amount_q4
+# 
+# caw_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, caw_issue_proportion)
+# caw_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, caw_issue_proportion)
+# caw_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, caw_issue_proportion)
+# caw_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, caw_issue_proportion)
+# caw_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q1)
+# caw_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q2)
+# caw_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q3)
+# caw_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q4)
+# lobbying_firmyear$CLI_CAW_amount_q1 <- caw_amount_q1
+# lobbying_firmyear$CLI_CAW_amount_q2 <- caw_amount_q2
+# lobbying_firmyear$CLI_CAW_amount_q3 <- caw_amount_q3
+# lobbying_firmyear$CLI_CAW_amount_q4 <- caw_amount_q4
+# 
+# eng_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, eng_issue_proportion)
+# eng_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, eng_issue_proportion)
+# eng_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, eng_issue_proportion)
+# eng_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, eng_issue_proportion)
+# eng_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q1)
+# eng_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q2)
+# eng_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q3)
+# eng_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q4)
+# lobbying_firmyear$CLI_ENG_amount_q1 <- eng_amount_q1
+# lobbying_firmyear$CLI_ENG_amount_q2 <- eng_amount_q2
+# lobbying_firmyear$CLI_ENG_amount_q3 <- eng_amount_q3
+# lobbying_firmyear$CLI_ENG_amount_q4 <- eng_amount_q4
+# 
+# fue_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, fue_issue_proportion)
+# fue_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, fue_issue_proportion)
+# fue_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, fue_issue_proportion)
+# fue_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, fue_issue_proportion)
+# fue_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q1)
+# fue_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q2)
+# fue_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q3)
+# fue_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q4)
+# lobbying_firmyear$CLI_FUE_amount_q1 <- fue_amount_q1
+# lobbying_firmyear$CLI_FUE_amount_q2 <- fue_amount_q2
+# lobbying_firmyear$CLI_FUE_amount_q3 <- fue_amount_q3
+# lobbying_firmyear$CLI_FUE_amount_q4 <- fue_amount_q4
 
-env_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, env_issue_proportion)
-env_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, env_issue_proportion)
-env_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, env_issue_proportion)
-env_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, env_issue_proportion)
-env_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q1)
-env_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q2)
-env_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q3)
-env_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, env_proportion_q4)
-lobbying_firmyear$CLI_ENV_amount_q1 <- env_amount_q1
-lobbying_firmyear$CLI_ENV_amount_q2 <- env_amount_q2
-lobbying_firmyear$CLI_ENV_amount_q3 <- env_amount_q3
-lobbying_firmyear$CLI_ENV_amount_q4 <- env_amount_q4
 
-caw_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, caw_issue_proportion)
-caw_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, caw_issue_proportion)
-caw_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, caw_issue_proportion)
-caw_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, caw_issue_proportion)
-caw_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q1)
-caw_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q2)
-caw_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q3)
-caw_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, caw_proportion_q4)
-lobbying_firmyear$CLI_CAW_amount_q1 <- caw_amount_q1
-lobbying_firmyear$CLI_CAW_amount_q2 <- caw_amount_q2
-lobbying_firmyear$CLI_CAW_amount_q3 <- caw_amount_q3
-lobbying_firmyear$CLI_CAW_amount_q4 <- caw_amount_q4
+#####
 
-eng_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, eng_issue_proportion)
-eng_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, eng_issue_proportion)
-eng_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, eng_issue_proportion)
-eng_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, eng_issue_proportion)
-eng_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q1)
-eng_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q2)
-eng_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q3)
-eng_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, eng_proportion_q4)
-lobbying_firmyear$CLI_ENG_amount_q1 <- eng_amount_q1
-lobbying_firmyear$CLI_ENG_amount_q2 <- eng_amount_q2
-lobbying_firmyear$CLI_ENG_amount_q3 <- eng_amount_q3
-lobbying_firmyear$CLI_ENG_amount_q4 <- eng_amount_q4
+issues <- lapply(lobbying_firmyear$issue_code, FUN = function(x) unique(strsplit(x, ";|\\|")[[1]]))
+issues <- unique(unlist(issues))
+issues
 
-fue_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, fue_issue_proportion)
-fue_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, fue_issue_proportion)
-fue_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, fue_issue_proportion)
-fue_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, fue_issue_proportion)
-fue_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q1)
-fue_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q2)
-fue_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q3)
-fue_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q4)
-lobbying_firmyear$CLI_FUE_amount_q1 <- fue_amount_q1
-lobbying_firmyear$CLI_FUE_amount_q2 <- fue_amount_q2
-lobbying_firmyear$CLI_FUE_amount_q3 <- fue_amount_q3
-lobbying_firmyear$CLI_FUE_amount_q4 <- fue_amount_q4
+for(i in issues) {
+  
+  #fue_issue <- lapply(issue_code_split, FUN = function(x) grepl("FUE", x))
+  X_issue <- lapply(issue_code_split, FUN = function(x) grepl(i, x))
+  
+  nm1 <- sprintf("CLI_%s_", i)
+  nm2 <- sprintf("CLI_%s_amount_", i)
+  lobbying_firmyear[ , paste0(nm1, "_q1")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q1)
+  lobbying_firmyear[ , paste0(nm1, "_q2")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q2)
+  lobbying_firmyear[ , paste0(nm1, "_q3")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q3)
+  lobbying_firmyear[ , paste0(nm1, "_q4")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q4)
+  # lobbying_firmyear$CLI_FUE_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q1)
+  # lobbying_firmyear$CLI_FUE_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q2)
+  # lobbying_firmyear$CLI_FUE_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q3)
+  # lobbying_firmyear$CLI_FUE_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q4)
+  
+  X_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl(i, y))}[[1]])})
+  
+  X_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, X_issue_proportion)
+  X_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, X_issue_proportion)
+  X_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, X_issue_proportion)
+  X_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, X_issue_proportion)
+  X_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, X_proportion_q1)
+  X_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, X_proportion_q2)
+  X_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, X_proportion_q3)
+  X_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, X_proportion_q4)
+  lobbying_firmyear[ , paste0(nm2, "q1")] <- X_amount_q1
+  lobbying_firmyear[ , paste0(nm2, "q2")] <- X_amount_q2
+  lobbying_firmyear[ , paste0(nm2, "q3")] <- X_amount_q3
+  lobbying_firmyear[ , paste0(nm2, "q4")] <- X_amount_q4
+  # fue_proportion_q1 <- mapply(FUN = function(x1, x2) {x1*x2}, q1_proportion, fue_issue_proportion)
+  # fue_proportion_q2 <- mapply(FUN = function(x1, x2) {x1*x2}, q2_proportion, fue_issue_proportion)
+  # fue_proportion_q3 <- mapply(FUN = function(x1, x2) {x1*x2}, q3_proportion, fue_issue_proportion)
+  # fue_proportion_q4 <- mapply(FUN = function(x1, x2) {x1*x2}, q4_proportion, fue_issue_proportion)
+  # fue_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q1)
+  # fue_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q2)
+  # fue_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q3)
+  # fue_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1)*x2, na.rm=T)}, amount_split, fue_proportion_q4)
+  # lobbying_firmyear$CLI_FUE_amount_q1 <- fue_amount_q1
+  # lobbying_firmyear$CLI_FUE_amount_q2 <- fue_amount_q2
+  # lobbying_firmyear$CLI_FUE_amount_q3 <- fue_amount_q3
+  # lobbying_firmyear$CLI_FUE_amount_q4 <- fue_amount_q4
+}
+
+#lobbying_firmyear$CLI_ENV_annual <- grepl("ENV", lobbying_firmyear$issue_code)
+lobbying_firmyear[ , sprintf("CLI_%s_annual", i)] <- grepl(i, lobbying_firmyear$issue_code)
+
+#env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
+issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl(i, y))}[[1]])})
+#env_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, env_issue_proportion)
+issue_amount <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, issue_proportion)
+#lobbying_firmyear$CLI_ENV_amount_annual <- env_amount
+lobbying_firmyear[ , sprintf("CLI_%s_amount_annual", i)] <- issue_amount
+print(i)
+
+#####
+
+
 
 doe_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("DEPARTMENT OF ENERGY", y))}[[1]])})
 epa_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENVIRONMENTAL PROTECTION AGENCY", y))}[[1]])})
@@ -383,17 +449,15 @@ lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
 
 #####
 
-rm(list = setdiff(ls(), "lobbying_firmyear"))
+rm(list = setdiff(ls(), c("lobbying_firmyear", "issues")))
 
 #####
 
 timespan <- paste0("q", 1:4)
 time_varying <- c("CLI_", "CLI_amount_", 
-                  "CLI_ENV_", "CLI_CAW_", "CLI_ENG_", "CLI_FUE_", 
                   "CLI_DOE_", "CLI_EPA_", 
-                  "CLI_ENV_amount_", "CLI_CAW_amount_", "CLI_ENG_amount_", "CLI_FUE_amount_", 
                   "CLI_DOE_amount_", "CLI_EPA_amount_",  
-                  "total_lobby_")
+                  "total_lobby_", sprintf("CLI_%s_", issues), sprintf("CLI_%s_amount_", issues))
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 
 
@@ -424,16 +488,25 @@ lobbying_firmquarter <- reshape(lobbying_firmyear,
                                 timevar="qtr",
                                 idvar="unique_id")
 
+for(i in issues) {
+  
+  names(lobbying_firmquarter)[names(lobbying_firmquarter)==sprintf("CLI_%s_q1", i)] <- sprintf("CLI_%s_quarter", i)
+  names(lobbying_firmquarter)[names(lobbying_firmquarter)==sprintf("CLI_%s_amount_q1", i)] <- sprintf("CLI_%s_amount_quarter", i)
+  # names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_q1"] <- "CLI_ENV_quarter"
+  # names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_amount_q1"] <- "CLI_ENV_amount_quarter"
+  
+}
+
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_q1"] <- "CLI_ENV_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_amount_q1"] <- "CLI_ENV_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_q1"] <- "CLI_CAW_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_amount_q1"] <- "CLI_CAW_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_q1"] <- "CLI_ENG_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_amount_q1"] <- "CLI_ENG_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_q1"] <- "CLI_FUE_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_amount_q1"] <- "CLI_FUE_amount_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_q1"] <- "CLI_ENV_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_amount_q1"] <- "CLI_ENV_amount_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_q1"] <- "CLI_CAW_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_amount_q1"] <- "CLI_CAW_amount_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_q1"] <- "CLI_ENG_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_amount_q1"] <- "CLI_ENG_amount_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_q1"] <- "CLI_FUE_quarter"
+# names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_amount_q1"] <- "CLI_FUE_amount_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_amount_q1"] <- "CLI_DOE_amount_quarter"
@@ -504,21 +577,36 @@ exposure_orbis_lobbyview_long$CLI_quarter <- as.numeric(exposure_orbis_lobbyview
 exposure_orbis_lobbyview_long$CLI_quarter[is.na(exposure_orbis_lobbyview_long$CLI_quarter)] <- 0
 exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
 
-exposure_orbis_lobbyview_long$CLI_CAW_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_quarter)
-exposure_orbis_lobbyview_long$CLI_CAW_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter)] <- 0
+# exposure_orbis_lobbyview_long$CLI_CAW_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_quarter)
+# exposure_orbis_lobbyview_long$CLI_CAW_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_quarter)] <- 0
+# exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_ENG_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_quarter)
+# exposure_orbis_lobbyview_long$CLI_ENG_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_quarter)] <- 0
+# exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_ENV_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_quarter)
+# exposure_orbis_lobbyview_long$CLI_ENV_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_quarter)] <- 0
+# exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter)] <- 0
+# 
+# exposure_orbis_lobbyview_long$CLI_FUE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_quarter)
+# exposure_orbis_lobbyview_long$CLI_FUE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_quarter)] <- 0
+# exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter)] <- 0
 
-exposure_orbis_lobbyview_long$CLI_ENG_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_quarter)
-exposure_orbis_lobbyview_long$CLI_ENG_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_ENV_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_quarter)
-exposure_orbis_lobbyview_long$CLI_ENV_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_FUE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_quarter)
-exposure_orbis_lobbyview_long$CLI_FUE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter)] <- 0
+for(i in issues) {
+  
+  nm1 <- sprintf("CLI_%s_quarter", i)
+  nm2 <- sprintf("CLI_%s_amount_quarter", i)
+  
+  exposure_orbis_lobbyview_long[ , nm1] <- as.numeric(exposure_orbis_lobbyview_long[ , nm1])
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[,nm1]) , nm1] <- 0
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[,nm2]) , nm2] <- 0
+  
+  # exposure_orbis_lobbyview_long$CLI_FUE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_quarter)
+  # exposure_orbis_lobbyview_long$CLI_FUE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_quarter)] <- 0
+  # exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter)] <- 0
+  
+}
 
 exposure_orbis_lobbyview_long$total_lobby_quarter[is.na(exposure_orbis_lobbyview_long$total_lobby_quarter)] <- 0
 
