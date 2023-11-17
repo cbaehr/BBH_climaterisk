@@ -1,6 +1,8 @@
 ### Firms & Lobbying
 ### Data transformation
 
+### Annual
+
 rm(list=ls())
 
 # load packages
@@ -366,17 +368,54 @@ exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipp
 exposure_orbis_lobbyview_long$CLI_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_annual)
 exposure_orbis_lobbyview_long$CLI_annual[is.na(exposure_orbis_lobbyview_long$CLI_annual)] <- 0
 exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_CAW_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_annual)
+exposure_orbis_lobbyview_long$CLI_CAW_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_CAW_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_ENG_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_annual)
+exposure_orbis_lobbyview_long$CLI_ENG_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_ENG_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_ENV_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_annual)
+exposure_orbis_lobbyview_long$CLI_ENV_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_ENV_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_FUE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_annual)
+exposure_orbis_lobbyview_long$CLI_FUE_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_FUE_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_annual)] <- 0
+
 exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_long$total_lobby_annual)] <- 0
 
 exposure_orbis_lobbyview_long$total_lobby_annual <- exposure_orbis_lobbyview_long$total_lobby_annual / 1000
 
+
+exposure_orbis_lobbyview_long$CLI_DOE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_annual)
+exposure_orbis_lobbyview_long$CLI_DOE_annual[is.na(exposure_orbis_lobbyview_long$CLI_DOE_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_EPA_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_EPA_annual)
+exposure_orbis_lobbyview_long$CLI_EPA_annual[is.na(exposure_orbis_lobbyview_long$CLI_EPA_annual)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_DOE_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_annual)] <- 0
+exposure_orbis_lobbyview_long$CLI_EPA_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_annual)] <- 0
+
+
+# check
+names(exposure_orbis_lobbyview_long)
+glimpse(exposure_orbis_lobbyview_long)
+
+table(exposure_orbis_lobbyview_long$CLI_annual, useNA = "ifany")
+table(exposure_orbis_lobbyview_long$CLI_EPA_annual, useNA = "ifany")
+table(exposure_orbis_lobbyview_long$CLI_DOE_annual, useNA = "ifany")
+table(exposure_orbis_lobbyview_long$CLI_amount_annual, useNA = "ifany")
+
+class(exposure_orbis_lobbyview_long$CLI_annual)
+class(exposure_orbis_lobbyview_long$CLI_EPA_annual)
+class(exposure_orbis_lobbyview_long$CLI_DOE_annual)
+class(exposure_orbis_lobbyview_long$CLI_amount_annual)
+
 ## write csv
-write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)
+fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)
 
-
-
-
-
-
-
-
+### END

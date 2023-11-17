@@ -160,9 +160,25 @@ caw_issue <- lapply(issue_code_split, FUN = function(x) grepl("CAW", x))
 eng_issue <- lapply(issue_code_split, FUN = function(x) grepl("ENG", x))
 fue_issue <- lapply(issue_code_split, FUN = function(x) grepl("FUE", x))
 lobbying_firmyear$CLI_ENV_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q1)
+lobbying_firmyear$CLI_ENV_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q2)
+lobbying_firmyear$CLI_ENV_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q3)
+lobbying_firmyear$CLI_ENV_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, env_issue, q4)
+
+lobbying_firmyear$CLI_CAW_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q1)
 lobbying_firmyear$CLI_CAW_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q2)
+lobbying_firmyear$CLI_CAW_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q3)
+lobbying_firmyear$CLI_CAW_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, caw_issue, q4)
+
+lobbying_firmyear$CLI_ENG_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q1)
+lobbying_firmyear$CLI_ENG_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q2)
 lobbying_firmyear$CLI_ENG_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q3)
+lobbying_firmyear$CLI_ENG_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, eng_issue, q4)
+
+lobbying_firmyear$CLI_FUE_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q1)
+lobbying_firmyear$CLI_FUE_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q2)
+lobbying_firmyear$CLI_FUE_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q3)
 lobbying_firmyear$CLI_FUE_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q4)
+
 
 
 gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
@@ -372,8 +388,30 @@ rm(list = setdiff(ls(), "lobbying_firmyear"))
 #####
 
 timespan <- paste0("q", 1:4)
-time_varying <- c("CLI_", "CLI_amount_", "CLI_DOE_", "CLI_EPA_", "CLI_DOE_amount_", "CLI_EPA_amount_",  "total_lobby_")
+time_varying <- c("CLI_", "CLI_amount_", 
+                  "CLI_ENV_", "CLI_CAW_", "CLI_ENG_", "CLI_FUE_", 
+                  "CLI_DOE_", "CLI_EPA_", 
+                  "CLI_ENV_amount_", "CLI_CAW_amount_", "CLI_ENG_amount_", "CLI_FUE_amount_", 
+                  "CLI_DOE_amount_", "CLI_EPA_amount_",  
+                  "total_lobby_")
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
+
+
+# # check columns
+# # Flatten the moving_list if it's a list of vectors
+# flat_moving_list <- unlist(moving_list)
+# 
+# # Check if each column in flat_moving_list exists in lobbying_firmyear
+# column_check <- sapply(flat_moving_list, function(col) col %in% names(lobbying_firmyear))
+# 
+# # Print out the results
+# print(column_check)
+# 
+# # Optionally, print out the columns that are missing
+# missing_columns <- flat_moving_list[!column_check]
+# print(missing_columns)
+
+
 ## reshape data from wide to long format
 
 lobbying_firmyear$unique_id <- paste(lobbying_firmyear$client_uuid, lobbying_firmyear$report_year)
@@ -388,6 +426,14 @@ lobbying_firmquarter <- reshape(lobbying_firmyear,
 
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_q1"] <- "CLI_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CLI_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_q1"] <- "CLI_ENV_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENV_amount_q1"] <- "CLI_ENV_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_q1"] <- "CLI_CAW_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_CAW_amount_q1"] <- "CLI_CAW_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_q1"] <- "CLI_ENG_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_amount_q1"] <- "CLI_ENG_amount_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_q1"] <- "CLI_FUE_quarter"
+names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_amount_q1"] <- "CLI_FUE_amount_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_amount_q1"] <- "CLI_DOE_amount_quarter"
@@ -454,6 +500,30 @@ exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipp
 exposure_orbis_lobbyview_long$CLI_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarter)
 exposure_orbis_lobbyview_long$CLI_quarter[is.na(exposure_orbis_lobbyview_long$CLI_quarter)] <- 0
 
+exposure_orbis_lobbyview_long$CLI_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarter)
+exposure_orbis_lobbyview_long$CLI_quarter[is.na(exposure_orbis_lobbyview_long$CLI_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_CAW_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_CAW_quarter)
+exposure_orbis_lobbyview_long$CLI_CAW_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_CAW_amount_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_ENG_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENG_quarter)
+exposure_orbis_lobbyview_long$CLI_ENG_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENG_amount_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_ENV_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_ENV_quarter)
+exposure_orbis_lobbyview_long$CLI_ENV_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_ENV_amount_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$CLI_FUE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_FUE_quarter)
+exposure_orbis_lobbyview_long$CLI_FUE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_quarter)] <- 0
+exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_FUE_amount_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$total_lobby_quarter[is.na(exposure_orbis_lobbyview_long$total_lobby_quarter)] <- 0
+
+exposure_orbis_lobbyview_long$total_lobby_quarter <- exposure_orbis_lobbyview_long$total_lobby_quarter / 1000
+
 exposure_orbis_lobbyview_long$CLI_DOE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_quarter)
 exposure_orbis_lobbyview_long$CLI_DOE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_quarter)] <- 0
 
@@ -463,11 +533,13 @@ exposure_orbis_lobbyview_long$CLI_EPA_quarter[is.na(exposure_orbis_lobbyview_lon
 exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
 exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter)] <- 0
 exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter)] <- 0
-exposure_orbis_lobbyview_long$total_lobby_quarter[is.na(exposure_orbis_lobbyview_long$total_lobby_quarter)] <- 0
 
-exposure_orbis_lobbyview_long$total_lobby_quarter <- exposure_orbis_lobbyview_long$total_lobby_quarter / 1000
+
+# check
+names(exposure_orbis_lobbyview_long)
+glimpse(exposure_orbis_lobbyview_long)
 
 ## write csv
-write.csv(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.csv", row.names=F)
+fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.csv", row.names=F)
 
-
+### END

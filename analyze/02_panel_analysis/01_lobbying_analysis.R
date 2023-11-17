@@ -146,7 +146,7 @@ modelsummary(
   ,vcov = ~ year + gvkey
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
   #,output = "latex"
-  ,output = "results/tables/climate_logit_targets.tex"
+  ,output = "results/tables/climate_logit_FIRM.tex"
 )
 
 

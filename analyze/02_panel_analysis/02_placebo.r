@@ -78,22 +78,20 @@ if(Sys.info()["user"]=="fiona" ) {setwd("/Users/Dropbox (Princeton)/BBH/BBH1/")}
 
 
 #Load dataset
-df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
+df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
 
-#Create new variable that is ebit/assets and normalize
-df <- df |> mutate(
-  ebit_at = scale(ebit / at)
-)
 
 # Specify covariate names
-cm <- c("op_expo_ew_y" = "Opportunity Exposure",
-        "rg_expo_ew_y" = "Regulatory Exposure",
-        "ph_expo_ew_y" = "Physical Exposure", 
-        "cc_expo_ew_y" = "Overall Exposure", 
+# Specify covariate names
+cm <- c("op_expo_ew" = "Opportunity Exposure",
+        "rg_expo_ew" = "Regulatory Exposure",
+        "ph_expo_ew" = "Physical Exposure", 
+        "cc_expo_ew" = "Overall Exposure",
         "ebit" = "EBIT",
+        "I(ebit/at)" = "EBIT/Assets",
         "ebit_at" = "EBIT/Assets",
         "us_dummy" = "US HQ",
-        "total_lobby" = "Total Lobbying ($)"
+        "total_lobby_quarter" = "Total Lobbying ($)"
 )
 
 #Run model for first issue code (agriculture) - this works
