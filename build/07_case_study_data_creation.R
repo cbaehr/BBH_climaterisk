@@ -524,7 +524,7 @@ lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 ## drop some lobbying variables that are still annual - dont want to create confusion for instance
 ## that ENV issue codes for a whole year are actually for a specific quarter. If we want to make these
 ## quarterly, we can do that later.
-lobbying_firmquarter <- lobbying_firmquarter[,!names(lobbying_firmquarter) %in% c("issue_code", "gov_entity", "issue_text")]
+# lobbying_firmquarter <- lobbying_firmquarter[,!names(lobbying_firmquarter) %in% c("issue_code", "gov_entity", "issue_text")]
 
 #####
 
@@ -638,5 +638,49 @@ fwrite(exposure_orbis_lobbyview_long, "data/02_processed/lobbying_df_quarterly_o
 
 # write rdata
 write_rds(exposure_orbis_lobbyview_long, "data/02_processed/lobbying_df_quarterly_only_CLI_text.rds")
+
+
+
+
+# Create excel sheets for automobile sector -------------------------------
+
+# Filter transportation sector
+auto <- exposure_orbis_lobbyview_long |>
+  filter(industry == "Transport Manufacturing")
+
+# Reduce
+auto <- auto |>
+  select(gvkey, conm, year, registrant_name, issue_code, issue_text, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  filter(!is.na(issue_text) & issue_text != "") |>
+  unique()
+  
+
+
+# Function to create excel sheet
+create_excel <- function(x){
+  
+  name <- deparse(substitute(x))
+  
+  # create a workbook
+  wb <- createWorkbook()
+  addWorksheet(wb, "Sheet1")
+  
+  # write contents
+  writeDataTable(wb, 1, x, startRow = 1, startCol = 1, tableStyle = "TableStyleLight9")
+  # ignore the warning message: it is redundant
+  # https://github.com/ycphs/openxlsx/issues/342
+  
+  # save the output
+  saveWorkbook(wb, paste0(name, ".xlsx"), overwrite = TRUE)
+}
+
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/03_final/issues_texts/")}
+
+# Create excel sheet
+create_excel(auto)
+
+
+
+
 
 ### END

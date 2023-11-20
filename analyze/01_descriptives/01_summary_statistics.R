@@ -8,14 +8,14 @@ pacman::p_load(tidyverse, data.table, modelsummary)
 
 ## Load data
 #Lobbying analysis dataset
-df <- fread("data/03_final/lobbying_df_wide_reduced.csv")
+df <- read_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal.rds")
 
 ## Number of firms
-df |> distinct(gvkey) |> count() # 2215
+df |> distinct(gvkey) |> count() # 11826
 
 ##Transform exposure variables *100 for easier interpretation
 # Identify the subset of variables to be multiplied by 100
-variables_to_multiply <- c("cc_expo_ew_y", "op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y")
+variables_to_multiply <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
 
 # Multiply the selected variables by 100
 df <- df |>
@@ -35,7 +35,7 @@ df$ebit_at <- df$ebit / df$at
 
 
 ##Summary statistics for all variables
-datasummary((Overall = cc_expo_ew_y) + (Opportunity = op_expo_ew_y) + (Regulatory = rg_expo_ew_y) + (Physical = ph_expo_ew_y) + (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + Min + P25 + P75 + Max + N,
+datasummary((Overall = cc_expo_ew) + (Opportunity = op_expo_ew) + (Regulatory = rg_expo_ew) + (Physical = ph_expo_ew) + (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + Min + P25 + P75 + Max + N,
             data = df,
             title = 'Summary Statistics',
             align = 'lccccccc',

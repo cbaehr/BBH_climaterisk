@@ -7,60 +7,63 @@ rm(list=ls())
 pacman::p_load(data.table, tidyverse)
 
 # set working directory
-if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/")}
-if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/data/")}
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
 
 
 # load data
-df <- fread("02_processed/exposure_year.csv", colClasses = c("sic"="character"))
-df$sic <- as.numeric(substr(df$sic, 1, 2))
+# df <- fread("02_processed/exposure_year.csv", colClasses = c("sic"="character"))
+# df$sic <- as.numeric(substr(df$sic, 1, 2))
+
+df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+
 
 # Within industry variation in exposure -----------------------------------
 
 
 # merge
 df <- df |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector != "") |> 
+  # filter out empty industry
+  filter(industry != "") |> 
   # select variables we need
-  select(isin, year, bvd_sector, opexpo, rgexpo, phexpo) |>
-  pivot_longer(cols = opexpo:phexpo, names_to = "Exposure", values_to = "Value") |>
+  select(isin, year, industry, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  pivot_longer(cols = op_expo_ew:ph_expo_ew, names_to = "Exposure", values_to = "Value") |>
   mutate(Exposure = recode(Exposure,
-                           opexpo = "Opportunity",
-                           phexpo = "Physical",
-                           rgexpo = "Regulatory"),
+                           op_expo_ew = "Opportunity",
+                           ph_expo_ew = "Physical",
+                           rg_expo_ew = "Regulatory"),
          round = round(Value,digits = 2))
 
 # calculate number of firms per industry
 industry_n_firms <- df |>
-  group_by(bvd_sector) |>
+  group_by(industry) |>
   count()
 
 # Calculate variance within each industry
 industry_var <- df |>
   # group by industry
-  group_by(bvd_sector, Exposure) |>
+  group_by(industry, Exposure) |>
   # get variance for each industry
   summarise(Variance = var(Value, na.rm = TRUE)) |>
   ungroup() |>
-  filter(!is.na(bvd_sector)) |>
+  filter(!is.na(industry)) |>
   arrange(desc(Variance))
 
 # Calculate mean variance across exposure variables
 industry_var_levels <- industry_var |>
-  group_by(bvd_sector) |>
+  group_by(industry) |>
   summarise(mean = mean(Variance, na.rm = TRUE)) |>
   ungroup() |>
-  filter(!is.na(bvd_sector)) |>
+  filter(!is.na(industry)) |>
   arrange((mean)) |>
   tail(15)
 
 
 # Violin Plot
 df |>
-  filter(bvd_sector %in% industry_var_levels$bvd_sector) |>
-  mutate(bvd_sector = factor(bvd_sector, levels = industry_var_levels$bvd_sector)) |>
-  ggplot(aes(y = Value, x = bvd_sector)) +
+  filter(industry %in% industry_var_levels$industry) |>
+  mutate(industry = factor(industry, levels = industry_var_levels$industry)) |>
+  ggplot(aes(y = Value, x = industry)) +
   facet_wrap(vars(Exposure), nrow = 1, scales = "free_x") +
   geom_violin(trim = T,
               fill = "darkgrey",
@@ -72,20 +75,20 @@ df |>
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         legend.position = "bottom",
-        text = element_text(size = 12))
+        text = element_text(size = 15))
 
 
-ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_violin.pdf", width=10, height=8)
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_violin.pdf", width=10, height=6)
 
 # BoxPlot
 
 df |>
-  filter(bvd_sector %in% industry_var_levels$bvd_sector) |>
+  filter(industry %in% industry_var_levels$industry) |>
   mutate(
-    bvd_sector=factor(bvd_sector, levels=industry_var_levels$bvd_sector),
-    bvd_sector = fct_relabel(bvd_sector, ~str_wrap(., width = 40))
+    industry=factor(industry, levels=industry_var_levels$industry),
+    industry = fct_relabel(industry, ~str_wrap(., width = 40))
     ) |>
-  ggplot(aes(y=Value,x=bvd_sector)) +
+  ggplot(aes(y=Value,x=industry)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "free_x") +
   geom_boxplot(fill="darkgrey"
                ,na.rm = TRUE
@@ -99,10 +102,10 @@ df |>
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         legend.position = "bottom",
-        text = element_text(size = 12))
+        text = element_text(size = 15))
 
 
-ggsave("../results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=8)
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=6)
 
 
 

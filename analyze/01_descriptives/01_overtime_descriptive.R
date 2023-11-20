@@ -639,11 +639,12 @@ plot_df |>
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)], labels = function(x) str_sub(x, end = -3)) +
-  # scale_color_viridis_d(option = "D", end = 0.9) +
+  scale_color_viridis_d(begin = 0.8, end = 0) +
   # scale_linetype_manual(values = c("dotted", "twodash", "dashed", "solid")) +
-  scale_color_brewer(type = "qual", palette = "Set1") +
+  # scale_color_brewer(palette = "Dark2") +
+  # scale_color_grey(start = .7, end = 0) +
   # scale_color_manual(values = c("darkgrey", "blue", "red", "black")) +
-  scale_shape_manual(values = c(0, 17, 2, 19)) +
+  scale_shape_manual(values = c(0, 17, 5, 19)) +
   theme(legend.position = "bottom", 
         text = element_text(size = 17),
         panel.grid.major = element_blank(), 
