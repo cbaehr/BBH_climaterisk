@@ -1,5 +1,5 @@
 ### Firms & Lobbying
-### Data transformation
+### Data transformation: With issue texts only for reports that include CLIMATE issues
 
 rm(list=ls())
 
@@ -95,6 +95,12 @@ lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
 ## missing would just be dropped. But makes the mapply easier
 lobbying$amount[which(lobbying$amount=="")] <- 0
 lobbying$gov_entity[lobbying$gov_entity==""] <- NA
+
+
+## Now filter out non-climate reports
+lobbying2 <- lobbying |> 
+  filter(grepl("ENV|CAW|ENG|FUE", issue_code))
+
 
 # collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
 #                   by=list(lobbying$report_year, lobbying$bvdid),
@@ -628,9 +634,9 @@ names(exposure_orbis_lobbyview_long)
 glimpse(exposure_orbis_lobbyview_long)
 
 ## write csv
-fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.csv")
+fwrite(exposure_orbis_lobbyview_long, "data/02_processed/lobbying_df_quarterly_only_CLI_text.csv")
 
 # write rdata
-write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.rds")
+write_rds(exposure_orbis_lobbyview_long, "data/02_processed/lobbying_df_quarterly_only_CLI_text.rds")
 
 ### END

@@ -11,8 +11,14 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # load packages
 pacman::p_load(data.table, tidyverse, haven)
 
+
+
+# Quarterly ---------------------------------------------------------------
+
+
+
 #Load data
-df <- fread("data/03_final/lobbying_df_quarterly_REVISE.csv")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 df <- data.frame(df)
 
 glimpse(df)
@@ -55,13 +61,17 @@ df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue
                                   "naics_2017_secondary", "bvdaccount", "client_name", "nace_primary",
                                   "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
                                   "bvdsector", "primary_naics", "amount_num")]
+
 write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata.dta")
 
-
+write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
 ### End Quarterly
 
-### Start Annual
+
+
+# Annual ------------------------------------------------------------------
+
 
 rm(list = ls())
 
