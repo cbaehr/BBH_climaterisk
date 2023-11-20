@@ -333,10 +333,10 @@ for(i in issues) {
   
   nm1 <- sprintf("CLI_%s_", i)
   nm2 <- sprintf("CLI_%s_amount_", i)
-  lobbying_firmyear[ , paste0(nm1, "_q1")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q1)
-  lobbying_firmyear[ , paste0(nm1, "_q2")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q2)
-  lobbying_firmyear[ , paste0(nm1, "_q3")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q3)
-  lobbying_firmyear[ , paste0(nm1, "_q4")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q4)
+  lobbying_firmyear[ , paste0(nm1, "q1")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q1)
+  lobbying_firmyear[ , paste0(nm1, "q2")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q2)
+  lobbying_firmyear[ , paste0(nm1, "q3")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q3)
+  lobbying_firmyear[ , paste0(nm1, "q4")] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, X_issue, q4)
   # lobbying_firmyear$CLI_FUE_q1 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q1)
   # lobbying_firmyear$CLI_FUE_q2 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q2)
   # lobbying_firmyear$CLI_FUE_q3 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, fue_issue, q3)
@@ -461,19 +461,19 @@ time_varying <- c("CLI_", "CLI_amount_",
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 
 
-# # check columns
-# # Flatten the moving_list if it's a list of vectors
-# flat_moving_list <- unlist(moving_list)
-# 
-# # Check if each column in flat_moving_list exists in lobbying_firmyear
-# column_check <- sapply(flat_moving_list, function(col) col %in% names(lobbying_firmyear))
-# 
-# # Print out the results
-# print(column_check)
-# 
-# # Optionally, print out the columns that are missing
-# missing_columns <- flat_moving_list[!column_check]
-# print(missing_columns)
+# check columns
+# Flatten the moving_list if it's a list of vectors
+flat_moving_list <- unlist(moving_list)
+
+# Check if each column in flat_moving_list exists in lobbying_firmyear
+column_check <- sapply(flat_moving_list, function(col) col %in% names(lobbying_firmyear))
+
+# Print out the results
+print(column_check)
+
+# Optionally, print out the columns that are missing
+missing_columns <- flat_moving_list[!column_check]
+print(missing_columns)
 
 
 ## reshape data from wide to long format
