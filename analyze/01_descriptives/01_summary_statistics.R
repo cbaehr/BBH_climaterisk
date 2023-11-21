@@ -8,39 +8,44 @@ pacman::p_load(tidyverse, data.table, modelsummary)
 
 ## Load data
 #Lobbying analysis dataset
-df <- read_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal.rds")
+df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
 ## Number of firms
 df |> distinct(gvkey) |> count() # 11826
 
-##Transform exposure variables *100 for easier interpretation
-# Identify the subset of variables to be multiplied by 100
-variables_to_multiply <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
-
-# Multiply the selected variables by 100
-df <- df |>
-  mutate(across(all_of(variables_to_multiply), ~ . * 100))
-
-##Transform financial variables
-
-# Identify the subset of variables to be divided by 1000000 to show in millions
-variables_to_divide <- c("ebit", "at", "total_lobby")
-
-# Divide the selected variables by 1000000
-df <- df |>
-  mutate(across(all_of(variables_to_divide), ~ . / 1000000))
-
-#Create new variable that is ebit/assets
-df$ebit_at <- df$ebit / df$at
+# ##Transform exposure variables *100 for easier interpretation
+# # Identify the subset of variables to be multiplied by 100
+# variables_to_multiply <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
+# 
+# # Multiply the selected variables by 100
+# df <- df |>
+#   mutate(across(all_of(variables_to_multiply), ~ . * 100))
+# 
+# ##Transform financial variables
+# 
+# # Identify the subset of variables to be divided by 1000000 to show in millions
+# variables_to_divide <- c("ebit", "at", "total_lobby")
+# 
+# # Divide the selected variables by 1000000
+# df <- df |>
+#   mutate(across(all_of(variables_to_divide), ~ . / 1000000))
+# 
+# #Create new variable that is ebit/assets
+# df$ebit_at <- df$ebit / df$at
 
 
 ##Summary statistics for all variables
-datasummary((Overall = cc_expo_ew) + (Opportunity = op_expo_ew) + (Regulatory = rg_expo_ew) + (Physical = ph_expo_ew) + (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + (`Total Lobbying Per Year($M)` = total_lobby) ~ Mean + SD + Min + P25 + P75 + Max + N,
-            data = df,
-            title = 'Summary Statistics',
-            align = 'lccccccc',
-            fmt = 3,
-            output = 'latex')
+datasummary(
+  (`Climate Lobbying Occurrence` = CLI_quarter) + (`Climate Lobbying Expenditure` = CLI_amount_quarter) + 
+    (Opportunity = op_expo_ew) + (Regulatory = rg_expo_ew) + (Physical = ph_expo_ew) + 
+    (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + 
+    (`Total Lobbying Per Quarter($M)` = total_lobby_quarter) ~ Mean + SD + Min + Max + N,
+  data = df,
+  title = 'Summary Statistics',
+  align = 'lccccc',
+  fmt = 3,
+  output = 'latex'
+)
 
 ##Exposure scores for top 10 industries
 # select for relevant variables
