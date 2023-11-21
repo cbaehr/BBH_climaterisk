@@ -1,0 +1,202 @@
+### Firms & Lobbying
+### Text Analysis
+### Transport manufacturing
+
+rm(list=ls())
+
+install.packages("quanteda.textstats", "wordcloud", "quanteda.textplots")
+
+# Load packages
+pacman::p_load(tidyverse, readxl, quanteda, quanteda.textstats, stm, wordcloud, quanteda.textplots)
+
+
+# Set working directory
+if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1/")}
+
+####Data preparation
+
+#Load data
+auto <- read_excel("data/03_final/issues_texts/auto.xlsx")
+
+#Create climate binary variable
+auto$CLI <- grepl("ENV|CAW|ENG|FUE", auto$issue_code)
+
+#Filter data for climate lobbying only 
+auto <- auto %>% 
+  filter(CLI == "TRUE")
+
+auto <- auto %>%
+  filter(
+    complete.cases(
+      op_expo_ew, rg_expo_ew, ph_expo_ew
+    )
+  )
+
+
+###Create overall corpus 
+auto_corpus <-corpus(auto$issue_text, docnames = seq_len(nrow(auto)))
+
+# Add document-level information
+docvars(auto_corpus) <- auto[, c("gvkey", "conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")]
+
+###Create sub-corpus for above/below average for each exposure measure
+##Opportunity 
+# Get the document variable from the corpus
+opp <- docvars(auto_corpus, "op_expo_ew")
+
+# Calculate the mean of the document variable
+med_opp <- median(opp)
+
+# Create a logical condition for grouping
+condition_opp <- opp > med_opp  # or < if you want the opposite comparison
+
+# Split the corpus into two groups based on the condition
+above_oppmed_corpus <- subset(auto_corpus, condition_opp)
+below_oppmed_corpus <- subset(auto_corpus, !condition_opp)
+
+#Make opp dfm
+# Convert the corpus to tokens
+tokens_opp_above <- tokens(above_oppmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE, remove = stopwords("english"))
+
+tokens_opp_above <- tokens_select(tokens_opp_above, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_opp_above <- dfm(tokens_opp_above)
+
+tokens_opp_below <- tokens(below_oppmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+
+tokens_opp_below <- tokens_select(tokens_opp_below, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_opp_below <- dfm(tokens_opp_below)
+
+##Keywords
+#Set opp keywords
+keywords_opp <- c("incentive", "tax", "charging", "technology", "electric", "fund", "research", "development", "battery", "hybrid")
+
+#Calculate frequency for above/below mean
+keyword_opp_above <- colSums(dfm_opp_above[, keywords_opp])
+
+keyword_opp_below <- colSums(dfm_opp_below[, keywords_opp])
+
+##Regulatory 
+# Get the document variable from the corpus
+reg <- docvars(auto_corpus, "rg_expo_ew")
+
+# Calculate the mean of the document variable
+med_reg <- median(reg)
+
+# Create a logical condition for grouping
+condition_reg <- reg > med_reg  # or < if you want the opposite comparison
+
+# Split the corpus into two groups based on the condition
+above_regmed_corpus <- subset(auto_corpus, condition_reg)
+below_regmed_corpus <- subset(auto_corpus, !condition_reg)
+
+#Make opp dfm
+# Convert the corpus to tokens
+tokens_reg_above <- tokens(above_regmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+
+tokens_reg_above <- tokens_select(tokens_reg_above, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_reg_above <- dfm(tokens_reg_above)
+
+tokens_reg_below <- tokens(below_regmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+
+tokens_reg_below <- tokens_select(tokens_reg_below, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_reg_below <- dfm(tokens_reg_below)
+
+##Keywords
+#Set opp keywords
+keywords_reg <- c("standard", "rule", "efficiency", "cafe", "fuel", "harmonization", "implement", "regulation", "monitor", "price")
+
+#Calculate frequency for above/below mean
+keyword_reg_above <- colSums(dfm_reg_above[, keywords_reg])
+
+keyword_reg_below <- colSums(dfm_reg_below[, keywords_reg])
+
+matching_keywords_reg <- colnames(dfm_reg_below)[colnames(dfm_reg_below) %in% keywords_reg]
+
+print(matching_keywords_reg) #median is zero so if we set condition to >= median then there is nothing below 
+
+##Physical 
+# Get the document variable from the corpus
+phy <- docvars(auto_corpus, "ph_expo_ew")
+
+# Calculate the mean of the document variable
+med_phy <- median(phy)
+
+# Create a logical condition for grouping
+condition_phy <- phy > med_phy  # or < if you want the opposite comparison
+
+# Split the corpus into two groups based on the condition
+above_phymed_corpus <- subset(auto_corpus, condition_phy)
+below_phymed_corpus <- subset(auto_corpus, !condition_phy)
+
+#Make opp dfm
+# Convert the corpus to tokens
+tokens_phy_above <- tokens(above_phymed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+
+tokens_phy_above <- tokens_select(tokens_phy_above, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_phy_above <- dfm(tokens_phy_above)
+
+tokens_phy_below <- tokens(below_phymed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+
+tokens_phy_below <- tokens_select(tokens_phy_below, 
+                                  pattern = stopwords("english"), 
+                                  selection = "remove")
+
+dfm_phy_below <- dfm(tokens_phy_below)
+
+##Keywords
+#Set opp keywords
+keywords_phy <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution", "flood" )
+keywords_phy_above <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution")
+
+#Calculate frequency for above/below mean
+keyword_phy_above <- colSums(dfm_phy_above[, keywords_phy_above])
+
+keyword_phy_below <- colSums(dfm_phy_below[, keywords_phy])
+
+matching_keywords_phy <- colnames(dfm_phy_above)[colnames(dfm_phy_above) %in% keywords_phy]
+
+print(matching_keywords_phy) #get same issue as above, no mention of flood in the above median group
+
+###Explore wordclouds
+set.seed(100)
+cloud_opp_above <- textplot_wordcloud(dfm_opp_above, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+
+cloud_opp_below <- textplot_wordcloud(dfm_opp_below, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+cloud_reg_above <- textplot_wordcloud(dfm_reg_above, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+
+cloud_reg_below <- textplot_wordcloud(dfm_reg_below, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+cloud_phy_above <- textplot_wordcloud(dfm_phy_above, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+
+cloud_phy_below <-textplot_wordcloud(dfm_phy_below, min_count = 8, random_order = FALSE,
+                   rotation = .25, 
+                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
