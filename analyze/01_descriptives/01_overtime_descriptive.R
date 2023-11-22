@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, janitor, cowplot, haschaR)
+pacman::p_load(data.table, tidyverse, janitor, haschaR, ggpubr)
 
 
 # set working directory
@@ -21,7 +21,7 @@ names(df)
 glimpse(df)
 
 
-## Reports over time -------------------------------------------------------
+# Reports over time -------------------------------------------------------
 
 df |>
   count(yearqtr, CLI_quarter) |>
@@ -38,7 +38,7 @@ df |>
   ggplot(aes(x = factor(yearqtr), y = n, group = factor(Issue))) +
   geom_line(aes(linetype = factor(Issue))) +
   theme_hanno() +
-  labs(x = "Year", y = "Number of Lobbying Reports", color = "Climate Report") +
+  labs(x = "Year", y = "# Lobbying Reports", color = "Climate Report") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
@@ -49,7 +49,7 @@ df |>
   theme(legend.position = "bottom")
 
 ## Save this
-ggsave("results/figures/descriptives/climate_lobbying_overtime.pdf", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_lobbying_overtime.pdf", width = 8, height = 5.5)
 # ggsave(plot = p1, "report/images/CLI_quartermate_lobbying_overtime.png", width = 9, height = 5.5)
 
 
@@ -77,22 +77,22 @@ ggsave("results/figures/descriptives/climate_lobbying_overtime.pdf", width = 9, 
 # # ggsave("report/images/CLI_quartermate_lobbying_overtime_issues.png", width = 9, height = 5.5)
 
 
-## Money over time ---------------------------------------------------------
+# Money over time ---------------------------------------------------------
 
 
-### By quarter --------------------------------------------------------------
+## By quarter --------------------------------------------------------------
 p2 <- df |>
   group_by(yearqtr) |>
   summarise(CLI = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
   left_join(
     df |>
       group_by(yearqtr) |>
-      summarise(Total = sum(total_lobby_quarter, na.rm = TRUE) / 10^6),
+      summarise(Total = sum(total_lobby_quarter, na.rm = TRUE) / 10^3),
     by = "yearqtr"
   ) |>
   mutate(
     Other = Total - CLI,
-    Share = CLI / Total
+    Share = (CLI / Total)*100
     )
 
 p2 |>
@@ -102,7 +102,7 @@ p2 |>
   ggplot(aes(x = factor(yearqtr), y = money, group = factor(Issue))) +
   geom_line(aes(linetype = factor(Issue))) +
   theme_hanno() +
-  labs(x = "Year", y = "Money Spent (Mio USD)") +
+  labs(x = element_blank(), y = "Lobbying Expenditure (Mio USD)") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
                    labels = function(x) str_sub(x, end = -3)) +
@@ -114,91 +114,115 @@ p2 |>
 
 
 ## Save this
-ggsave("results/figures/descriptives/climate_spending_overtime.pdf", width = 9, height = 5.5)
-# ggsave(plot = p2, "report/images/CLI_quartermate_spending_overtime.png", width = 9, height = 5.5)
+ggsave("results/figures/descriptives/climate_spending_overtime.pdf", width = 8, height = 5)
 
 
+p2 |>
+  filter(Share != 0) |>
+  ggplot(aes(x = yearqtr, y = Share, group = 1)) +
+  geom_line() +
+  theme_hanno() +
+  labs(x = element_blank(), y = "Climate share of lobbying 
+       expenditure (in %)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
+                   labels = function(x) str_sub(x, end = -3))
 
-# ### By year -----------------------------------------------------------------
-# 
-# p3 <- df |>
-#   group_by(year) |>
-#   summarise(CLI = sum(CLI_amount_annual, na.rm = TRUE) / 10^9) |>
-#   left_join(
-#     df |>
-#       group_by(year) |>
-#       summarise(Total = sum(total_lobby_annual, na.rm = TRUE) / 10^9),
-#     by = "year"
-#   ) |>
-#   mutate(
-#     Other = Total - CLI,
-#     Share = CLI / Total
-#   )
-# 
-# p3 |>
-#   select(-c(Total, Share)) |>
-#   pivot_longer(CLI:Other, names_to = "Issue", values_to = "money") |>
-#   filter(year < 2020) |>
-#   ggplot(aes(x = factor(year), y = money, group = factor(Issue))) +
-#   geom_line(aes(linetype = factor(Issue))) +
-#   theme_hanno() +
-#   labs(x = "Year", y = "Money Spent (Bio USD)") +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-#   expand_limits(y = 0) +
-#   scale_linetype_manual(name = "", 
-#                         labels = c("Climate Issues", "Other Issues"),
-#                         values = c("solid", "dashed")) +
-#   theme(legend.position = "bottom")
-# 
-# 
-# ## Save this
-# ggsave("results/figures/descriptives/climate_spending_overtime_annual.pdf", width = 9, height = 5.5)
-# # ggsave(plot = p2, "report/images/CLI_quartermate_spending_overtime.png", width = 9, height = 5.5)
-
-
-# ## By issue -----------------------------------------------------------------
-# 
-# df |>
-#   group_by(year, CLI_) |>
-#   summarise(money = sum(amount_num, na.rm = TRUE)) |>
-#   mutate(money = money / 10^9) |>
-#   filter(ENV==1) |> select(-ENV) |> mutate(issue = "Environmental") |>
-#   bind_rows(
-#     df |>
-#       group_by(yearqtr, CAW) |>
-#       summarise(money = sum(amount_num, na.rm = TRUE)) |>
-#       mutate(money = money / 10^9) |>
-#       filter(CAW==1) |> select(-CAW) |> mutate(issue = "Clean Air & Water (Quality)"),
-#     df |>
-#       group_by(yearqtr, ENG) |>
-#       summarise(money = sum(amount_num, na.rm = TRUE)) |>
-#       mutate(money = money / 10^9) |>
-#       filter(ENG==1) |> select(-ENG) |> mutate(issue = "Energy/Nuclear"),
-#     df |>
-#       group_by(yearqtr, FUE) |>
-#       summarise(money = sum(amount_num, na.rm = TRUE)) |>
-#       mutate(money = money / 10^9) |>
-#       filter(FUE==1) |> select(-FUE) |> mutate(issue = "Fuel/Gas/Oil")
-#     ) |>
-#   ggplot(aes(x = factor(yearqtr), y = money, group = factor(issue))) +
-#   geom_line(aes(color = factor(issue))) +
-#   theme_hanno() +
-#   labs(x = "Year", y = "Money Spent (Bio USD)") +
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-#   expand_limits(y = 0) +
-#   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)],
-#                    labels = function(x) str_sub(x, end = -3)) +
-#   scale_color_brewer(type =  "qual", name = "", palette = 2) +
-#   theme(legend.position = "bottom")
-# 
 ## Save this
-# ggsave("results/figures/descriptives/CLI_quartermate_spending_overtime_issues.pdf", width = 9, height = 5.5)
-# # ggsave("report/images/CLI_quartermate_spending_overtime_issues.png", width = 9, height = 5.5)
-# 
-# 
-# # Combine
-# pcomb <- plot_grid(p1, p2, labels = "AUTO", nrow = 2)
-# ggsave2(plot = pcomb, "results/figures/descriptives/CLI_quartermate_lobbying_overtime_comb.pdf", width = 9, height = 9)
+ggsave("results/figures/descriptives/climate_spending_overtime_share.pdf", width = 8, height = 4)
+
+
+## By year -----------------------------------------------------------------
+
+p3 <- df |>
+  group_by(year) |>
+  summarise(CLI = sum(CLI_amount_annual, na.rm = TRUE)) |>
+  left_join(
+    df |>
+      group_by(year) |>
+      summarise(Total = sum(total_lobby_annual, na.rm = TRUE)),
+    by = "year"
+  ) |>
+  mutate(
+    Other = Total - CLI,
+    Share = (CLI / Total) * 100
+  )
+
+p3 |>
+  select(-c(Total, Share)) |>
+  pivot_longer(CLI:Other, names_to = "Issue", values_to = "money") |>
+  filter(year < 2020) |>
+  ggplot(aes(x = factor(year), y = money, group = factor(Issue))) +
+  geom_line(aes(linetype = factor(Issue))) +
+  theme_hanno() +
+  labs(x = "Year", y = "Lobbying Expenditure (Bio USD)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
+  scale_linetype_manual(name = "",
+                        labels = c("Climate Issues", "Other Issues"),
+                        values = c("solid", "dashed")) +
+  theme(legend.position = "bottom")
+
+## Save this
+ggsave("results/figures/descriptives/climate_spending_overtime_annual.pdf", width = 9, height = 5.5)
+
+
+p3 |>
+  filter(year < 2020) |>
+  ggplot(aes(x = factor(year), y = Share, group = 1)) +
+  geom_line() +
+  theme_hanno() +
+  labs(x = "Year", y = "Climate share of lobbying
+       expenditure (in %)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+## Save this
+ggsave("results/figures/descriptives/climate_spending_overtime_annual_share.pdf", width = 8, height = 5.5)
+
+
+## By issue (quarter) -----------------------------------------------------------------
+
+p4 <- df |>
+  group_by(yearqtr) |>
+  summarise(money = sum(CLI_ENV_amount_quarter, na.rm = TRUE)) |>
+  mutate(issue = "Environmental") |>
+  bind_rows(
+    df |>
+      group_by(yearqtr) |>
+      summarise(money = sum(CLI_CAW_amount_quarter, na.rm = TRUE)) |>
+      mutate(issue = "Clean Air & Water (Quality)"),
+    df |>
+      group_by(yearqtr) |>
+      summarise(money = sum(CLI_ENG_amount_quarter, na.rm = TRUE)) |>
+      mutate(issue = "Energy/Nuclear"),
+    df |>
+      group_by(yearqtr) |>
+      summarise(money = sum(CLI_FUE_amount_quarter, na.rm = TRUE)) |>
+      mutate(issue = "Fuel/Gas/Oil")
+    ) |>
+  filter(money != 0) |>
+  mutate(money = money / 1000000)
+
+p4 |>
+  ggplot(aes(x = factor(yearqtr), y = money, group = factor(issue))) +
+  geom_line(aes(color = factor(issue))) +
+  geom_point(aes(shape = factor(issue), color = factor(issue))) +
+  theme_hanno() +
+  labs(x = element_blank(), y = "Lobbying Expenditure (Mio USD)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
+  scale_x_discrete(
+    breaks = function(x)
+      x[seq(1, length(x), 4)],
+    labels = function(x)
+      str_sub(x, end = -3)
+  ) +
+  scale_color_viridis_d(begin = 0.8, end = 0) +
+  scale_shape_manual(values = c(19, 17, 5, 0)) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+# Combine
+ggsave("results/figures/descriptives/climate_spending_overtime_issues.pdf", width = 8, height = 4.5)
 
 
 

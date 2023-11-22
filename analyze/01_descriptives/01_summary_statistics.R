@@ -6,6 +6,11 @@ rm(list=ls())
 # Load packages
 pacman::p_load(tidyverse, data.table, modelsummary)
 
+# set working directory
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
+
+
 ## Load data
 #Lobbying analysis dataset
 df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
@@ -50,48 +55,49 @@ datasummary(
 ##Exposure scores for top 10 industries
 # select for relevant variables
 df_ind <- df |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector != "") |> 
+  # filter out empty industry
+  filter(industry != "") |> 
   # select variables we need
-  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(isin, year, industry, cc_expo_ew, op_expo_ew, rg_expo_ew, ph_expo_ew)
 
 
 ##calculate summary for exposure variables and identify top 10 
-#Overall exposure
-# Step 1: Calculate the mean of overall exposure
-avg_overall <- df_ind |>
-  group_by(bvd_sector) |>
-  summarize(mean = mean(cc_expo_ew_y, na.rm = TRUE))
-
-# Step 2: Sort the dataframe based on the mean values in descending order
-sorted_avg_overall <- avg_overall[order(-avg_overall$mean), ]
-
-# Step 3: Select the top 10 rows from the sorted dataframe
-top10_avg_overall <- sorted_avg_overall[1:10, ]
-
-ov_industries <- as.character(top10_avg_overall$bvd_sector)
-
-
-#Step 4: Make datasummary table for these 10 industries 
-# select for relevant variables
-df_ind_ov <- df_ind |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector %in% ov_industries) |> 
-  # select variables we need
-  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
-
-#data summary
-overall <- datasummary((Industry = bvd_sector) ~ cc_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
-            data = df_ind_ov,
-            title = 'Overall Exposure for Top 10 Industries',
-            fmt = 3,
-            output = 'latex')
+# #Overall exposure
+# # Step 1: Calculate the mean of overall exposure
+# avg_overall <- df_ind |>
+#   group_by(industry) |>
+#   summarize(mean = mean(cc_expo_ew, na.rm = TRUE))
+# 
+# # Step 2: Sort the dataframe based on the mean values in descending order
+# sorted_avg_overall <- avg_overall[order(-avg_overall$mean), ]
+# 
+# # Step 3: Select the top 10 rows from the sorted dataframe
+# top10_avg_overall <- sorted_avg_overall[1:10, ]
+# 
+# ov_industries <- as.character(top10_avg_overall$industry)
+# 
+# 
+# #Step 4: Make datasummary table for these 10 industries 
+# # select for relevant variables
+# df_ind_ov <- df_ind |> 
+#   # filter out empty industry
+#   filter(industry %in% ov_industries) |> 
+#   # select variables we need
+#   select(isin, year, industry, cc_expo_ew, op_expo_ew, rg_expo_ew, ph_expo_ew)
+# 
+# #data summary
+# datasummary((Industry = industry) ~ cc_expo_ew * (Mean + SD + Min + Max + N),
+#             data = df_ind_ov,
+#             title = 'Overall Exposure for Top 10 Industries',
+#             fmt = 3,
+#             output = 'latex'
+# )
 
 #Opp exposure
 # Step 1: Calculate the mean of opp exposure
 avg_opp <- df_ind |>
-  group_by(bvd_sector) |>
-  summarize(mean = mean(op_expo_ew_y, na.rm = TRUE))
+  group_by(industry) |>
+  summarize(mean = mean(op_expo_ew, na.rm = TRUE))
 
 # Step 2: Sort the dataframe based on the mean values in descending order
 sorted_avg_opp <- avg_opp[order(-avg_opp$mean), ]
@@ -99,19 +105,19 @@ sorted_avg_opp <- avg_opp[order(-avg_opp$mean), ]
 # Step 3: Select the top 10 rows from the sorted dataframe
 top10_avg_opp <- sorted_avg_opp[1:10, ]
 
-opp_industries <- as.character(top10_avg_opp$bvd_sector)
+opp_industries <- as.character(top10_avg_opp$industry)
 
 
 #Step 4: Make datasummary table for these 10 industries 
 # select for relevant variables
 df_ind_opp <- df_ind |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector %in% opp_industries) |> 
+  # filter out empty industry
+  filter(industry %in% opp_industries) |> 
   # select variables we need
-  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(isin, year, industry, cc_expo_ew, op_expo_ew, rg_expo_ew, ph_expo_ew)
 
 #data summary
-datasummary((Industry = bvd_sector) ~ op_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+datasummary((Industry = industry) ~ op_expo_ew*(Mean + SD + Min + Max + N),
                        data = df_ind_opp,
                        title = 'Opportunity Exposure by Industry',
                        fmt = 3,
@@ -120,8 +126,8 @@ datasummary((Industry = bvd_sector) ~ op_expo_ew_y*(Mean + SD + Min + P25 + P75 
 #Reg exposure
 # Step 1: Calculate the mean of opp exposure
 avg_reg <- df_ind |>
-  group_by(bvd_sector) |>
-  summarize(mean = mean(rg_expo_ew_y, na.rm = TRUE))
+  group_by(industry) |>
+  summarize(mean = mean(rg_expo_ew, na.rm = TRUE))
 
 # Step 2: Sort the dataframe based on the mean values in descending order
 sorted_avg_reg <- avg_reg[order(-avg_reg$mean), ]
@@ -129,18 +135,18 @@ sorted_avg_reg <- avg_reg[order(-avg_reg$mean), ]
 # Step 3: Select the top 10 rows from the sorted dataframe
 top10_avg_reg <- sorted_avg_reg[1:10, ]
 
-reg_industries <- as.character(top10_avg_reg$bvd_sector)
+reg_industries <- as.character(top10_avg_reg$industry)
 
 
 #Step 4: Make datasummary table for these 10 industries 
 # select for relevant variables
 df_ind_reg <- df_ind |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector %in% reg_industries) |> 
+  # filter out empty industry
+  filter(industry %in% reg_industries) |> 
   # select variables we need
-  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(isin, year, industry, cc_expo_ew, op_expo_ew, rg_expo_ew, ph_expo_ew)
 
-datasummary((Industry = bvd_sector) ~ rg_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+datasummary((Industry = industry) ~ rg_expo_ew*(Mean + SD + Min + Max + N),
                        data = df_ind_reg,
                        title = 'Regulatory Exposure',
                        fmt = 3, 
@@ -149,8 +155,8 @@ datasummary((Industry = bvd_sector) ~ rg_expo_ew_y*(Mean + SD + Min + P25 + P75 
 #Phy exposure
 # Step 1: Calculate the mean of phy exposure
 avg_ph <- df_ind |>
-  group_by(bvd_sector) |>
-  summarize(mean = mean(ph_expo_ew_y, na.rm = TRUE))
+  group_by(industry) |>
+  summarize(mean = mean(ph_expo_ew, na.rm = TRUE))
 
 # Step 2: Sort the dataframe based on the mean values in descending order
 sorted_avg_ph <- avg_ph[order(-avg_ph$mean), ]
@@ -158,21 +164,21 @@ sorted_avg_ph <- avg_ph[order(-avg_ph$mean), ]
 # Step 3: Select the top 10 rows from the sorted dataframe
 top10_avg_ph <- sorted_avg_ph[1:10, ]
 
-ph_industries <- as.character(top10_avg_ph$bvd_sector)
+ph_industries <- as.character(top10_avg_ph$industry)
 
 
 #Step 4: Make datasummary table for these 10 industries 
 # select for relevant variables
 df_ind_ph <- df_ind |> 
-  # filter out empty bvd_sector
-  filter(bvd_sector %in% ph_industries) |> 
+  # filter out empty industry
+  filter(industry %in% ph_industries) |> 
   # select variables we need
-  select(isin, year, bvd_sector, cc_expo_ew_y, op_expo_ew_y, rg_expo_ew_y, ph_expo_ew_y)
+  select(isin, year, industry, cc_expo_ew, op_expo_ew, rg_expo_ew, ph_expo_ew)
 
-datasummary((Industry = bvd_sector) ~ ph_expo_ew_y*(Mean + SD + Min + P25 + P75 + Max + N),
+datasummary((Industry = industry) ~ ph_expo_ew*(Mean + SD + Min + Max + N),
                        data = df_ind_ph,
                        title = 'Physical Exposure by Industry',
                        fmt = 3, 
                    output = 'latex')
 
-##
+# END
