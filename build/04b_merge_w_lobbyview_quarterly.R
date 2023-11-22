@@ -612,6 +612,8 @@ exposure_orbis_lobbyview_long$total_lobby_quarter[is.na(exposure_orbis_lobbyview
 
 exposure_orbis_lobbyview_long$total_lobby_quarter <- exposure_orbis_lobbyview_long$total_lobby_quarter / 1000
 
+exposure_orbis_lobbyview_long$ebit <- exposure_orbis_lobbyview_long$ebit / 1000000
+
 exposure_orbis_lobbyview_long$CLI_DOE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_quarter)
 exposure_orbis_lobbyview_long$CLI_DOE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_quarter)] <- 0
 
@@ -621,6 +623,7 @@ exposure_orbis_lobbyview_long$CLI_EPA_quarter[is.na(exposure_orbis_lobbyview_lon
 exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
 exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter)] <- 0
 exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter)] <- 0
+
 
 
 # check

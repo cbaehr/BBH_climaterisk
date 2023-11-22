@@ -15,59 +15,42 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/03_final/lobbying_df_wide_reduced_normal.csv")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
-
+# Rename fixed effects variables
 df <- df |>
-  mutate(
-    EPA_CLI = ifelse(
-      CLI == 1 & 
-        (EPA_ENV == 1 |
-           EPA_CAW == 1 |
-           EPA_ENG == 1 |
-           EPA_FUE == 1),
-      1, 0),
-    DOE_CLI = ifelse(
-      CLI == 1 & 
-        (DOE_ENV == 1 |
-           DOE_CAW == 1 |
-           DOE_ENG == 1 |
-           DOE_FUE == 1),
-      1, 0),
+  rename(
+    Firm = gvkey,
+    Year = year,
+    Industry = industry,
+    `Industry x Year` = industry_year
   )
-
-# # inspect
-# inspect <- df |> select(CLI, EPA_CLI, EPA_ENV, EPA_CAW, EPA_ENG, EPA_FUE)
-# # works!
-
-
 
 # Run models --------------------------------------------------------------
 
-# names
-cm <- c(
-  "op_expo_ew_y" = "Opportunity Exposure",
-  "rg_expo_ew_y" = "Regulatory Exposure",
-  "ph_expo_ew_y" = "Physical Exposure",
-  "ebit" = "EBIT",
-  "I(ebit/at)" = "EBIT/Assets",
-  "log_co2_l1" = "Log(Total CO2 Emissions)",
-  "us_dummy" = "US HQ",
-  "total_lobby" = "Total Lobbying ($)"
+# Specify covariate names
+cm <- c("op_expo_ew" = "Opportunity Exposure",
+        "rg_expo_ew" = "Regulatory Exposure",
+        "ph_expo_ew" = "Physical Exposure", 
+        "cc_expo_ew" = "Overall Exposure",
+        "ebit" = "EBIT",
+        "ebit_at" = "EBIT/Assets",
+        "us_dummy" = "US HQ",
+        "total_lobby_quarter" = "Total Lobbying ($)"
 )
 
 models <- list(
-  "(EPA)" = feglm(EPA_CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df),
-  "(DOE)" = feglm(DOE_CLI ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year, family = "binomial", df)
+  "EPA" = feglm(CLI_EPA_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
+  "DOE" = feglm(CLI_DOE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df)
 )
 
 modelsummary(
   models
   ,stars = c('*' = .1, '**' = .05, '***' = .01)
   ,coef_map = cm
-  ,vcov = ~ year + gvkey
-  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  ,output = "results/Tables/climate_logit_targets.tex"
+  ,vcov = ~ Year + Industry
+  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
+  #,output = "results/Tables/climate_logit_qrt_targets.tex"
 )
 
 ### END
