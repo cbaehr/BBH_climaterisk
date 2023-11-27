@@ -15,8 +15,48 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 #Lobbying analysis dataset
 df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
+
+
+# Number of firms & years -------------------------------------------------
+
 ## Number of firms
 df |> distinct(gvkey) |> count() # 11826
+
+## Years analyzed
+df |> 
+  filter(!is.na(op_expo_ew)) |>
+  distinct(year) |>
+  pull() # 2000-2020
+
+df |> 
+  filter(!is.na(CLI_quarter)) |>
+  distinct(year) |>
+  pull()
+
+
+# Table 2: Auto Stats -----------------------------------------------------
+
+# BMW & YearQrt 2020_3
+df |> filter(str_detect(conm, "BAYERI")) |> filter(yearqtr == "2020_3") |>
+  select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  # round to two digits
+  mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))
+
+# GM & YearQrt 2020_4
+df |> filter(str_detect(conm, "GENERAL MOTORS COMPANY")) |> filter(yearqtr == "2020_4") |>
+  select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  # round to two digits
+  mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))
+
+# Toyota & YearQrt 2020_3
+df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(yearqtr == "2020_4") |>
+  select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  # round to two digits
+  mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))
+
+
+
+# Summary stats -----------------------------------------------------------
 
 # ##Transform exposure variables *100 for easier interpretation
 # # Identify the subset of variables to be multiplied by 100

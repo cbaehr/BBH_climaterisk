@@ -108,12 +108,16 @@ modelsummary(
   ,output = "results/tables/climate_logit_qrt_bycomponent.tex"
 )
 
-modelsummary(
-  models,
-  stars = c('*' = .1, '**' = .05, '***' = .01),
-  coef_map = cm
-  ,gof_omit = 'AIC|BIC|Log.Lik|RMSE'
-)
+# Inspect model 6
+m6 <- models$`(6)`
+m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
+
+# modelsummary(
+#   models,
+#   stars = c('*' = .1, '**' = .05, '***' = .01),
+#   coef_map = cm
+#   ,gof_omit = 'AIC|BIC|Log.Lik|RMSE'
+# )
 
 ### calculate F statistics for each model
 # fitstat
