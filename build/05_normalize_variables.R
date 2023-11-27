@@ -76,7 +76,7 @@ write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 rm(list = ls())
 
 #Load data
-df <- fread("data/03_final/lobbying_df_annual_REVISE.csv")
+df <- read_rds("data/03_final/lobbying_df_annual_REVISE.rds")
 df <- data.frame(df)
 #Normalize variables for interpretation 
 
@@ -107,27 +107,16 @@ df <- df %>%
 # Check class
 glimpse(df)
 
-
-# Transform some empty to NA
-df <- df %>%
-  mutate(across(where(is.numeric), ~ ifelse(. == "", NA, .)))
-
-# Check class
-glimpse(df)
-
 # check
-table(df$cc_expo_ew, useNA = "ifany") # looks fine
-table(is.na(df$cc_expo_ew))
-class(df$cc_expo_ew)
-summary(df$cc_expo_ew)
 table(df$op_expo_ew, useNA = "ifany") # looks fine
+table(is.na(df$op_expo_ew))
+class(df$op_expo_ew)
+summary(df$cc_expo_ew)
 table(df$total_assets_usd, useNA = "ifany") # looks fine
 table(df$n_employees, useNA = "ifany") # looks fine
 table(df$operating_rev_usd, useNA = "ifany") # looks fine
 table(df$P_L_b4tax_usd, useNA = "ifany") # looks fine
 table(df$amount_num, useNA = "ifany") # looks fine
-
-glimpse(df)
 
 # write rds
 write_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal.rds")

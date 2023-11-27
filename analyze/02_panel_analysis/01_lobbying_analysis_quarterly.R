@@ -6,9 +6,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, modelsummary, 
-               marginaleffects, kableExtra, fixest,
-               janitor, viridis, censReg)
+pacman::p_load(tidyverse, fixest, modelsummary, kableExtra)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -126,25 +124,25 @@ modelsummary(
 
 
 
-### w/ firm fixed effects ---------------------------------------------------
-
-models <- list(
-  "(1)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df),
-  "(2)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew | year, family = "binomial", df),
-  "(3)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | year, family = "binomial", df),
-  "(4)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | year, family = "binomial", df),
-  "(5)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | year + gvkey, family = "binomial", df)
-)
-
-modelsummary(
-  models,
-  stars = c('*' = .1, '**' = .05, '***' = .01),
-  #title = 'Effect of Climate Change Attention (components) on Lobbying on Climate Issues',
-  coef_map = cm
-  ,vcov = ~ year + gvkey
-  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
-  ,output = "results/tables/climate_logit_qrt_FIRM.tex"
-)
+# ### w/ firm fixed effects ---------------------------------------------------
+# 
+# models <- list(
+#   "(1)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df),
+#   "(2)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew | year, family = "binomial", df),
+#   "(3)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | year, family = "binomial", df),
+#   "(4)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | year, family = "binomial", df),
+#   "(5)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | year + gvkey, family = "binomial", df)
+# )
+# 
+# modelsummary(
+#   models,
+#   stars = c('*' = .1, '**' = .05, '***' = .01),
+#   #title = 'Effect of Climate Change Attention (components) on Lobbying on Climate Issues',
+#   coef_map = cm
+#   ,vcov = ~ year + gvkey
+#   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
+#   ,output = "results/tables/climate_logit_qrt_FIRM.tex"
+# )
 
 
 
@@ -153,11 +151,11 @@ modelsummary(
 ## Overall climate lobbying (DOLLARS), overall exposure for quarter
 models <- list(
   "(1)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew, df, vcov = ~ Year + Industry),
-  "(4)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, df, vcov = ~ Year + Industry),
-  "(5)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, df, vcov = ~ Year + Industry),
-  "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, df, vcov = ~ Year + Industry),
-  "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, df, vcov = ~ Year + Industry),
-  "(7)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Firm, df, vcov = ~ Year + Firm)
+  "(2)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, df, vcov = ~ Year + Industry),
+  "(3)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, df, vcov = ~ Year + Industry),
+  "(4)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, df, vcov = ~ Year + Industry),
+  "(5)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, df, vcov = ~ Year + Industry),
+  "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Firm, df, vcov = ~ Year + Firm)
 )
 
 modelsummary(
@@ -227,7 +225,6 @@ models3 <- list(
 y <- modelsummary(
   models3
   ,stars = c('*' = .1, '**' = .05, '***' = .01)
-  #,title = 'Effect of Different Climate Change Attention on Lobbying on Climate Issues'
   ,coef_map = cm
   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
   ,output = "latex"
@@ -246,14 +243,14 @@ save_kable(y, file="results/tables/climate_logit_qrt_bycomponent_separate_issues
 
 # Region level analysis --------------------------------------------------
 
-us <- c("United States")
-eur <- c("France", "Germany", "Ireland", "Netherlands", "Switzerland", "United Kingdom", "Sweden", "Finland", "Norway", "Italy", "Denmark", 
-         "Belgium", "Luxembourg", "Spain", "Czechia", "Russia", "Austria")
-asia <- c("Japan", "China", "South Korea", "India", "Singapore", "Philippines", "Taiwan")
-
-df$hqloc <- ifelse(df$country_name %in% us, "usa",
-                   ifelse(df$country_name %in% eur, "europe",
-                          ifelse(df$country_name %in% asia, "asia", NA)))
+# us <- c("United States")
+# eur <- c("France", "Germany", "Ireland", "Netherlands", "Switzerland", "United Kingdom", "Sweden", "Finland", "Norway", "Italy", "Denmark", 
+#          "Belgium", "Luxembourg", "Spain", "Czechia", "Russia", "Austria")
+# asia <- c("Japan", "China", "South Korea", "India", "Singapore", "Philippines", "Taiwan")
+# 
+# df$hqloc <- ifelse(df$country_name %in% us, "usa",
+#                    ifelse(df$country_name %in% eur, "europe",
+#                           ifelse(df$country_name %in% asia, "asia", NA)))
 
 
 # ## Overall climate lobbying, overall exposure for quarter by specific attention component

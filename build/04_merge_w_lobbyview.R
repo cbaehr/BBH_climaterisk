@@ -419,6 +419,7 @@ exposure_orbis_lobbyview_long$total_lobby_annual[is.na(exposure_orbis_lobbyview_
 
 exposure_orbis_lobbyview_long$total_lobby_annual <- exposure_orbis_lobbyview_long$total_lobby_annual / 1000
 
+exposure_orbis_lobbyview_long$ebit <- exposure_orbis_lobbyview_long$ebit / 1000000
 
 exposure_orbis_lobbyview_long$CLI_DOE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_annual)
 exposure_orbis_lobbyview_long$CLI_DOE_annual[is.na(exposure_orbis_lobbyview_long$CLI_DOE_annual)] <- 0
@@ -447,5 +448,13 @@ class(exposure_orbis_lobbyview_long$CLI_amount_annual)
 
 ## write csv
 fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.csv", row.names=F)
+
+# write rdata
+write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_annual_REVISE.rds")
+
+
+# exposure_orbis_lobbyview_long_year <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
+
+
 
 ### END

@@ -636,4 +636,8 @@ fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVIS
 # write rdata
 write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.rds")
 
+
+# exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
+
+
 ### END
