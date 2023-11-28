@@ -59,7 +59,7 @@ industry_var_levels <- industry_var |>
   tail(15)
 
 
-# Violin Plot
+## Violin Plot -----
 df |>
   filter(industry %in% industry_var_levels$industry) |>
   mutate(industry = factor(industry, levels = industry_var_levels$industry)) |>
@@ -80,8 +80,7 @@ df |>
 
 ggsave("results/Figures/descriptives/within_industry_variances_TOP15_violin.pdf", width=10, height=6)
 
-# BoxPlot
-
+## BoxPlot ------
 df |>
   filter(industry %in% industry_var_levels$industry) |>
   mutate(
@@ -106,6 +105,33 @@ df |>
 
 
 ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot.pdf", width=10, height=6)
+
+
+## BoxPlot with same axis -----
+df |>
+  filter(industry %in% industry_var_levels$industry) |>
+  mutate(
+    industry=factor(industry, levels=industry_var_levels$industry),
+    industry = fct_relabel(industry, ~str_wrap(., width = 40))
+  ) |>
+  ggplot(aes(y=Value,x=industry)) +
+  facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+  ) +
+  coord_flip() + 
+  theme_bw() +
+  labs(y = "Distribution of Exposure Variables", x = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 15))
+
+
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed.pdf", width=10, height=6)
 
 
 
