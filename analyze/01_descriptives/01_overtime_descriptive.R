@@ -769,4 +769,37 @@ ggsave("results/figures/descriptives/climate_spending_overtime_variation_annual.
 # # ggsave("report/images/CLI_quartermate_firms_overtime_variation.png", width = 10, height = 5.5)
 
 
+
+# Exposure over time ------------------------------------------------------
+
+# Plot three exposure variable over time for firms in sample
+df_distr |>
+  group_by(yearqtr) |>
+  summarise(
+    op_expo_ew = mean(op_expo_ew, na.rm = TRUE),
+    rg_expo_ew = mean(rg_expo_ew, na.rm = TRUE),
+    ph_expo_ew = mean(ph_expo_ew, na.rm = TRUE)
+  ) |>
+  # filter out quarters where no firms are in the sample
+  filter(op_expo_ew > 0 | rg_expo_ew > 0 | ph_expo_ew > 0) |>
+  gather(key = "measure", value = "exposure", -yearqtr) |>
+  # rename exposure measures
+  mutate(measure = factor(measure, levels = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),
+                          labels = c("Opportunity", "Regulatory", "Physical"))) |>
+  ggplot(aes(x = factor(yearqtr), y = exposure, group = measure)) +
+  geom_point(aes(color = measure, shape = measure)) +
+  geom_line(aes(color = measure)) +
+  theme_hanno() +
+  labs(x = "Year", y = "Climate Change Exposure", color = "Exposure Measure", shape = "Exposure Measure") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  expand_limits(y = 0) +
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)], labels = function(x) str_sub(x, end = -3)) +
+  scale_color_viridis_d(option = "D", end = 0.9) +
+  scale_shape_manual(values = c(16, 17, 15)) +
+  theme(legend.position = "bottom", text = element_text(size = 15))
+
+# Save this
+ggsave("results/figures/descriptives/climate_exposure_overtime_variation.pdf", width = 8, height = 4.5)
+
+
 ### END

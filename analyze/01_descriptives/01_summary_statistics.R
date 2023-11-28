@@ -37,19 +37,19 @@ df |>
 # Table 2: Auto Stats -----------------------------------------------------
 
 # BMW & YearQrt 2020_3
-df |> filter(str_detect(conm, "BAYERI")) |> filter(yearqtr == "2020_3") |>
+df |> filter(str_detect(conm, "BAYERI")) |> filter(year == "2019") |>
   select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
   # round to two digits
   mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))
 
 # GM & YearQrt 2020_4
-df |> filter(str_detect(conm, "GENERAL MOTORS COMPANY")) |> filter(yearqtr == "2020_4") |>
+df |> filter(str_detect(conm, "GENERAL MOTORS COMPANY")) |> filter(year == "2019") |>
   select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
   # round to two digits
   mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))
 
 # Toyota & YearQrt 2020_3
-df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(yearqtr == "2020_4") |>
+df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(year == "2019") |>
   select(op_expo_ew, rg_expo_ew, ph_expo_ew) |>
   # round to two digits
   mutate(across(all_of(c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")), ~ round(., 2)))

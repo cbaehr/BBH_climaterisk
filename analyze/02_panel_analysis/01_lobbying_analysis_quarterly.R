@@ -96,7 +96,7 @@ models <- list(
   "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Year, family = "binomial", df, vcov = ~ Year + Industry),
   "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, family = "binomial", df, vcov = ~ Year + Industry),
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Industry),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df, vcov = ~ Year + `Industry x Year`),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df, vcov = ~ Year + Industry),
   "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
@@ -111,6 +111,7 @@ modelsummary(
 # Inspect model 6
 m6 <- models$`(6)`
 m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
+
 
 # modelsummary(
 #   models,
@@ -128,7 +129,7 @@ m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
 
 
 
-# ### w/ firm fixed effects ---------------------------------------------------
+### w/ firm fixed effects ---------------------------------------------------
 # 
 # models <- list(
 #   "(1)" = feglm(CLI_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df),
@@ -147,6 +148,58 @@ m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
 #   ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
 #   ,output = "results/tables/climate_logit_qrt_FIRM.tex"
 # )
+
+
+
+## Quarter FEs -------------------------------------------------------------
+
+df <- df |>
+  mutate(
+    Quarter = yearqtr,
+    `Industry x Quarter` = paste(Industry, Quarter)
+    )
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Quarter, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Quarter, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Industry, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Industry + `Industry x Quarter`, family = "binomial", df, vcov = ~ Quarter + Industry),
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Firm, family = "binomial", df, vcov = ~ Quarter + Firm)
+)
+
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm
+  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
+  ,output = "results/tables/climate_logit_qrt_bycomponent_qrtFEs.tex"
+)
+
+
+
+## All standardized --------------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df, vcov = ~ Year + Industry),
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Year, family = "binomial", df, vcov = ~ Year + Industry),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_scaled + ebit_at_scaled | Year, family = "binomial", df, vcov = ~ Year + Industry),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_scaled + ebit_at_scaled + us_dummy_scaled + total_lobby_quarter_scaled | Year, family = "binomial", df, vcov = ~ Year + Industry),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_scaled + ebit_at_scaled + us_dummy_scaled + total_lobby_quarter_scaled | Year + Industry, family = "binomial", df, vcov = ~ Year + Industry),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_scaled + ebit_at_scaled + us_dummy_scaled + total_lobby_quarter_scaled | Year + Industry + `Industry x Year`, family = "binomial", df, vcov = ~ Year + Industry),
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_scaled + ebit_at_scaled + us_dummy_scaled + total_lobby_quarter_scaled | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+)
+
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  #coef_map = cm
+  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
+  # ,output = "results/tables/climate_logit_qrt_bycomponent.tex"
+)
 
 
 

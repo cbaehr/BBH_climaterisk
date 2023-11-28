@@ -16,7 +16,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
 
 
@@ -92,87 +92,105 @@ df$`Total Lobbying`<- df$total_lobby_quarter
 
 df$CLI <- as.numeric(df$CLI_quarter)
 
-m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df)
+m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df, vcov = ~ year + industry)
 
 # Opportunity
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_occurrence_op_qty.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_occurrence,
     treatment = "op_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 15
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 
 # Regulatory
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_occurrence_rg_qty.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_occurrence,
     treatment = "rg_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 15
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 
-# Regulatory
+# Physical
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_occurrence_ph_qty.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_occurrence,
     treatment = "ph_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 15
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 
 # Amount --------------------------------------------------------------
 
-m_amount <- feols(CLI_amount_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df)
+m_amount <- feols(CLI_amount_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df, vcov = ~ year + industry)
 
 # Opportunity
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_amount_op_qrt.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_amount,
     treatment = "op_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 1
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 
 # Regulatory
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_amount_rg_qrt.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_amount,
     treatment = "rg_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 1
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 
-# Regulatory
+# Physical
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_amount_ph_qrt.pdf", width = 6, height = 6)
-# First Plot
 plot(
   sensemakr(
     m_amount,
     treatment = "ph_expo_ew",
     benchmark_covariates = "`Total Lobbying`",
     kd = 1
-  )
+  ),
+  cex.label.text = 1,
+  label.bump.x = 0.05,
+  cex.axis = 1,
+  cex.lab = 1
 )
 dev.off()
 # END

@@ -49,8 +49,8 @@ modelsummary(
   ,stars = c('*' = .1, '**' = .05, '***' = .01)
   ,coef_map = cm
   ,vcov = ~ Year + Industry
-  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE',
-  #,output = "results/Tables/climate_logit_qrt_targets.tex"
+  ,gof_omit = 'AIC|BIC|Log.Lik|Std.Errors|RMSE'
+  ,output = "results/Tables/climate_logit_qrt_targets.tex"
 )
 
 ### END

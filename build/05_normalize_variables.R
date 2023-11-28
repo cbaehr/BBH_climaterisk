@@ -35,6 +35,7 @@ df_wide_cont <- scale(df_wide_cont)
 ## slot back into main df_wide
 df[, df_wide_cont_vars] <- df_wide_cont
 
+
 # Transform some to numeric
 df <- df %>%
   mutate(
@@ -42,6 +43,14 @@ df <- df %>%
              "total_assets_usd", "n_employees", "operating_rev_usd", "P_L_b4tax_usd", "amount_num"
              ), as.numeric)
     )
+
+# List of additional variables to standardize
+additional_vars <- c("ebit", "ebit_at", "us_dummy", "total_lobby_quarter")
+
+# Standardize and create new columns with '_scaled' suffix
+for (var in additional_vars) {
+  df[[paste0(var, "_scaled")]] <- scale(df[[var]], center = TRUE, scale = TRUE)
+}
 
 # check
 table(df$cc_expo_ew, useNA = "ifany") # looks fine
@@ -51,6 +60,11 @@ table(df$n_employees, useNA = "ifany") # looks fine
 table(df$operating_rev_usd, useNA = "ifany") # looks fine
 table(df$P_L_b4tax_usd, useNA = "ifany") # looks fine
 table(df$amount_num, useNA = "ifany") # looks fine
+
+# Drop quarter "2020_2" - first covid quarters
+df <- df %>%
+  filter(!(yearqtr %in% c("2020_2", "2020_3", "2020_4", 
+                         "2021_1", "2021_2", "2021_3", "2021_4")))
 
 # write csv
 fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
@@ -104,6 +118,15 @@ df <- df %>%
     ), as.numeric)
   )
 
+
+# List of additional variables to standardize
+additional_vars <- c("ebit", "ebit_at", "us_dummy", "total_lobby_annual")
+
+# Standardize and create new columns with '_scaled' suffix
+for (var in additional_vars) {
+  df[[paste0(var, "_scaled")]] <- scale(df[[var]], center = TRUE, scale = TRUE)
+}
+
 # Check class
 glimpse(df)
 
@@ -118,6 +141,13 @@ table(df$operating_rev_usd, useNA = "ifany") # looks fine
 table(df$P_L_b4tax_usd, useNA = "ifany") # looks fine
 table(df$amount_num, useNA = "ifany") # looks fine
 
+# Drop quarter "2020_2" - first covid quarters
+df <- df %>%
+  filter(!(year %in% c("2020", "2021")))
+
+table(df$year)
+
+
 # write rds
 write_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal.rds")
 
@@ -131,4 +161,5 @@ df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue
                                   "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
                                   "bvdsector", "primary_naics", "amount_num")]
 write_dta(df_dta, path="data/03_final/lobbying_df_annual_REVISE_normal_stata.dta")
+
 ### End
