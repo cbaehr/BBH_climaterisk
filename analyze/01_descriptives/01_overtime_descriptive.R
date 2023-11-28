@@ -554,7 +554,8 @@ plot_df <- df_distr |>
       rename(quantile = ph_expo_ew_yqindustry_above_median) |> mutate(measure = "Physical")
     ) |>
   ungroup() |>
-  filter(!is.na(quantile))
+  filter(!is.na(quantile)) |>
+  mutate(measure = factor(measure, levels = c("Opportunity", "Regulatory", "Physical")))
 
 plot_df |>
   ggplot(aes(x = factor(yearqtr), y = money, group = factor(quantile))) +
@@ -591,7 +592,8 @@ plot_df <- df_distr |>
     quantile == "Q2" ~ "25-50%",
     quantile == "Q3" ~ "50-75%",
     quantile == "Q4" ~ "75-100%"
-  ))
+  )) |>
+  mutate(measure = factor(measure, levels = c("Opportunity", "Regulatory", "Physical")))
 
 plot_df |>
   ggplot(aes(x = factor(yearqtr), y = money, group = factor(quantile))) +
@@ -644,7 +646,8 @@ plot_df <- df_distr |>
     quantile == "Q2" ~ "25-50%",
     quantile == "Q3" ~ "50-75%",
     quantile == "Q4" ~ "75-100%"
-  )))
+  ))) |>
+  mutate(measure = factor(measure, levels = c("Opportunity", "Regulatory", "Physical")))
 
 plot_df |>
   ggplot(aes(x = factor(yearqtr), y = money, group = quantile)) +
@@ -659,7 +662,7 @@ plot_df |>
   theme_hanno() +
   facet_wrap(~measure, ncol = 1) +
   labs(x = "Year", y = "Lobbying Expenditure (Mio USD)", 
-       color = "Firm Exposure Quartile", linetype = "Firm Exposure Quartile", shape = "Firm Exposure Quartile") +
+       color = "Firm Exposure Percentile", linetype = "Firm Exposure Percentile", shape = "Firm Exposure Percentile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
   scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)], labels = function(x) str_sub(x, end = -3)) +
@@ -701,7 +704,9 @@ plot_df <- df_distr |>
     quantile == "Q2" ~ "25-50%",
     quantile == "Q3" ~ "50-75%",
     quantile == "Q4" ~ "75-100%"
-  )))
+  )))  |>
+  mutate(measure = factor(measure, levels = c("Opportunity", "Regulatory", "Physical")))
+
 
 plot_df |>
   ggplot(aes(x = factor(year), y = money, group = quantile)) +
@@ -716,13 +721,13 @@ plot_df |>
   theme_hanno() +
   facet_wrap(~measure, ncol = 1) +
   labs(x = "Year", y = "Lobbying Expenditure (Mio USD)", 
-       color = "Firm Exposure Quartile", linetype = "Firm Exposure Quartile", shape = "Firm Exposure Quartile") +
+       color = "Firm Exposure Percentile", linetype = "Firm Exposure Percentile", shape = "Firm Exposure Percentile") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   expand_limits(y = 0) +
   # scale_x_discrete(breaks = function(x) x[seq(1, length(x), 4)], labels = function(x) str_sub(x, end = -3)) +
-  # scale_color_viridis_d(option = "D", end = 0.9) +
+  scale_color_viridis_d(begin = 0.8, end = 0) +
   # scale_linetype_manual(values = c("dotted", "twodash", "dashed", "solid")) +
-  scale_color_brewer(type = "qual", palette = "Set1") +
+  # scale_color_brewer(type = "qual", palette = "Set1") +
   # scale_color_manual(values = c("darkgrey", "blue", "red", "black")) +
   scale_shape_manual(values = c(0, 17, 2, 19)) +
   theme(legend.position = "bottom", 
@@ -784,8 +789,9 @@ df_distr |>
   filter(op_expo_ew > 0 | rg_expo_ew > 0 | ph_expo_ew > 0) |>
   gather(key = "measure", value = "exposure", -yearqtr) |>
   # rename exposure measures
-  mutate(measure = factor(measure, levels = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),
-                          labels = c("Opportunity", "Regulatory", "Physical"))) |>
+  mutate(
+    measure = factor(measure, levels = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),
+                     labels = c("Opportunity", "Regulatory", "Physical"))) |>
   ggplot(aes(x = factor(yearqtr), y = exposure, group = measure)) +
   geom_point(aes(color = measure, shape = measure)) +
   geom_line(aes(color = measure)) +
