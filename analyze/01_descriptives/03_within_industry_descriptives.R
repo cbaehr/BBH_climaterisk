@@ -62,7 +62,10 @@ industry_var_levels <- industry_var |>
 ## Violin Plot -----
 df |>
   filter(industry %in% industry_var_levels$industry) |>
-  mutate(industry = factor(industry, levels = industry_var_levels$industry)) |>
+  mutate(
+    industry = factor(industry, levels = industry_var_levels$industry),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical")),
+    ) |>
   ggplot(aes(y = Value, x = industry)) +
   facet_wrap(vars(Exposure), nrow = 1, scales = "free_x") +
   geom_violin(trim = T,
@@ -85,7 +88,8 @@ df |>
   filter(industry %in% industry_var_levels$industry) |>
   mutate(
     industry=factor(industry, levels=industry_var_levels$industry),
-    industry = fct_relabel(industry, ~str_wrap(., width = 40))
+    industry = fct_relabel(industry, ~str_wrap(., width = 40)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical")),
     ) |>
   ggplot(aes(y=Value,x=industry)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "free_x") +
@@ -112,7 +116,8 @@ df |>
   filter(industry %in% industry_var_levels$industry) |>
   mutate(
     industry=factor(industry, levels=industry_var_levels$industry),
-    industry = fct_relabel(industry, ~str_wrap(., width = 40))
+    industry = fct_relabel(industry, ~str_wrap(., width = 40)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
   ) |>
   ggplot(aes(y=Value,x=industry)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
