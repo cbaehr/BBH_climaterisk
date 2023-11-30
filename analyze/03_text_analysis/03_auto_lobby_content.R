@@ -4,8 +4,6 @@
 
 rm(list=ls())
 
-install.packages("quanteda.textstats", "wordcloud", "quanteda.textplots")
-
 # Load packages
 pacman::p_load(tidyverse, readxl, quanteda, quanteda.textstats, stm, wordcloud, quanteda.textplots, ggplot2, viridis)
 
@@ -32,208 +30,24 @@ auto <- auto %>%
     )
   )
 
-
 ###Create overall corpus 
 auto_corpus <-corpus(auto$issue_text, docnames = seq_len(nrow(auto)))
 
 # Add document-level information
 docvars(auto_corpus) <- auto[, c("gvkey", "conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")]
 
-###Create sub-corpus for quartiles for each exposure measure
-##Opportunity 
-# Get the document variable from the corpus
+####Create sub-corpus for each exposure measure
+# Get the document variables from the corpus
 opp <- docvars(auto_corpus, "op_expo_ew")
-
-#Calculate quartiles for opportunity 
-q_opp <- quantile(opp, probs = c(0.25, 0.5, 0.75))
-
-#Create logical condition for grouping based on quartiles
-q1_opp <- auto_corpus[opp <= q_opp[1]]
-q2_opp <- auto_corpus[opp > q_opp[1] & opp <=q_opp[2]]
-q3_opp <- auto_corpus[opp > q_opp[2] & opp <=q_opp[3]]
-q4_opp <- auto_corpus[opp > q_opp[3]]
-
-
-#Make opp dfm
-# Convert the corpus to tokens
-tokens_q1_opp <- tokens(q1_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q1_opp <- tokens_select(tokens_q1_opp, 
-                                  pattern = stopwords("english"), 
-                                  selection = "remove")
-
-dfm_q1_opp <- dfm(tokens_q1_opp)
-
-
-tokens_q2_opp <- tokens(q2_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q2_opp <- tokens_select(tokens_q2_opp, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q2_opp <- dfm(tokens_q2_opp)
-
-
-tokens_q3_opp <- tokens(q3_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q3_opp <- tokens_select(tokens_q3_opp, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q3_opp <- dfm(tokens_q3_opp)
-
-
-tokens_q4_opp <- tokens(q4_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q4_opp <- tokens_select(tokens_q4_opp, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q4_opp <- dfm(tokens_q4_opp)
-
-
-##Keywords
-#Set opp keywords_version 1
-keywords_oppv1 <- c("battery", "charging", "development", "electric", "fund", "hybrid", "incentive", "research", "tax", "technology")
-
-#Calculate frequency for each quartile
-keyword_q1_oppv1 <- colSums(dfm_q1_opp[, keywords_oppv1])
-
-keyword_q2_oppv1 <- colSums(dfm_q2_opp[, keywords_oppv1])
-
-keyword_q3_oppv1 <- colSums(dfm_q3_opp[, keywords_oppv1])
-
-keyword_q4_oppv1 <- colSums(dfm_q4_opp[, keywords_oppv1])
-
-##Plot the results 
-#Create df
-opp_dfv1 <- data.frame(
-  Keyword = rep(keywords_opp, 4),
-  Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_opp)),
-  Count = c(keyword_q1_oppv1, keyword_q2_oppv1, keyword_q3_oppv1, keyword_q4_oppv1)
-)
-
-ggplot(opp_dfv1, aes(x = Keyword, y = Count, fill = Quartile)) +
-  geom_bar(stat = "identity", position = "dodge", color = "black") +
-  labs(title = "Opportunity Keyword Counts by Quartiles V1", x = "Keyword", y = "Count", fill = "Quartile") +
-  scale_fill_viridis_d(option = "viridis") +  
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-#Set opp keywords_version 2
-keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
-
-#Calculate frequency for each quartile
-keyword_q1_oppv2 <- colSums(dfm_q1_opp[, keywords_oppv2])
-
-keyword_q2_oppv2 <- colSums(dfm_q2_opp[, keywords_oppv2])
-
-keyword_q3_oppv2 <- colSums(dfm_q3_opp[, keywords_oppv2])
-
-keyword_q4_oppv2 <- colSums(dfm_q4_opp[, keywords_oppv2])
-
-##Plot the results 
-#Create df
-opp_dfv2 <- data.frame(
-  Keyword = rep(keywords_opp, 4),
-  Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_opp)),
-                 Count = c(keyword_q1_oppv2, keyword_q2_oppv2, keyword_q3_oppv2, keyword_q4_oppv2)
-  )
-
-ggplot(opp_dfv2, aes(x = Keyword, y = Count, fill = Quartile)) +
-  geom_bar(stat = "identity", position = "dodge", color = "black") +
-  labs(title = "Opportunity Keyword Counts by Quartiles V2", x = "Keyword", y = "Count", fill = "Quartile") +
-  scale_fill_viridis_d(option = "viridis") +  
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-##Regulatory
-# Get the document variable from the corpus
 reg <- docvars(auto_corpus, "rg_expo_ew")
+phy <- docvars(auto_corpus, "ph_expo_ew")
 
-#Calculate quartiles for regulatory 
-q_reg <- quantile(reg, probs = c(0.25, 0.5, 0.75))
-
-#Create logical condition for grouping based on quartiles
-q1_reg <- auto_corpus[reg <= q_reg[1]]
-q2_reg <- auto_corpus[reg > q_reg[1] & reg <=q_reg[2]]
-q3_reg <- auto_corpus[reg > q_reg[2] & reg <=q_reg[3]]
-q4_reg <- auto_corpus[reg > q_reg[3]]
-
-
-#Make reg dfm
-# Convert the corpus to tokens
-tokens_q1_reg <- tokens(q1_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q1_reg <- tokens_select(tokens_q1_reg, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q1_reg <- dfm(tokens_q1_reg)
-
-
-tokens_q2_reg <- tokens(q2_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q2_reg <- tokens_select(tokens_q2_reg, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q2_reg <- dfm(tokens_q2_reg)
-
-
-tokens_q3_reg <- tokens(q3_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q3_reg <- tokens_select(tokens_q3_reg, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q3_reg <- dfm(tokens_q3_reg)
-
-
-tokens_q4_reg <- tokens(q4_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
-
-tokens_q4_reg <- tokens_select(tokens_q4_reg, 
-                               pattern = stopwords("english"), 
-                               selection = "remove")
-
-dfm_q4_reg <- dfm(tokens_q4_reg)
-
-
-##Keywords
-#Set reg keywords
-keywords_reg <- c("standard", "rule", "efficiency", "cafe", "fuel", "harmonization", "implement", "regulation", "monitor", "price")
-
-#Calculate frequency for each quartile
-keyword_q1_reg <- colSums(dfm_q1_reg[, keywords_reg])
-
-keyword_q2_reg <- colSums(dfm_q2_reg[, keywords_reg])
-
-keyword_q3_reg <- colSums(dfm_q3_reg[, keywords_reg])
-
-keyword_q4_reg <- colSums(dfm_q4_reg[, keywords_reg])
-
-##Plot the results 
-#Create df
-reg_df <- data.frame(
-  Keyword = rep(keywords_reg, 4),
-  Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_reg)),
-  Count = c(keyword_q1_reg, keyword_q2_reg, keyword_q3_reg, keyword_q4_reg)
-)
-
-ggplot(reg_df, aes(x = Keyword, y = Count, fill = Quartile)) +
-  geom_bar(stat = "identity", position = "dodge", color = "black") +
-  labs(title = "Keyword Counts by Quartiles", x = "Keyword", y = "Count", fill = "Quartile") +
-  scale_fill_viridis_d(option = "viridis") +  
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-###################################
-###Alternative approach using median
-# Calculate the mean of the document variable
+###Opportunity median analysis
+# Calculate the median of the document variable
 med_opp <- median(opp)
 
 # Create a logical condition for grouping
-condition_opp <- opp > med_opp  # or < if you want the opposite comparison
+condition_opp <- opp > med_opp
 
 # Split the corpus into two groups based on the condition
 above_oppmed_corpus <- subset(auto_corpus, condition_opp)
@@ -259,12 +73,12 @@ dfm_opp_below <- dfm(tokens_opp_below)
 
 ##Keywords
 #Set opp keywords
-keywords_opp <- c("incentive", "tax", "charging", "technology", "electric", "fund", "research", "development", "battery", "hybrid")
+keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
 
-#Calculate frequency for above/below mean
-keyword_opp_above <- colSums(dfm_opp_above[, keywords_opp])
+#Calculate frequency for above/below median
+keyword_opp_above <- colSums(dfm_opp_above[, keywords_oppv2])
 
-keyword_opp_below <- colSums(dfm_opp_below[, keywords_opp])
+keyword_opp_below <- colSums(dfm_opp_below[, keywords_oppv2])
 
 # Calculate total words in the corpus
 total_opp_above <- sum(dfm_opp_above)
@@ -278,23 +92,20 @@ ratio_opp_below <- (keyword_opp_below / total_opp_below)
 
 ##Plot the results 
 #Create df to plot
-opp_df <- data.frame(keywords = keywords_opp, above = ratio_opp_above, below = ratio_opp_below)
+opp_df <- data.frame(keywords = keywords_oppv2, above = ratio_opp_above, below = ratio_opp_below)
 plot_opp_df <- reshape2::melt(opp_df, id.vars = "keywords")
 
 #Plot
-ggplot(plot_df, aes(x = keywords, y = value, fill = variable)) +
+ggplot(plot_opp_df, aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   scale_fill_viridis(discrete = TRUE, option = "D") +
-  labs(title = "Ratio of Opportunity Keywords Above and Below the Median",
+  labs(title = "Ratio of Opportunity Keywords Above and At/Below the Median",
        x = "Keywords", y = "Ratio") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
-##Regulatory 
-# Get the document variable from the corpus
-reg <- docvars(auto_corpus, "rg_expo_ew")
-
-# Calculate the mean of the document variable
+###Regulatory 
+# Calculate the median of the document variable
 med_reg <- median(reg)
 
 # Create a logical condition for grouping
@@ -323,14 +134,13 @@ tokens_reg_below <- tokens_select(tokens_reg_below,
 dfm_reg_below <- dfm(tokens_reg_below)
 
 ##Keywords
-#Set opp keywords
-keywords_reg <- c("standard", "rule", "efficiency", "cafe", "fuel", "harmonization", "implement", "regulation", "monitor", "price")
+#Set reg keywords
+keywords_reg <- c("implementation", "rule", "efficiency", "cafe", "emissions", "harmonization", "standards", "regulation", "monitor", "price")
 
-#Calculate frequency for above/below mean
+#Calculate frequency for above/below median
 keyword_reg_above <- colSums(dfm_reg_above[, keywords_reg])
 
 keyword_reg_below <- colSums(dfm_reg_below[, keywords_reg])
-
 
 # Calculate total words in the corpus
 total_reg_above <- sum(dfm_reg_above)
@@ -342,6 +152,7 @@ ratio_reg_above <- (keyword_reg_above / total_reg_above)
 
 ratio_reg_below <- (keyword_reg_below / total_reg_below)
 
+##Plot the results 
 #Create df to plot
 reg_df <- data.frame(keywords = keywords_reg, above = ratio_reg_above, below = ratio_reg_below)
 plot_reg_df <- reshape2::melt(reg_df, id.vars = "keywords")
@@ -356,11 +167,8 @@ ggplot(plot_reg_df, aes(x = keywords, y = value, fill = variable)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 
-##Physical 
-# Get the document variable from the corpus
-phy <- docvars(auto_corpus, "ph_expo_ew")
-
-# Calculate the mean of the document variable
+###Physical 
+# Calculate the median of the document variable
 med_phy <- median(phy)
 
 # Create a logical condition for grouping
@@ -389,18 +197,13 @@ tokens_phy_below <- tokens_select(tokens_phy_below,
 dfm_phy_below <- dfm(tokens_phy_below)
 
 ##Keywords
-#Set opp keywords
-keywords_phy <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution", "flood" )
-keywords_phy <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution")
+#Set phy keywords
+keywords_phy <- c("gas", "clean", "climate", "greenhouse", "warming", "environmental", "global", "air", "pollution", "fossil" )
 
 #Calculate frequency for above/below mean
 keyword_phy_above <- colSums(dfm_phy_above[, keywords_phy])
 
 keyword_phy_below <- colSums(dfm_phy_below[, keywords_phy])
-
-matching_keywords_phy <- colnames(dfm_phy_above)[colnames(dfm_phy_above) %in% keywords_phy]
-
-print(matching_keywords_phy) #get same issue as above, no mention of flood in the above median group
 
 
 # Calculate total words in the corpus
@@ -409,9 +212,226 @@ total_phy_above <- sum(dfm_phy_above)
 total_phy_below <- sum(dfm_phy_below)
 
 #Calculate ratio of each keyword to total words
-ratio_phy_above <- (keyword_phy_above / total_phy_above)*100
+ratio_phy_above <- (keyword_phy_above / total_phy_above)
 
-ratio_phy_below <- (keyword_phy_below / total_phy_below)*100
+ratio_phy_below <- (keyword_phy_below / total_phy_below)
+
+##Plot the results 
+#Create df to plot
+phy_df <- data.frame(keywords = keywords_phy, above = ratio_phy_above, below = ratio_phy_below)
+plot_phy_df <- reshape2::melt(phy_df, id.vars = "keywords")
+
+#Plot
+ggplot(plot_phy_df, aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  labs(title = "Ratio of Physical Keywords for Firms Above vs At/Below the Median",
+       x = "Keywords", y = "Ratio") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+###################OLD CODE
+# 
+# #Calculate quartiles for opportunity 
+# q_opp <- quantile(opp, probs = c(0.25, 0.5, 0.75))
+# 
+# #Create logical condition for grouping based on quartiles
+# q1_opp <- auto_corpus[opp <= q_opp[1]]
+# q2_opp <- auto_corpus[opp > q_opp[1] & opp <=q_opp[2]]
+# q3_opp <- auto_corpus[opp > q_opp[2] & opp <=q_opp[3]]
+# q4_opp <- auto_corpus[opp > q_opp[3]]
+# 
+# 
+# #Make opp dfm
+# # Convert the corpus to tokens
+# tokens_q1_opp <- tokens(q1_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q1_opp <- tokens_select(tokens_q1_opp, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q1_opp <- dfm(tokens_q1_opp)
+# 
+# 
+# tokens_q2_opp <- tokens(q2_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q2_opp <- tokens_select(tokens_q2_opp, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q2_opp <- dfm(tokens_q2_opp)
+# 
+# 
+# tokens_q3_opp <- tokens(q3_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q3_opp <- tokens_select(tokens_q3_opp, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q3_opp <- dfm(tokens_q3_opp)
+# 
+# 
+# tokens_q4_opp <- tokens(q4_opp, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q4_opp <- tokens_select(tokens_q4_opp, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q4_opp <- dfm(tokens_q4_opp)
+# 
+# 
+# ##Keywords
+# #Set opp keywords_version 1
+# keywords_oppv1 <- c("battery", "charging", "development", "electric", "fund", "hybrid", "incentive", "research", "tax", "technology")
+# 
+# #Calculate frequency for each quartile
+# keyword_q1_oppv1 <- colSums(dfm_q1_opp[, keywords_oppv1])
+# 
+# keyword_q2_oppv1 <- colSums(dfm_q2_opp[, keywords_oppv1])
+# 
+# keyword_q3_oppv1 <- colSums(dfm_q3_opp[, keywords_oppv1])
+# 
+# keyword_q4_oppv1 <- colSums(dfm_q4_opp[, keywords_oppv1])
+# 
+# ##Plot the results 
+# #Create df
+# opp_dfv1 <- data.frame(
+#   Keyword = rep(keywords_opp, 4),
+#   Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_opp)),
+#   Count = c(keyword_q1_oppv1, keyword_q2_oppv1, keyword_q3_oppv1, keyword_q4_oppv1)
+# )
+# 
+# ggplot(opp_dfv1, aes(x = Keyword, y = Count, fill = Quartile)) +
+#   geom_bar(stat = "identity", position = "dodge", color = "black") +
+#   labs(title = "Opportunity Keyword Counts by Quartiles V1", x = "Keyword", y = "Count", fill = "Quartile") +
+#   scale_fill_viridis_d(option = "viridis") +  
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# 
+# #Set opp keywords_version 2
+# keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
+# 
+# #Calculate frequency for each quartile
+# keyword_q1_oppv2 <- colSums(dfm_q1_opp[, keywords_oppv2])
+# 
+# keyword_q2_oppv2 <- colSums(dfm_q2_opp[, keywords_oppv2])
+# 
+# keyword_q3_oppv2 <- colSums(dfm_q3_opp[, keywords_oppv2])
+# 
+# keyword_q4_oppv2 <- colSums(dfm_q4_opp[, keywords_oppv2])
+# 
+# # Calculate total words in the corpus for each quartile
+# total_opp_q1 <- sum(dfm_q1_opp)
+# 
+# total_opp_q2 <- sum(dfm_q2_opp)
+# 
+# total_opp_q3 <- sum(dfm_q3_opp)
+# 
+# total_opp_q4 <- sum(dfm_q4_opp)
+# 
+# 
+# #Calculate ratio of each keyword to total words
+# ratio_opp_q1 <- (keyword_q1_oppv2 / total_opp_q1)
+# 
+# ratio_opp_q2 <- (keyword_q2_oppv2 / total_opp_q2)
+# 
+# ratio_opp_q3 <- (keyword_q3_oppv2 / total_opp_q3)
+# 
+# ratio_opp_q4 <- (keyword_q4_oppv2 / total_opp_q4)
+# 
+# 
+# ##Plot the results 
+# #Create df
+# opp_dfv2 <- data.frame(
+#   Keyword = rep(keywords_oppv2, 4),
+#   Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_oppv2)),
+#   Ratio = c(ratio_opp_q1, ratio_opp_q2, ratio_opp_q3, ratio_opp_q4)
+# )
+# 
+# ggplot(opp_dfv2, aes(x = Keyword, y = Ratio, fill = Quartile)) +
+#   geom_bar(stat = "identity", position = "dodge", color = "black") +
+#   labs(title = "Opportunity Keyword Ratio by Quartiles V2", x = "Keyword", y = "Ratio of Keywords to Total Words", fill = "Quartile") +
+#   scale_fill_viridis_d(option = "viridis") +  
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# 
+# #Calculate quartiles for regulatory 
+# q_reg <- quantile(reg, probs = c(0.25, 0.5, 0.75))
+# 
+# #Create logical condition for grouping based on quartiles
+# q1_reg <- auto_corpus[reg <= q_reg[1]]
+# q2_reg <- auto_corpus[reg > q_reg[1] & reg <=q_reg[2]]
+# q3_reg <- auto_corpus[reg > q_reg[2] & reg <=q_reg[3]]
+# q4_reg <- auto_corpus[reg > q_reg[3]]
+# 
+# 
+# #Make reg dfm
+# # Convert the corpus to tokens
+# tokens_q1_reg <- tokens(q1_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q1_reg <- tokens_select(tokens_q1_reg, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q1_reg <- dfm(tokens_q1_reg)
+# 
+# 
+# tokens_q2_reg <- tokens(q2_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q2_reg <- tokens_select(tokens_q2_reg, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q2_reg <- dfm(tokens_q2_reg)
+# 
+# 
+# tokens_q3_reg <- tokens(q3_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q3_reg <- tokens_select(tokens_q3_reg, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q3_reg <- dfm(tokens_q3_reg)
+# 
+# 
+# tokens_q4_reg <- tokens(q4_reg, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
+# 
+# tokens_q4_reg <- tokens_select(tokens_q4_reg, 
+#                                pattern = stopwords("english"), 
+#                                selection = "remove")
+# 
+# dfm_q4_reg <- dfm(tokens_q4_reg)
+# 
+# 
+# ##Keywords
+# #Set reg keywords
+# keywords_reg <- c("standard", "rule", "efficiency", "cafe", "fuel", "harmonization", "implement", "regulation", "monitor", "price")
+# 
+# #Calculate frequency for each quartile
+# keyword_q1_reg <- colSums(dfm_q1_reg[, keywords_reg])
+# 
+# keyword_q2_reg <- colSums(dfm_q2_reg[, keywords_reg])
+# 
+# keyword_q3_reg <- colSums(dfm_q3_reg[, keywords_reg])
+# 
+# keyword_q4_reg <- colSums(dfm_q4_reg[, keywords_reg])
+# 
+# ##Plot the results 
+# #Create df
+# reg_df <- data.frame(
+#   Keyword = rep(keywords_reg, 4),
+#   Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_reg)),
+#   Count = c(keyword_q1_reg, keyword_q2_reg, keyword_q3_reg, keyword_q4_reg)
+# )
+# 
+# ggplot(reg_df, aes(x = Keyword, y = Count, fill = Quartile)) +
+#   geom_bar(stat = "identity", position = "dodge", color = "black") +
+#   labs(title = "Keyword Counts by Quartiles", x = "Keyword", y = "Count", fill = "Quartile") +
+#   scale_fill_viridis_d(option = "viridis") +  
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 
 ###Explore wordclouds
 #set.seed(100)
