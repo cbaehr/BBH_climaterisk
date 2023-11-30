@@ -93,29 +93,56 @@ dfm_q4_opp <- dfm(tokens_q4_opp)
 
 
 ##Keywords
-#Set opp keywords
-keywords_opp <- c("incentive", "tax", "charging", "technology", "electric", "fund", "research", "development", "battery", "hybrid")
+#Set opp keywords_version 1
+keywords_oppv1 <- c("battery", "charging", "development", "electric", "fund", "hybrid", "incentive", "research", "tax", "technology")
 
 #Calculate frequency for each quartile
-keyword_q1_opp <- colSums(dfm_q1_opp[, keywords_opp])
+keyword_q1_oppv1 <- colSums(dfm_q1_opp[, keywords_oppv1])
 
-keyword_q2_opp <- colSums(dfm_q2_opp[, keywords_opp])
+keyword_q2_oppv1 <- colSums(dfm_q2_opp[, keywords_oppv1])
 
-keyword_q3_opp <- colSums(dfm_q3_opp[, keywords_opp])
+keyword_q3_oppv1 <- colSums(dfm_q3_opp[, keywords_oppv1])
 
-keyword_q4_opp <- colSums(dfm_q4_opp[, keywords_opp])
+keyword_q4_oppv1 <- colSums(dfm_q4_opp[, keywords_oppv1])
 
 ##Plot the results 
 #Create df
-opp_df <- data.frame(
+opp_dfv1 <- data.frame(
   Keyword = rep(keywords_opp, 4),
   Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_opp)),
-                 Count = c(keyword_q1_opp, keyword_q2_opp, keyword_q3_opp, keyword_q4_opp)
+  Count = c(keyword_q1_oppv1, keyword_q2_oppv1, keyword_q3_oppv1, keyword_q4_oppv1)
+)
+
+ggplot(opp_dfv1, aes(x = Keyword, y = Count, fill = Quartile)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Opportunity Keyword Counts by Quartiles V1", x = "Keyword", y = "Count", fill = "Quartile") +
+  scale_fill_viridis_d(option = "viridis") +  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#Set opp keywords_version 2
+keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
+
+#Calculate frequency for each quartile
+keyword_q1_oppv2 <- colSums(dfm_q1_opp[, keywords_oppv2])
+
+keyword_q2_oppv2 <- colSums(dfm_q2_opp[, keywords_oppv2])
+
+keyword_q3_oppv2 <- colSums(dfm_q3_opp[, keywords_oppv2])
+
+keyword_q4_oppv2 <- colSums(dfm_q4_opp[, keywords_oppv2])
+
+##Plot the results 
+#Create df
+opp_dfv2 <- data.frame(
+  Keyword = rep(keywords_opp, 4),
+  Quartile = rep(c("Q1", "Q2", "Q3", "Q4"), each = length(keywords_opp)),
+                 Count = c(keyword_q1_oppv2, keyword_q2_oppv2, keyword_q3_oppv2, keyword_q4_oppv2)
   )
 
-ggplot(opp_df, aes(x = Keyword, y = Count, fill = Quartile)) +
+ggplot(opp_dfv2, aes(x = Keyword, y = Count, fill = Quartile)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  labs(title = "Keyword Counts by Quartiles", x = "Keyword", y = "Count", fill = "Quartile") +
+  labs(title = "Opportunity Keyword Counts by Quartiles V2", x = "Keyword", y = "Count", fill = "Quartile") +
   scale_fill_viridis_d(option = "viridis") +  
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -214,7 +241,7 @@ below_oppmed_corpus <- subset(auto_corpus, !condition_opp)
 
 #Make opp dfm
 # Convert the corpus to tokens
-tokens_opp_above <- tokens(above_oppmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE, remove = stopwords("english"))
+tokens_opp_above <- tokens(above_oppmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
 
 tokens_opp_above <- tokens_select(tokens_opp_above, 
                                   pattern = stopwords("english"), 
@@ -238,6 +265,30 @@ keywords_opp <- c("incentive", "tax", "charging", "technology", "electric", "fun
 keyword_opp_above <- colSums(dfm_opp_above[, keywords_opp])
 
 keyword_opp_below <- colSums(dfm_opp_below[, keywords_opp])
+
+# Calculate total words in the corpus
+total_opp_above <- sum(dfm_opp_above)
+
+total_opp_below <- sum(dfm_opp_below)
+
+#Calculate ratio of each keyword to total words
+ratio_opp_above <- (keyword_opp_above / total_opp_above)
+
+ratio_opp_below <- (keyword_opp_below / total_opp_below)
+
+##Plot the results 
+#Create df to plot
+opp_df <- data.frame(keywords = keywords_opp, above = ratio_opp_above, below = ratio_opp_below)
+plot_opp_df <- reshape2::melt(opp_df, id.vars = "keywords")
+
+#Plot
+ggplot(plot_df, aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  labs(title = "Ratio of Opportunity Keywords Above and Below the Median",
+       x = "Keywords", y = "Ratio") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 ##Regulatory 
 # Get the document variable from the corpus
@@ -280,9 +331,30 @@ keyword_reg_above <- colSums(dfm_reg_above[, keywords_reg])
 
 keyword_reg_below <- colSums(dfm_reg_below[, keywords_reg])
 
-matching_keywords_reg <- colnames(dfm_reg_below)[colnames(dfm_reg_below) %in% keywords_reg]
 
-print(matching_keywords_reg) #median is zero so if we set condition to >= median then there is nothing below 
+# Calculate total words in the corpus
+total_reg_above <- sum(dfm_reg_above)
+
+total_reg_below <- sum(dfm_reg_below)
+
+#Calculate ratio of each keyword to total words
+ratio_reg_above <- (keyword_reg_above / total_reg_above)
+
+ratio_reg_below <- (keyword_reg_below / total_reg_below)
+
+#Create df to plot
+reg_df <- data.frame(keywords = keywords_reg, above = ratio_reg_above, below = ratio_reg_below)
+plot_reg_df <- reshape2::melt(reg_df, id.vars = "keywords")
+
+#Plot
+ggplot(plot_reg_df, aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_viridis(discrete = TRUE, option = "D") +
+  labs(title = "Ratio of Regulatory Keywords for Firms Above vs At/Below the Median",
+       x = "Keywords", y = "Ratio") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
 
 ##Physical 
 # Get the document variable from the corpus
@@ -319,10 +391,10 @@ dfm_phy_below <- dfm(tokens_phy_below)
 ##Keywords
 #Set opp keywords
 keywords_phy <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution", "flood" )
-keywords_phy_above <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution")
+keywords_phy <- c("greenhouse", "water", "climate", "general", "warming", "environment", "land", "air", "pollution")
 
 #Calculate frequency for above/below mean
-keyword_phy_above <- colSums(dfm_phy_above[, keywords_phy_above])
+keyword_phy_above <- colSums(dfm_phy_above[, keywords_phy])
 
 keyword_phy_below <- colSums(dfm_phy_below[, keywords_phy])
 
@@ -330,31 +402,42 @@ matching_keywords_phy <- colnames(dfm_phy_above)[colnames(dfm_phy_above) %in% ke
 
 print(matching_keywords_phy) #get same issue as above, no mention of flood in the above median group
 
+
+# Calculate total words in the corpus
+total_phy_above <- sum(dfm_phy_above)
+
+total_phy_below <- sum(dfm_phy_below)
+
+#Calculate ratio of each keyword to total words
+ratio_phy_above <- (keyword_phy_above / total_phy_above)*100
+
+ratio_phy_below <- (keyword_phy_below / total_phy_below)*100
+
 ###Explore wordclouds
-set.seed(100)
-cloud_opp_above <- textplot_wordcloud(dfm_opp_above, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+#set.seed(100)
+#cloud_opp_above <- textplot_wordcloud(dfm_opp_above, min_count = 8, random_order = FALSE,
+                   #rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
 
 
-cloud_opp_below <- textplot_wordcloud(dfm_opp_below, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+#cloud_opp_below <- textplot_wordcloud(dfm_opp_below, min_count = 8, random_order = FALSE,
+                   #rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
 
-cloud_reg_above <- textplot_wordcloud(dfm_reg_above, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
-
-
-cloud_reg_below <- textplot_wordcloud(dfm_reg_below, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
-
-cloud_phy_above <- textplot_wordcloud(dfm_phy_above, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+#cloud_reg_above <- textplot_wordcloud(dfm_reg_above, min_count = 8, random_order = FALSE,
+                   #rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
 
 
-cloud_phy_below <-textplot_wordcloud(dfm_phy_below, min_count = 8, random_order = FALSE,
-                   rotation = .25, 
-                   colors = RColorBrewer::brewer.pal(8,"Dark2"))
+#cloud_reg_below <- textplot_wordcloud(dfm_reg_below, min_count = 8, random_order = FALSE,
+                   #rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+#cloud_phy_above <- textplot_wordcloud(dfm_phy_above, min_count = 8, random_order = FALSE,
+                  # rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
+
+
+#cloud_phy_below <-textplot_wordcloud(dfm_phy_below, min_count = 8, random_order = FALSE,
+                   #rotation = .25, 
+                   #colors = RColorBrewer::brewer.pal(8,"Dark2"))
