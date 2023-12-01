@@ -73,10 +73,8 @@ wald_stats <- lapply(models_f, function(w) {
 wald_stats <- data.frame(
   Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
   Value = c(
-    sapply(wald_stats, function(stat)
-      stat["F_stat"]),
-    sapply(wald_stats, function(stat)
-      stat["P_val"])
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
   ),
   Model = rep(names(models), 2)
 ) %>%

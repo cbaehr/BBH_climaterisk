@@ -128,10 +128,8 @@ wald_stats <- lapply(models_f, function(w) {
 wald_stats <- data.frame(
   Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
   Value = c(
-    sapply(wald_stats, function(stat)
-      stat["F_stat"]),
-    sapply(wald_stats, function(stat)
-      stat["P_val"])
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
   ),
   Model = rep(names(models), 2)
 ) %>%
@@ -272,10 +270,8 @@ wald_stats <- lapply(models_f, function(w) {
 wald_stats <- data.frame(
   Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
   Value = c(
-    sapply(wald_stats, function(stat)
-      stat["F_stat"]),
-    sapply(wald_stats, function(stat)
-      stat["P_val"])
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
   ),
   Model = rep(names(models), 2)
 ) %>%
@@ -284,9 +280,9 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Quarter FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
   `Industry FE` = c(' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
+  `Industry x Quarter FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
   `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' ', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
@@ -300,8 +296,8 @@ fes <- data.frame(
     Test = case_when(
       Test == "Industry.FE" ~ "Industry FE",
       Test == "Firm.FE" ~ "Firm FE",
-      Test == "Year.FE" ~ "Year FE",
-      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Quarter" ~ "Quarter FE",
+      Test == "Industry.x.Quarter.FE" ~ "Industry x Quarter FE",
       TRUE ~ " "
     )
   )
@@ -389,10 +385,8 @@ wald_stats <- lapply(models_f, function(w) {
 wald_stats <- data.frame(
   Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
   Value = c(
-    sapply(wald_stats, function(stat)
-      stat["F_stat"]),
-    sapply(wald_stats, function(stat)
-      stat["P_val"])
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
   ),
   Model = rep(names(models), 2)
 ) %>%
@@ -524,10 +518,8 @@ wald_stats <- lapply(models_f, function(w) {
 wald_stats <- data.frame(
   Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
   Value = c(
-    sapply(wald_stats, function(stat)
-      stat["F_stat"]),
-    sapply(wald_stats, function(stat)
-      stat["P_val"])
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
   ),
   Model = rep(names(models), 2)
 ) %>%
@@ -566,6 +558,7 @@ stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
 y <- modelsummary(
   models
   , stars = c('*' = .1, '**' = .05, '***' = .01)
+  , coef_map = cm
   , gof_map = "nobs"
   , add_rows = stats
   , output = "latex"
