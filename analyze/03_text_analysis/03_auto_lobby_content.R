@@ -10,8 +10,9 @@ pacman::p_load(tidyverse, readxl, quanteda, quanteda.textstats, stm, wordcloud, 
 
 # Set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
 
-####Data preparation
+####Data preparation -----
 
 #Load data
 auto <- read_excel("data/03_final/issues_texts/auto.xlsx")
@@ -30,19 +31,19 @@ auto <- auto %>%
     )
   )
 
-###Create overall corpus 
+###Create overall corpus ------
 auto_corpus <-corpus(auto$issue_text, docnames = seq_len(nrow(auto)))
 
 # Add document-level information
 docvars(auto_corpus) <- auto[, c("gvkey", "conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")]
 
-####Create sub-corpus for each exposure measure
+####Create sub-corpus for each exposure measure -------
 # Get the document variables from the corpus
 opp <- docvars(auto_corpus, "op_expo_ew")
 reg <- docvars(auto_corpus, "rg_expo_ew")
 phy <- docvars(auto_corpus, "ph_expo_ew")
 
-###Opportunity median analysis
+# Opportunity -----
 # Calculate the median of the document variable
 med_opp <- median(opp)
 
@@ -53,7 +54,7 @@ condition_opp <- opp > med_opp
 above_oppmed_corpus <- subset(auto_corpus, condition_opp)
 below_oppmed_corpus <- subset(auto_corpus, !condition_opp)
 
-#Make opp dfm
+#Make opp dfm 
 # Convert the corpus to tokens
 tokens_opp_above <- tokens(above_oppmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
 
@@ -71,7 +72,7 @@ tokens_opp_below <- tokens_select(tokens_opp_below,
 
 dfm_opp_below <- dfm(tokens_opp_below)
 
-##Keywords
+## Opp Keywords  
 #Set opp keywords
 keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
 
@@ -95,16 +96,31 @@ ratio_opp_below <- (keyword_opp_below / total_opp_below)
 opp_df <- data.frame(keywords = keywords_oppv2, above = ratio_opp_above, below = ratio_opp_below)
 plot_opp_df <- reshape2::melt(opp_df, id.vars = "keywords")
 
-#Plot
-ggplot(plot_opp_df, aes(x = keywords, y = value, fill = variable)) +
-  geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_viridis(discrete = TRUE, option = "D") +
-  labs(title = "Ratio of Opportunity Keywords Above and At/Below the Median",
-       x = "Keywords", y = "Ratio") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+# Order by the ratio of the above median to below median
+plot_opp_df <- plot_opp_df |>
+  mutate(
+    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
+    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    keywords = reorder(keywords, value),
+    exposure = "Opportunity"
+    )
 
-###Regulatory 
+#Plot
+plot_opp_df |>
+  ggplot(aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  labs(x = "Keywords", y = "Ratio", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12),
+        legend.position = "bottom") +
+  coord_flip()
+
+ggsave("results/figures/text_analysis/median_opportunity.pdf", width = 8, height = 4)
+
+# Regulatory -----
 # Calculate the median of the document variable
 med_reg <- median(reg)
 
@@ -115,7 +131,7 @@ condition_reg <- reg > med_reg  # or < if you want the opposite comparison
 above_regmed_corpus <- subset(auto_corpus, condition_reg)
 below_regmed_corpus <- subset(auto_corpus, !condition_reg)
 
-#Make opp dfm
+#Make reg dfm
 # Convert the corpus to tokens
 tokens_reg_above <- tokens(above_regmed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
 
@@ -157,17 +173,32 @@ ratio_reg_below <- (keyword_reg_below / total_reg_below)
 reg_df <- data.frame(keywords = keywords_reg, above = ratio_reg_above, below = ratio_reg_below)
 plot_reg_df <- reshape2::melt(reg_df, id.vars = "keywords")
 
+# Order by the ratio of the above median to below median
+plot_reg_df <- plot_reg_df |>
+  mutate(
+    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
+    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    keywords = reorder(keywords, value),
+    exposure = "Regulatory"
+  )
+
 #Plot
-ggplot(plot_reg_df, aes(x = keywords, y = value, fill = variable)) +
+plot_reg_df |>
+  ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_viridis(discrete = TRUE, option = "D") +
-  labs(title = "Ratio of Regulatory Keywords for Firms Above vs At/Below the Median",
-       x = "Keywords", y = "Ratio") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  labs(x = "Keywords", y = "Ratio", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12),
+        legend.position = "bottom") +
+  coord_flip()
+
+ggsave("results/figures/text_analysis/median_regulatory.pdf", width = 8, height = 4)
 
 
-###Physical 
+# Physical  -----
 # Calculate the median of the document variable
 med_phy <- median(phy)
 
@@ -178,7 +209,7 @@ condition_phy <- phy > med_phy  # or < if you want the opposite comparison
 above_phymed_corpus <- subset(auto_corpus, condition_phy)
 below_phymed_corpus <- subset(auto_corpus, !condition_phy)
 
-#Make opp dfm
+#Make phy dfm
 # Convert the corpus to tokens
 tokens_phy_above <- tokens(above_phymed_corpus, remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE, lowercase = TRUE)
 
@@ -221,14 +252,74 @@ ratio_phy_below <- (keyword_phy_below / total_phy_below)
 phy_df <- data.frame(keywords = keywords_phy, above = ratio_phy_above, below = ratio_phy_below)
 plot_phy_df <- reshape2::melt(phy_df, id.vars = "keywords")
 
+# Order by the ratio of the above median to below median
+plot_phy_df <- plot_phy_df |>
+  mutate(
+    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
+    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    keywords = reorder(keywords, value),
+    exposure = "Physical"
+  )
+
 #Plot
-ggplot(plot_phy_df, aes(x = keywords, y = value, fill = variable)) +
+plot_phy_df |>
+  ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_viridis(discrete = TRUE, option = "D") +
-  labs(title = "Ratio of Physical Keywords for Firms Above vs At/Below the Median",
-       x = "Keywords", y = "Ratio") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  labs(x = "Keywords", y = "Ratio", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12),
+        legend.position = "bottom") +
+  coord_flip()
+
+ggsave("results/figures/text_analysis/median_physical.pdf", width = 8, height = 4)
+
+
+
+# Combine into one stacked plot -------------------------------------------
+
+#Combine into one df
+plot_df <- rbind(plot_opp_df, plot_reg_df, plot_phy_df)
+
+#Plot
+plot_df |>
+  mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
+  ggplot(aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  labs(x = "Keywords", y = "Ratio", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12),
+        legend.position = "bottom") +
+  facet_wrap(~exposure, ncol = 1, scales = "free_y") +
+  coord_flip()
+
+ggsave("results/figures/text_analysis/median_combined.pdf", width = 8, height = 10)
+
+#Plot
+plot_df |>
+  mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
+  ggplot(aes(x = keywords, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  labs(x = "Keywords", y = "Relative Frequency within Climate Lobbying Report", fill = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        text = element_text(size = 12),
+        legend.position = "bottom") +
+  facet_wrap(~exposure, ncol = 3, scales = "free") +
+  coord_flip() +
+  # x axis labels turn by 45 degrees
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggsave("results/figures/text_analysis/median_combined_wide.pdf", width = 8, height = 4)
+
+
 
 ###################OLD CODE
 # 
