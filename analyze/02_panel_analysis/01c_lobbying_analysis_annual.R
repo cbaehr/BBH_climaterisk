@@ -96,12 +96,11 @@ class(df$cc_expo_ew)
 ## Overall climate lobbying, overall exposure for annual by specific attention component
 models <- list(
   "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df, vcov = ~ Year + Firm),
-  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year + Industry + `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_annual | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual, family = "binomial", df, vcov = ~ Year + Firm),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year, family = "binomial", df, vcov = ~ Year + Firm),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_annual | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
 
@@ -143,10 +142,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%

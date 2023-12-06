@@ -92,7 +92,7 @@ df$`Total Lobbying`<- df$total_lobby_quarter
 
 df$CLI <- as.numeric(df$CLI_quarter)
 
-m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df, vcov = ~ year + isin)
+m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | industry_year, df, vcov = ~ year + isin)
 
 # Opportunity
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_occurrence_op_qty.pdf", width = 6, height = 6)

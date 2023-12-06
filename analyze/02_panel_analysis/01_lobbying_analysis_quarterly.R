@@ -92,12 +92,11 @@ glimpse(df)
 ## Effect of climate exposure on lobbying occurrence
 models <- list(
   "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df, vcov = ~ Year + Firm),
-  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, family = "binomial", df, vcov = ~ Year + Firm),
-  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, family = "binomial", df, vcov = ~ Year + Firm),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, family = "binomial", df, vcov = ~ Year + Firm),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
 ### Get all adjusted pseudo R2
@@ -138,10 +137,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
@@ -233,12 +232,11 @@ df <- df |>
 ## Effect of climate exposure on lobbying occurrence
 models <- list(
   "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Quarter, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Quarter, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Industry, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Industry + `Industry x Quarter`, family = "binomial", df, vcov = ~ Quarter + Firm),
-  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Quarter + Firm, family = "binomial", df, vcov = ~ Quarter + Firm)
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, family = "binomial", df, vcov = ~ Quarter + Firm),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter, family = "binomial", df, vcov = ~ Quarter + Firm),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Quarter + Industry, family = "binomial", df, vcov = ~ Quarter + Firm),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Quarter`, family = "binomial", df, vcov = ~ Quarter + Firm),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Quarter + Firm, family = "binomial", df, vcov = ~ Quarter + Firm)
 )
 
 
@@ -280,10 +278,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Quarter FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', ' '),
-  `Industry x Quarter FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Quarter FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
+  `Industry x Quarter FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
@@ -296,7 +294,7 @@ fes <- data.frame(
     Test = case_when(
       Test == "Industry.FE" ~ "Industry FE",
       Test == "Firm.FE" ~ "Firm FE",
-      Test == "Quarter" ~ "Quarter FE",
+      Test == "Quarter.FE" ~ "Quarter FE",
       Test == "Industry.x.Quarter.FE" ~ "Industry x Quarter FE",
       TRUE ~ " "
     )
@@ -348,12 +346,11 @@ modelsummary(
 ## Overall climate lobbying (DOLLARS), overall exposure for quarter
 models <- list(
   "(1)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew, df, vcov = ~ Year + Firm),
-  "(2)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew | Year, df, vcov = ~ Year + Firm),
-  "(3)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at | Year, df, vcov = ~ Year + Firm),
-  "(4)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, df, vcov = ~ Year + Firm),
-  "(5)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, df, vcov = ~ Year + Firm),
-  "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, df, vcov = ~ Year + Firm),
-  "(7)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, df, vcov = ~ Year + Firm)
+  "(2)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, df, vcov = ~ Year + Firm),
+  "(3)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, df, vcov = ~ Year + Firm),
+  "(4)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, df, vcov = ~ Year + Firm),
+  "(5)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, df, vcov = ~ Year + Firm)
 )
 
 
@@ -395,10 +392,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
@@ -482,11 +479,11 @@ modelsummary(
 
 # Aggreate and disaggregated lobby issues, disaggregated exposure types, quarter
 models <- list(
-  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
-  "(2)" = feglm(CLI_CAW_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
-  "(3)" = feglm(CLI_ENG_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
-  "(4)" = feglm(CLI_ENV_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
-  "(5)" = feglm(CLI_FUE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df)
+  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
+  "(2)" = feglm(CLI_CAW_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
+  "(3)" = feglm(CLI_ENG_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
+  "(4)" = feglm(CLI_ENV_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
+  "(5)" = feglm(CLI_FUE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df)
 )
 
 
@@ -528,8 +525,6 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Industry FE` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
   `Industry x Year FE` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
@@ -541,9 +536,6 @@ fes <- data.frame(
   # Test: Industry x Year FE
   mutate(
     Test = case_when(
-      Test == "Industry.FE" ~ "Industry FE",
-      Test == "Firm.FE" ~ "Firm FE",
-      Test == "Year.FE" ~ "Year FE",
       Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
       TRUE ~ " "
     )

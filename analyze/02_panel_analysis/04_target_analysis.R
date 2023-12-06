@@ -40,8 +40,8 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
 )
 
 models <- list(
-  "EPA" = feglm(CLI_EPA_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df),
-  "DOE" = feglm(CLI_DOE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry + `Industry x Year`, family = "binomial", df)
+  "EPA" = feglm(CLI_EPA_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
+  "DOE" = feglm(CLI_DOE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df)
 )
 
 
@@ -83,8 +83,6 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c('\\checkmark', '\\checkmark'),
-  `Industry FE` = c('\\checkmark', '\\checkmark'),
   `Industry x Year FE` = c('\\checkmark', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe

@@ -117,7 +117,7 @@ if(Sys.info()["user"]=="fiona" ) {setwd("/Users/Dropbox (Princeton)/BBH/BBH1/")}
 # # Iterate over the dependent variables and fit the feglm model with fixed effects for each
 # 
 # for (dv in dependent_vars) { {
-#   formula <- as.formula(paste(dv, "~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | year + industry + industry_year")) # Include fixed effects in the formula
+#   formula <- as.formula(paste(dv, "~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | industry_year")) # Include fixed effects in the formula
 #   
 #   # Debugging
 #   print(formula)
