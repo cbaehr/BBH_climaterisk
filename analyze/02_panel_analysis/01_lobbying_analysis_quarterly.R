@@ -99,6 +99,8 @@ models <- list(
   "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
+
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
   Test = rep("Adj. Pseudo R2", length(models)),
@@ -352,6 +354,7 @@ models <- list(
   "(5)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(6)" = feols(log(CLI_amount_quarter +1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, df, vcov = ~ Year + Firm)
 )
+
 
 
 ### Get all adjusted pseudo R2
