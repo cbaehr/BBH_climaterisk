@@ -32,7 +32,7 @@ df <- df |>
                            op_expo_ew = "Opportunity",
                            ph_expo_ew = "Physical",
                            rg_expo_ew = "Regulatory"),
-         round = round(Value,digits = 2))
+         round = round(Value, digits = 2))
 
 # calculate number of firms per industry
 industry_n_firms <- df |>
@@ -139,6 +139,237 @@ df |>
 ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed.pdf", width=10, height=6)
 
 
+
+
+# Create balance table ----------------------------------------------------
+
+# load data
+df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+
+# transform
+df_trans <- df |> 
+  # filter out empty industry
+  filter(industry != "") |> 
+  # select variables we need
+  select(isin, year, qtr, industry, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  pivot_longer(cols = op_expo_ew:ph_expo_ew, names_to = "Exposure", values_to = "Value") |>
+  mutate(Exposure = recode(Exposure,
+                           op_expo_ew = "Opportunity",
+                           ph_expo_ew = "Physical",
+                           rg_expo_ew = "Regulatory"),
+         round = round(Value, digits = 2))
+
+# Load covariate data
+cov <- df |>
+  select(isin, year, qtr, op_expo_ew, rg_expo_ew, ph_expo_ew, ebit, ebit_at, total_lobby_quarter)
+
+clist <- c("ebit", "ebit_at", "total_lobby_quarter", "op_expo_ew", "rg_expo_ew", "ph_expo_ew") 
+
+names <- c("EBIT", "EBIT/Assets", "Total Lobbying ($)", "Opportunity", "Regulatory", "Physical")
+
+# We want to get the characteristics of firms that are above median and below median in their industry for each exposure variable and see how they differ on covariates
+# 1. identify whether firms is above or below/equal median for each industry - year
+# 2. calculate mean of covariates for each group
+
+# Note: we select 2010, qtr == 1as year for balance table
+df_10 <- df_trans |>
+  filter(year == 2010 & qtr == 1)
+
+# 1. identify whether firms is above or below/equal median for each industry - year
+above_median <- df_10 |>
+  group_by(industry, Exposure) |>
+  mutate(median = median(Value, na.rm = TRUE)) |>
+  mutate(above_median = Value > median) |>
+  ungroup() |>
+  filter(!is.na(industry)) |>
+  select(isin, Exposure, Value, median, above_median) |>
+  distinct() |>
+  arrange(isin, Exposure)
+
+# 2. calculate mean and sds of covariates for each group
+prep_df <- df_10 |>
+  left_join(above_median |>
+              select(isin, Exposure, above_median),
+            by = c("isin", "Exposure")) |>
+  left_join(cov |> 
+              filter(year == 2010 & qtr == 1) |>
+              select(-c(year, qtr)),
+            by = c("isin")) |>
+  filter(!is.na(above_median)) |>
+  select(-c(isin, year, qtr))
+
+prep_df_opp <- prep_df |> 
+  filter(Exposure =="Opportunity") |>
+  mutate(above_median = ifelse(above_median == TRUE, 1, 0))
+
+prep_df_reg <- prep_df |> 
+  filter(Exposure =="Regulatory") |>
+  mutate(above_median = ifelse(above_median == TRUE, 1, 0))
+
+prep_df_phy <- prep_df |>
+  filter(Exposure =="Physical") |>
+  mutate(above_median = ifelse(above_median == TRUE, 1, 0))
+
+# get balance for opportunity
+bal1 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_opp,
+                         FE = NULL, weights = NULL
+) 
+
+bal2 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_opp,
+                         FE = "industry", weights = NULL
+)
+
+b_plot_levels_opp <- bal1 %>%
+  mutate(fe = "Base") %>%
+  bind_rows(bal2 %>% mutate(fe = "Differences in levels within industry")) %>%
+  left_join(data.frame(cov = clist, name = names), by = "cov") |>
+  mutate(exp = "Opportunity") |>
+  filter(cov != "op_expo_ew")
+
+
+# get balance for regulatory
+bal3 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_reg,
+                         FE = NULL, weights = NULL
+)
+
+bal4 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_reg,
+                         FE = "industry", weights = NULL
+)
+
+b_plot_levels_reg <- bal3 %>%
+  mutate(fe = "Base") %>%
+  bind_rows(bal4 %>% mutate(fe = "Differences in levels within industry")) %>%
+  left_join(data.frame(cov = clist, name = names), by = "cov")|>
+  mutate(exp = "Regulatory") |>
+  filter(cov != "rg_expo_ew")
+
+# get balance for physical
+bal5 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_phy,
+                         FE = NULL, weights = NULL
+)
+
+bal6 <- haschaR::get_bal(treatvar = "above_median", 
+                         cov_list = clist,
+                         data.df = prep_df_phy,
+                         FE = NULL, weights = NULL
+)
+
+b_plot_levels_phy <- bal5 %>%
+  mutate(fe = "Base") %>%
+  bind_rows(bal6 %>% mutate(fe = "Differences in levels within industry")) %>%
+  left_join(data.frame(cov = clist, name = names), by = "cov") |>
+  mutate(exp = "Physical") |>
+  filter(cov != "ph_expo_ew")
+
+b_plot_levels <- bind_rows(b_plot_levels_opp, b_plot_levels_reg, b_plot_levels_phy)  |>
+  filter(!is.na(exp))
+
+pd <- position_dodge(0.5)
+
+b_plot_levels %>%
+  mutate(
+    # reorder: Opportunity, Regulatory, Physical, Ebit, EBIT/Assets, Total Lobbying
+    name = factor(name, levels = c("Total Lobbying ($)", "EBIT/Assets", "EBIT", "Physical", "Regulatory", "Opportunity")),
+    exp = factor(exp, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) |>
+  ggplot(aes(x = name, y = coef, color = fe, group = fe)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.0, position = pd) +
+  geom_point(position = pd) +
+  facet_wrap(~exp, scales = "free_x") +
+  haschaR::theme_hanno() +
+  labs(
+    x = "",
+    y = "Standardized mean difference in levels in Q1 2010",
+    color = ""
+  ) +
+  coord_flip() +
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = c("Base" = "black", "Differences in levels within industry" = "darkgrey"))
+
+ggsave("results/figures/descriptives/balance_plot.pdf", width = 7, height = 3.5)
+
+ggsave("../../Apps/Overleaf/Climate Exposure and Political Activity_BBH/graphs/balance_plot.pdf", width = 7, height = 3.5)
+
+# means <- prep_df |>
+#   group_by(Exposure, above_median) |>
+#   summarise(
+#     op_expo_ew = mean(op_expo_ew, na.rm = TRUE),
+#     rg_expo_ew = mean(rg_expo_ew, na.rm = TRUE),
+#     ph_expo_ew = mean(ph_expo_ew, na.rm = TRUE),
+#     ebit = mean(ebit, na.rm = TRUE),
+#     ebit_at = mean(ebit_at, na.rm = TRUE),
+#     total_lobby_quarter = mean(total_lobby_quarter, na.rm = TRUE)
+#   ) |>
+#   # pivot longer
+#   pivot_longer(cols = c(op_expo_ew, rg_expo_ew, ph_expo_ew, ebit, ebit_at, total_lobby_quarter),
+#                names_to = "variable",
+#                values_to = "mean")
+# 
+# sds <- prep_df |>
+#   group_by(Exposure, above_median) |>
+#   summarise(
+#     op_expo_ew = sd(op_expo_ew, na.rm = TRUE),
+#     rg_expo_ew = sd(rg_expo_ew, na.rm = TRUE),
+#     ph_expo_ew = sd(ph_expo_ew, na.rm = TRUE),
+#     ebit = sd(ebit, na.rm = TRUE),
+#     ebit_at = sd(ebit_at, na.rm = TRUE),
+#     total_lobby_quarter = sd(total_lobby_quarter, na.rm = TRUE)
+#   ) |>
+#   # pivot longer
+#   pivot_longer(cols = c(op_expo_ew, rg_expo_ew, ph_expo_ew, ebit, ebit_at, total_lobby_quarter),
+#                names_to = "variable",
+#                values_to = "sd")
+# 
+# balance_table <- means |>
+#   left_join(sds, by = c("Exposure", "above_median", "variable")) |>
+#   mutate(
+#     above_median = case_when(
+#       above_median == TRUE ~ "Above Median",
+#       above_median == FALSE ~ "Below Median"
+#     ),
+#     variable = case_when(
+#       variable == "op_expo_ew" ~ "Opportunity Exposure",
+#       variable == "rg_expo_ew" ~ "Regulatory Exposure",
+#       variable == "ph_expo_ew" ~ "Physical Exposure",
+#       variable == "ebit" ~ "EBIT",
+#       variable == "ebit_at" ~ "EBIT/Assets",
+#       variable == "total_lobby_quarter" ~ "Total Lobbying (\\$)"
+#       )
+#     )
+# 
+# # Plot balance table with geom points and error bars
+# # facet grid by covariate and exposure
+# balance_table |>
+#   filter(Exposure == "Opportunity") |>
+#   ggplot(aes(y=above_median, x=mean)) +
+#   geom_vline(xintercept = 0, linetype="dashed", color = "grey") +
+#   geom_point() +
+#   geom_errorbar(aes(xmin=mean-sd, xmax=mean+sd), width=.2) +
+#   facet_wrap(~variable, scales = "free") +
+#   theme_bw() +
+#   labs(y = "Mean of Covariates", x = "") +
+#   theme(panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank(), text = element_text(size = 15))
+#   
+# 
+# # pivot wider and remove sd
+# balance_table |>
+#   select(-sd) |>
+#   pivot_wider(names_from = above_median, values_from = mean) |>
+#   # do t.test
+#   mutate(ttest = t.test(`Above Median`, `Below Median`, "two.sided")$p.value)
+# 
 
 # # calculate average climate change exposure by firm
 # firm_mean <- df |>
