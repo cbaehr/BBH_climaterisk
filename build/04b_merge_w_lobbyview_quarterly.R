@@ -27,6 +27,19 @@ lobby_issue$gov_entity <- gsub(',', ';', lobby_issue$gov_entity)
 lobby_issue$gov_entity <- gsub("\\s+", " ", lobby_issue$gov_entity) # remove redundant spaces
 lobby_issue$gov_entity <- trimws(lobby_issue$gov_entity)
 
+# # check
+# entities <- lobby_issue |>
+#   select(gov_entity) |>
+#   # split column by " ; " and unnest
+#   separate_rows(gov_entity, sep = ";") |>
+#   # trim whitespace
+#   mutate(gov_entity = trimws(gov_entity)) |>
+#   # calculate how often each entity appears
+#   count(gov_entity, sort = TRUE) |>
+#   filter(gov_entity != "")
+# 
+# fwrite(entities, "data/xx_other/gov_entities.csv")
+
 ## remove special escape characters
 lobby_text$issue_text <- gsub("[^A-z0-9. ]", " ", lobby_text$issue_text)
 lobby_text$issue_text <- gsub("`|\\^|\\[|\\]|\\\\|_", " ", lobby_text$issue_text)
