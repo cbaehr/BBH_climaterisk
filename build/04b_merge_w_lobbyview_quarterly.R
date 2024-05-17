@@ -196,23 +196,32 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 
 gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
 
-doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
-epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
+# define the set of relevant agencies
+agencies <- c(DOE="DEPARTMENT OF ENERGY",
+              EPA="ENVIRONMENTAL PROTECTION AGENCY",
+              FEMA="FEDERAL EMERGENCY MANAGEMENT AGENCY",
+              COEQ="COUNCIL ON ENVIRONMENTAL QUALITY",
+              DOT="DEPARTMENT OF TRANSPORTATION",
+              DOTY="DEPARTMENT OF THE TREASURY",
+              DOA="DEPARTMENT OF AGRICULTURE",
+              NOAA="NATIONAL OCEANIC AND ATMOSPHERIC ADMINISTRATION",
+              HOUS="HOUSE",
+              SEN="SENATE",
+              WTHS="WHITE HOUSE")
 
-lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
-lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
-
-lobbying_firmyear$CLI_DOE_q1 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q1)
-lobbying_firmyear$CLI_EPA_q1 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q1)
-
-lobbying_firmyear$CLI_DOE_q2 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q2)
-lobbying_firmyear$CLI_EPA_q2 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q2)
-
-lobbying_firmyear$CLI_DOE_q3 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q3)
-lobbying_firmyear$CLI_EPA_q3 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q3)
-
-lobbying_firmyear$CLI_DOE_q4 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, doe, q4)
-lobbying_firmyear$CLI_EPA_q4 <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, epa, q4)
+# looping through agencies to build agency specific lobbying dummies by year/quarter
+for(i in 1:length(agencies)) {
+  
+  agent <- lapply(gov_entity_split, FUN = function(x) grepl(agencies[i], x))
+  
+  lobbying_firmyear[ , sprintf("CLI_%s_annual", names(agencies)[i])] <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, agent)
+  
+  lobbying_firmyear[ , sprintf("CLI_%s_q1", names(agencies)[i])] <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, agent, q1)
+  lobbying_firmyear[ , sprintf("CLI_%s_q2", names(agencies)[i])] <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, agent, q2)
+  lobbying_firmyear[ , sprintf("CLI_%s_q3", names(agencies)[i])] <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, agent, q3)
+  lobbying_firmyear[ , sprintf("CLI_%s_q4", names(agencies)[i])] <- mapply(FUN = function(x1, x2, x3) {any(x1 & x2 & x3)}, climate_issue, agent, q4)
+  
+}
 
 #summary(lobbying_firmyear$CLI_annual)
 #summary(lobbying_firmyear$CLI_q1 | lobbying_firmyear$CLI_q2 | lobbying_firmyear$CLI_q3 | lobbying_firmyear$CLI_q4)
@@ -397,49 +406,35 @@ print(i)
 #####
 
 
-
-doe_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("DEPARTMENT OF ENERGY", y))}[[1]])})
-epa_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENVIRONMENTAL PROTECTION AGENCY", y))}[[1]])})
-
-## product of q1 * "climate issue" proportion
-total_proportion_doe_q1 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q1_proportion, climate_issue_proportion, doe_proportion)
-total_proportion_doe_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_proportion, climate_issue_proportion, doe_proportion)
-total_proportion_doe_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, doe_proportion)
-total_proportion_doe_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, doe_proportion)
-
-total_proportion_epa_q1 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q1_proportion, climate_issue_proportion, epa_proportion)
-total_proportion_epa_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_proportion, climate_issue_proportion, epa_proportion)
-total_proportion_epa_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, epa_proportion)
-total_proportion_epa_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, epa_proportion)
-
-## scale report amount by the product of a) proportion of issues in the report that are climate
-## and b) proportion of gov entities in the report that are DOE (EPA)
-doe_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q1)
-doe_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q2)
-doe_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q3)
-doe_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_doe_q4)
-
-epa_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q1)
-epa_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q2)
-epa_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q3)
-epa_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_epa_q4)
-
-lobbying_firmyear$CLI_DOE_amount_q1 <- doe_amount_q1
-lobbying_firmyear$CLI_DOE_amount_q2 <- doe_amount_q2
-lobbying_firmyear$CLI_DOE_amount_q3 <- doe_amount_q3
-lobbying_firmyear$CLI_DOE_amount_q4 <- doe_amount_q4
-
-lobbying_firmyear$CLI_EPA_amount_q1 <- epa_amount_q1
-lobbying_firmyear$CLI_EPA_amount_q2 <- epa_amount_q2
-lobbying_firmyear$CLI_EPA_amount_q3 <- epa_amount_q3
-lobbying_firmyear$CLI_EPA_amount_q4 <- epa_amount_q4
-
 # amount_split[900]
 # climate_issue[900]
 # climate_issue_proportion[900]
 # epa_proportion[900]
 # epa_amount[900]
 # doe_amount[900]
+
+# looping through agencies
+for(i in 1:length(agencies)) {
+  
+  agency_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl(agencies[i], y))}[[1]])})
+  total_proportion_agency_q1 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q1_proportion, climate_issue_proportion, agency_proportion)
+  total_proportion_agency_q2 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q2_proportion, climate_issue_proportion, agency_proportion)
+  total_proportion_agency_q3 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q3_proportion, climate_issue_proportion, agency_proportion)
+  total_proportion_agency_q4 <- mapply(FUN = function(x1, x2, x3) {x1*x2*x3}, q4_proportion, climate_issue_proportion, agency_proportion)
+  
+  agency_amount_q1 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_agency_q1)
+  agency_amount_q2 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_agency_q2)
+  agency_amount_q3 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_agency_q3)
+  agency_amount_q4 <- mapply(FUN = function(x1, x2) {sum(as.numeric(x1) * x2)}, amount_split, total_proportion_agency_q4)
+  
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_q1", names(agencies)[i])] <- agency_amount_q1
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_q2", names(agencies)[i])] <- agency_amount_q2
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_q3", names(agencies)[i])] <- agency_amount_q3
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_q4", names(agencies)[i])] <- agency_amount_q4
+  
+  
+}
+
 
 
 
@@ -462,14 +457,16 @@ lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
 
 #####
 
-rm(list = setdiff(ls(), c("lobbying_firmyear", "issues")))
+rm(list = setdiff(ls(), c("lobbying_firmyear", "issues", "agencies")))
 
 #####
 
 timespan <- paste0("q", 1:4)
-time_varying <- c("CLI_", "CLI_amount_", 
-                  "CLI_DOE_", "CLI_EPA_", 
-                  "CLI_DOE_amount_", "CLI_EPA_amount_",  
+time_varying <- c("CLI_", "CLI_amount_",
+                  paste0("CLI_", names(agencies), "_"),
+                  paste0("CLI_", names(agencies), "_amount_"),
+                  #"CLI_DOE_", "CLI_EPA_", 
+                  #"CLI_DOE_amount_", "CLI_EPA_amount_",  
                   "total_lobby_", sprintf("CLI_%s_", issues), sprintf("CLI_%s_amount_", issues))
 moving_list <- lapply(time_varying, function(x) paste0(x, timespan))
 
@@ -520,11 +517,15 @@ names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_amount_q1"] <- "CL
 # names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_ENG_amount_q1"] <- "CLI_ENG_amount_quarter"
 # names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_q1"] <- "CLI_FUE_quarter"
 # names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_FUE_amount_q1"] <- "CLI_FUE_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_q1"] <- "CLI_DOE_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_q1"] <- "CLI_EPA_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_DOE_amount_q1"] <- "CLI_DOE_amount_quarter"
-names(lobbying_firmquarter)[names(lobbying_firmquarter)=="CLI_EPA_amount_q1"] <- "CLI_EPA_amount_quarter"
 names(lobbying_firmquarter)[names(lobbying_firmquarter)=="total_lobby_q1"] <- "total_lobby_quarter"
+
+# looping through agencies
+for(i in 1:length(agencies)) {
+  # change names from "q1" to "quarter"
+  names(lobbying_firmquarter)[names(lobbying_firmquarter)==sprintf("CLI_%s_q1", names(agencies)[i])] <- sprintf("CLI_%s_quarter", names(agencies)[i])
+  names(lobbying_firmquarter)[names(lobbying_firmquarter)==sprintf("CLI_%s_amount_q1", names(agencies)[i])] <- sprintf("CLI_%s_amount_quarter", names(agencies)[i])
+}
+
 
 lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 
@@ -627,16 +628,18 @@ exposure_orbis_lobbyview_long$total_lobby_quarter <- exposure_orbis_lobbyview_lo
 
 exposure_orbis_lobbyview_long$ebit <- exposure_orbis_lobbyview_long$ebit / 1000000
 
-exposure_orbis_lobbyview_long$CLI_DOE_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_quarter)
-exposure_orbis_lobbyview_long$CLI_DOE_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_quarter)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_EPA_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_EPA_quarter)
-exposure_orbis_lobbyview_long$CLI_EPA_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_quarter)] <- 0
-
 exposure_orbis_lobbyview_long$CLI_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_amount_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_quarter)] <- 0
-exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_quarter)] <- 0
 
+# looping thru agency dummies to clean variables
+for(i in 1:length(agencies)) {
+  # change to numeric
+  exposure_orbis_lobbyview_long[ , sprintf("CLI_%s_quarter", names(agencies)[i])] <- as.numeric(exposure_orbis_lobbyview_long[ , sprintf("CLI_%s_quarter", names(agencies)[i])])
+  # change NA dummies to 0
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[ , sprintf("CLI_%s_quarter", names(agencies)[i])]) , sprintf("CLI_%s_quarter", names(agencies)[i])] <- 0
+  # change NA amounts to 0
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[ , sprintf("CLI_%s_amount_quarter", names(agencies)[i])]) , sprintf("CLI_%s_amount_quarter", names(agencies)[i])] <- 0
+  
+}
 
 
 # check

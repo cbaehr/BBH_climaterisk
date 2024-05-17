@@ -164,11 +164,33 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 ## AND B) the report is for qX . If any reports for that firm-year meet this criteria, they get a TRUE; else FALSE.
 
 gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
-doe <- lapply(gov_entity_split, FUN = function(x) grepl("DEPARTMENT OF ENERGY", x))
-epa <- lapply(gov_entity_split, FUN = function(x) grepl("ENVIRONMENTAL PROTECTION AGENCY", x))
 
-lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
-lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
+# define the set of relevant agencies
+agencies <- c(DOE="DEPARTMENT OF ENERGY",
+              EPA="ENVIRONMENTAL PROTECTION AGENCY",
+              FEMA="FEDERAL EMERGENCY MANAGEMENT AGENCY",
+              COEQ="COUNCIL ON ENVIRONMENTAL QUALITY",
+              DOT="DEPARTMENT OF TRANSPORTATION",
+              DOTY="DEPARTMENT OF THE TREASURY",
+              DOA="DEPARTMENT OF AGRICULTURE",
+              NOAA="NATIONAL OCEANIC AND ATMOSPHERIC ADMINISTRATION",
+              HOUS="HOUSE",
+              SEN="SENATE",
+              WTHS="WHITE HOUSE")
+
+# looping through agencies to build agency specific lobbying dummies by year/quarter
+for(i in 1:length(agencies)) {
+  
+  first <- lapply(gov_entity_split, FUN = function(x) grepl(agencies[i], x))
+  
+  second <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, first)
+  
+  lobbying_firmyear[ , sprintf("CLI_%s_annual", names(agencies)[i])] <- second
+  
+}
+
+
+
 
 # lobbying_firmyear$gov_entity[900]
 # gov_entity_split[900]
@@ -255,16 +277,18 @@ for(i in issues) {
 #lobbying_firmyear$CLI_DOE_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, doe)
 #lobbying_firmyear$CLI_EPA_annual <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climate_issue, epa)
 
-doe_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("DEPARTMENT OF ENERGY", y))}[[1]])})
-epa_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENVIRONMENTAL PROTECTION AGENCY", y))}[[1]])})
-
 ## scale report amount by the product of a) proportion of issues in the report that are climate
 ## and b) proportion of gov entities in the report that are DOE (EPA)
-doe_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, doe_proportion)
-epa_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, epa_proportion)
 
-lobbying_firmyear$CLI_DOE_amount_annual <- doe_amount
-lobbying_firmyear$CLI_EPA_amount_annual <- epa_amount
+# looping through agencies
+for(i in 1:length(agencies)) {
+  
+  agency_proportion <- lapply(gov_entity_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl(agencies[i], y))}[[1]])})
+  agency_amount <- mapply(FUN = function(x1, x2, x3) {sum(as.numeric(x1) * x2 * x3)}, amount_split, climate_issue_proportion, agency_proportion)
+  lobbying_firmyear[ , sprintf("CLI_%s_amount_annual", names(agencies)[i])] <- agency_amount
+  
+}
+
 
 # amount_split[900]
 # climate_issue[900]
@@ -337,7 +361,7 @@ lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
 
 #####
 
-rm(list = setdiff(ls(), c("lobbying_firmyear", "issues")))
+rm(list = setdiff(ls(), c("lobbying_firmyear", "issues", "agencies")))
 
 #####
 
@@ -421,16 +445,18 @@ exposure_orbis_lobbyview_long$total_lobby_annual <- exposure_orbis_lobbyview_lon
 
 exposure_orbis_lobbyview_long$ebit <- exposure_orbis_lobbyview_long$ebit / 1000000
 
-exposure_orbis_lobbyview_long$CLI_DOE_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_DOE_annual)
-exposure_orbis_lobbyview_long$CLI_DOE_annual[is.na(exposure_orbis_lobbyview_long$CLI_DOE_annual)] <- 0
-
-exposure_orbis_lobbyview_long$CLI_EPA_annual <- as.numeric(exposure_orbis_lobbyview_long$CLI_EPA_annual)
-exposure_orbis_lobbyview_long$CLI_EPA_annual[is.na(exposure_orbis_lobbyview_long$CLI_EPA_annual)] <- 0
+# looping through agencies
+for(i in 1:length(agencies)) {
+  
+  nm <- sprintf("CLI_%s_annual", names(agencies)[i])
+  nm_amt <- sprintf("CLI_%s_amount_annual", names(agencies)[i])
+  exposure_orbis_lobbyview_long[ , nm] <- as.numeric(exposure_orbis_lobbyview_long[ , nm])
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[ , nm]) , nm] <- 0
+  exposure_orbis_lobbyview_long[is.na(exposure_orbis_lobbyview_long[ , nm_amt]) , nm_amt] <- 0
+  
+}
 
 exposure_orbis_lobbyview_long$CLI_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_amount_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_DOE_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_DOE_amount_annual)] <- 0
-exposure_orbis_lobbyview_long$CLI_EPA_amount_annual[is.na(exposure_orbis_lobbyview_long$CLI_EPA_amount_annual)] <- 0
-
 
 # check
 names(exposure_orbis_lobbyview_long)
