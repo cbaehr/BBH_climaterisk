@@ -76,9 +76,11 @@ df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue
                                   "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
                                   "bvdsector", "primary_naics", "amount_num")]
 
-write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata.dta")
 
 write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+
+write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata.dta")
+
 
 ### End Quarterly
 
