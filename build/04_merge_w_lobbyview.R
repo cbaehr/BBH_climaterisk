@@ -20,6 +20,16 @@ lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 
 lobby_report$n_quarters <- str_count(as.character(lobby_report$report_quarter_code), "")
 
+fema=grepl("FEDERAL EMERGENCY MANAGEMENT AGENCY", lobby_issue$gov_entity)
+fema_reports = lobby_issue$report_uuid[which(fema & grepl("ENV|CLI|CAW|FUE", lobby_issue$issue_code))]
+reports = lobby_report[which(lobby_report$report_uuid %in% fema_reports),]
+length(unique(reports$client_uuid))
+fema_clients <- lobby_client[which(lobby_client$client_uuid %in% reports$client_uuid) , ]
+
+dat <- read.csv("data/03_final/lobbying_df_annual_REVISE_normal.csv", stringsAsFactors = F)
+unique(dat$client_uuid[which(dat$client_uuid %in% fema_clients$client_uuid)])
+
+
 #####
 
 
