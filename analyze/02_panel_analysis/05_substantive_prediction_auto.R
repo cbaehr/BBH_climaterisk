@@ -1,5 +1,6 @@
 
 rm(list=ls())
+options(scipen = 999)
 
 # load packages
 pacman::p_load(tidyverse, fixest, modelsummary, kableExtra)
@@ -23,50 +24,45 @@ df <- df |>
     `Industry x Year` = industry_year
   )
 
-# Specify covariate names
-cm <- c("op_expo_ew" = "Opportunity Exposure",
-        "rg_expo_ew" = "Regulatory Exposure",
-        "ph_expo_ew" = "Physical Exposure", 
-        "cc_expo_ew" = "Overall Exposure",
-        "ebit" = "EBIT",
-        "ebit_at" = "EBIT/Assets",
-        "us_dummy" = "US HQ",
-        "total_lobby_quarter" = "Total Lobbying (\\$)"
-)
-
 df$CLI <- as.numeric(df$CLI_quarter)
-
-glimpse(df)
 
 ###
 
 load("data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
 
 ## select the model from column 4 (year and industry FE separate)
-#mod <- models[[4]]
-mod <- models[[5]]
-
-#unique(grep("TOYOTA", df$conm, value=T)) # find the name corresponding to firm i
-## find the index corresponding to firm-year-qtr i
-which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4)
-which(df$conm == "TOYOTA MOTOR CORPORATION" & df$year == 2019 & df$qtr == 4)
+mod <- models[[4]]
+#mod5 <- models[[5]]
 
 ## grab all relevant covariates for Ford 2019 q4
+inp <- df[which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4) ,
+          c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
+               "total_lobby_quarter", "Year", "Industry")]
 # inp <- df[which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4) ,
 #           c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-#                "total_lobby_quarter", "Year", "Industry")]
-inp <- df[which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4) ,
-          c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-               "total_lobby_quarter", "Industry x Year")]
+#                "total_lobby_quarter", "Industry x Year")]
 
-temp <- df[ , c("conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter", "Industry x Year")]
+#temp <- df[ , c("conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter", "Industry x Year")]
 
-temp <- temp[which(temp$conm == "GENERAL MOTORS COMPANY") , ]
+#temp <- temp[which(temp$conm == "GENERAL MOTORS COMPANY") , ]
+
+## predict for Ford 2019 q4
+test1 <- predict(object = mod, newdata = inp, type = "response")
+
+## find index of toyota 2019 q4
+replace <- which(df$conm == "TOYOTA MOTOR CORPORATION" & df$year == 2019 & df$qtr == 4)
+## replace Ford opportunity exposure with Toyota in 2019 q4
+inp$op_expo_ew <- df$op_expo_ew[replace]
+
+## predicted probability of exposure for Ford with Toyota's opportunity 
+## score (all in 2019q4)
+test2 <- predict(object = mod, newdata = inp, type = "response")
+
+
+test1
+test2
 
 ###
-
-
-
 
 tobs <- read.csv("data/03_final/tobit_model_coefs.csv", stringsAsFactors = F)
 tobs <- tobs[-c(1:2) , ]
@@ -75,11 +71,122 @@ tobs <- tobs[which(tobs$X. != "=") , ]
 tobs <- tobs[which(!tobs$X. %in% c("=Observations", "=t statistics in parentheses", "=* p<0.05, ** p<0.01, *** p<0.001")) , ]
 tobs <- tobs[!grepl("=sig", tobs$X.) , ]
 ## coefs come from model 4
-coefs <- as.numeric(gsub("=|\\*", "", tobs$X..4.))
-#coefs <- as.numeric(gsub("=|\\*", "", tobs$X..5.))
-names(coefs) <- tobs$X.
+coefs4 <- as.numeric(gsub("=|\\*", "", tobs$X..4.))
+coefs5 <- as.numeric(gsub("=|\\*", "", tobs$X..5.))
+names(coefs4) <- names(coefs5) <- tobs$X.
 
 sigmas <- as.numeric(gsub("=", "", sigmas))
+
+###
+
+# Function to predict outcome of Tobit model
+predict_tobit <- function(x_values, tobit_betas, sigma) {
+  XB <- x_values %*% tobit_betas
+  # Compute the cumulative distribution function and the probability density function
+  Phi <- pnorm(XB / sigma)
+  phi <- dnorm(XB / sigma)
+  # Compute the inverse Mills ratio
+  lambda <- phi / Phi
+  # Compute the expected value of Y
+  expected_Y <- Phi * (XB + sigma * lambda)
+  return(expected_Y)
+}
+
+
+###
+
+## model 4 prediction
+coef_temp <- coefs4[1:55]
+temp <- df[which(df$conm=="GENERAL MOTORS COMPANY") , ]
+inddums <- ifelse(1:28 == 22, 1, 0)
+for(i in 1:nrow(temp)) {
+  if(i==1) {y <- c(); y_alt <- c()}
+  #yrdums <- ifelse(2001:2020 == 2019, 1, 0)
+  yrdums <- ifelse(2001:2020 == temp$year[i], 1, 0)
+  xvals <- c(as.numeric(temp[i , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter")]), yrdums, inddums)
+  names(xvals) <- names(coef_temp)
+  
+  if(!any(is.na(xvals))) {
+    y[i] <- predict_tobit(xvals, coef_temp, sigmas[4])
+    op <- df$op_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==temp$yearqtr[i])]
+    xvals["=Opportunity Exposure"] <- op
+    y_alt[i] <- predict_tobit(xvals, coef_temp, sigmas[4])
+  } else {
+    y[i] <- y_alt[i] <- NA
+  }
+}
+
+temp$m4_y <- exp(y)
+temp$m4_yalt <- exp(y_alt)
+
+## model 4 prediction
+coef_temp <- coefs4[1:55]
+temp2 <- df[which(df$conm=="FORD MOTOR CO") , ]
+inddums <- ifelse(1:28 == 22, 1, 0)
+for(i in 1:nrow(temp)) {
+  if(i==1) {yf <- c(); yf_alt <- c()}
+  #yrdums <- ifelse(2001:2020 == 2019, 1, 0)
+  yrdums <- ifelse(2001:2020 == temp$year[i], 1, 0)
+  xvals <- c(as.numeric(temp2[i , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter")]), yrdums, inddums)
+  names(xvals) <- names(coef_temp)
+  
+  if(!any(is.na(xvals))) {
+    yf[i] <- predict_tobit(xvals, coef_temp, sigmas[4])
+    op <- df$op_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==temp2$yearqtr[i])]
+    xvals["=Opportunity Exposure"] <- op
+    yf_alt[i] <- predict_tobit(xvals, coef_temp, sigmas[4])
+  } else {
+    yf[i] <- yf_alt[i] <- NA
+  }
+}
+
+temp$m4_yf <- exp(yf)
+temp$m4_yfalt <- exp(yf_alt)
+
+
+
+
+###
+
+tobs <- read.csv("/Users/christianbaehr/Downloads/tobit_prediction_data.csv", stringsAsFactors = F)
+
+## model 5 prediction
+coef_temp <- coefs5
+temp2 <- tobs[which(tobs$conm=="GENERAL MOTORS COMPANY") , ]
+inddums <- ifelse(1:28 == 22, 1, 0)
+ind_yr <- grep("industry_year", names(coef_temp), value=T)
+ind_yr <- as.numeric(gsub("=group\\(industry_year\\)=", "", ind_yr))
+for(i in 1:nrow(temp2)) {
+  if(i==1) {y <- c(); y_alt <- c()}
+  #yrdums <- ifelse(2001:2020 == 2019, 1, 0)
+  yrdums <- ifelse(2001:2020 == temp2$year[i], 1, 0)
+  
+  indyr_dums <- ifelse(ind_yr == temp2$industry_year_n[i], 1, 0)
+  
+  xvals <- c(as.numeric(temp2[i , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter")]), yrdums, inddums, indyr_dums)
+  names(xvals) <- names(coef_temp)
+  
+  if(!any(is.na(xvals))) {
+    y[i] <- predict_tobit(xvals, coef_temp, sigmas[5])
+    op <- df$op_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==temp$yearqtr[i])]
+    xvals["=Opportunity Exposure"] <- op
+    y_alt[i] <- predict_tobit(xvals, coef_temp, sigmas[5])
+  } else {
+    y[i] <- y_alt[i] <- NA
+  }
+}
+
+temp$m5_y <- exp(y)
+temp$m5_yalt <- exp(y_alt)
+
+
+
+
+View(temp[ , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter",
+               "conm", "yearqtr", "m4_y", "m4_yalt", "m4_yf", "m4_yfalt", "m5_y", "m5_yalt")])
+
+
+
 
 ###
 
@@ -119,18 +226,7 @@ coefs <- coefs[!is.na(coefs)]
 
 ###
 
-# Function to predict outcome of Tobit model
-predict_tobit <- function(x_values, tobit_betas, sigma) {
-  XB <- x_values %*% tobit_betas
-  # Compute the cumulative distribution function and the probability density function
-  Phi <- pnorm(XB / sigma)
-  phi <- dnorm(XB / sigma)
-  # Compute the inverse Mills ratio
-  lambda <- phi / Phi
-  # Compute the expected value of Y
-  expected_Y <- Phi * (XB + sigma * lambda)
-  return(expected_Y)
-}
+
 
 coef_temp <- coefs[1:55]
 for(i in 1:nrow(temp)) {
@@ -174,21 +270,6 @@ cat("GM PREDICTED SPEND 2019Q4 (TOYOTA OPPO):", exp(as.numeric(expected_Y)))
 
 
 
-
-
-###
-
-## predict for Ford 2019 q4
-test1 <- predict(object = mod, newdata = inp, type = "response")
-
-## find index of toyota 2019 q4
-replace <- which(df$conm == "TOYOTA MOTOR CORPORATION" & df$year == 2019 & df$qtr == 4)
-## replace Ford opportunity exposure with Toyota in 2019 q4
-inp$op_expo_ew <- df$op_expo_ew[replace]
-
-## predicted probability of exposure for Ford with Toyota's opportunity 
-## score (all in 2019q4)
-test2 <- predict(object = mod, newdata = inp, type = "response")
 
 
 
