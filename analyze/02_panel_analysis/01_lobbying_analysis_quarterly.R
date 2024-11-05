@@ -41,6 +41,17 @@ df$CLI <- as.numeric(df$CLI_quarter)
 
 glimpse(df)
 
+df %>%
+  filter(CLI_amount_quarter<100000 & CLI_amount_quarter>0) %>%
+  filter(year %in% c(2017, 2021)) %>%
+  ggplot() +
+  geom_histogram(aes(x=CLI_amount_quarter), binwidth=500) +
+  geom_vline(xintercept = 13000, col="red", lty=2) +
+  theme_classic() +
+  scale_x_continuous(breaks=seq(0, 100000, 10000)) +
+  labs(x="Quarterly Lobbying Disbursement (2017-21)")
+ggsave("ajps_review/disburse_q.pdf", width=15, height=8)
+
 
 # Lobbying Occurrence ------------------------------------------------------
 
@@ -96,10 +107,11 @@ models <- list(
   "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, family = "binomial", df, vcov = ~ Year + Firm),
   "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Firm)
 )
 
-save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -139,10 +151,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
@@ -173,7 +185,7 @@ modelsummary(
   coef_map = cm,
   gof_map = "nobs"
   , add_rows = stats
-  ,output = "results/tables/climate_logit_qrt_bycomponent.tex"
+  ,output = "results/tables/climate_logit_qrt_bycomponent_REVISION.tex"
   , escape = FALSE
 )
 

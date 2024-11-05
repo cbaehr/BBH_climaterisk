@@ -100,9 +100,9 @@ models <- list(
   "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year, family = "binomial", df, vcov = ~ Year + Firm),
   "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_annual | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_annual | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_annual | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Firm)
 )
-
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -142,10 +142,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark'),
-  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' '),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ' '),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ' '),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
@@ -176,7 +176,7 @@ modelsummary(
   coef_map = cm,
   gof_map = "nobs"
   , add_rows = stats
-  ,output = "results/tables/climate_logit_year_bycomponent.tex"
+  ,output = "results/tables/climate_logit_year_bycomponent_REVISION.tex"
   , escape = FALSE
 )
 
