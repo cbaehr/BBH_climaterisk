@@ -31,13 +31,25 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
         "rg_expo_ew" = "Regulatory Exposure",
         "ph_expo_ew" = "Physical Exposure", 
         "cc_expo_ew" = "Overall Exposure",
+        "op_expo_ew:rg_expo_ew" = "Opp. x Reg.",
+        "op_expo_ew:ph_expo_ew" = "Opp. x Phy.",
+        "rg_expo_ew:ph_expo_ew" = "Reg. x Phy.",
         "ebit" = "EBIT",
         "ebit_at" = "EBIT/Assets",
         "us_dummy" = "US HQ",
-        "total_lobby_quarter" = "Total Lobbying (\\$)"
+        "total_lobby_quarter" = "Total Lobbying (\\$)",
+        "CLI_l1" = "Lagged DV",
+        "log_CLI_amount_l1" = "Lagged DV"
 )
 
 df$CLI <- as.numeric(df$CLI_quarter)
+
+df$log_CLI_amount <- log(df$CLI_amount_quarter + 1)
+
+df <- df %>%
+  group_by(Firm) %>%
+  mutate(CLI_l1 = lag(CLI, n=1, order_by=yearqtr),
+         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=yearqtr))
 
 glimpse(df)
 
@@ -50,7 +62,7 @@ df %>%
   theme_classic() +
   scale_x_continuous(breaks=seq(0, 100000, 10000)) +
   labs(x="Quarterly Lobbying Disbursement (2017-21)")
-ggsave("ajps_review/disburse_q.pdf", width=15, height=8)
+ggsave("ajps_review/disburse_q_REVISION.pdf", width=15, height=8)
 
 
 # Lobbying Occurrence ------------------------------------------------------
@@ -108,7 +120,7 @@ models <- list(
   "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
   "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
-  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Firm)
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
 save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION.RData")
@@ -211,7 +223,774 @@ models$`(7)`[["fixef_id"]][["Firm"]] #  firm fixed effects: 614
 # fitstat(models$`(1)`, ~ f + wf + wald + my)
 ### 
 
+### Interactions  -----------------------------------------------------
 
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew, family = "binomial", df, vcov = ~ Year + Firm),
+  "(2)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, family = "binomial", df, vcov = ~ Year + Firm),
+  "(3)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, family = "binomial", df, vcov = ~ Year + Firm),
+  "(4)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
+  "(5)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(6)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(7)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(8)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(9)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', '', '', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', '', '', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_logit_qrt_bycomponent_interactions_REVISION.tex"
+  , escape = FALSE
+)
+
+### Lagged DV  -----------------------------------------------------
+
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + CLI_l1, family = "binomial", df, vcov = ~ Year + Firm),
+  "(2)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1, family = "binomial", df, vcov = ~ Year + Firm),
+  "(3)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year, family = "binomial", df, vcov = ~ Year + Firm),
+  "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
+  "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_logit_qrt_bycomponent_laggeddv_REVISION.tex"
+  , escape = FALSE
+)
+
+
+
+## OLS -----------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_qrt_bycomponent_REVISION.tex"
+  , escape = FALSE
+)
+
+
+
+# Inspect model 6
+m6 <- models$`(6)`
+m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
+models$`(7)`[["fixef_id"]][["Firm"]] #  firm fixed effects: 614
+
+
+# modelsummary(
+#   models,
+#   stars = c('*' = .1, '**' = .05, '***' = .01),
+#   coef_map = cm
+#   ,gof_omit = 'AIC|BIC|Log.Lik|RMSE'
+# )
+
+### calculate F statistics for each model
+# fitstat
+
+# Calculate additional fit statistics
+# fitstat(models$`(1)`, ~ f + wf + wald + my)
+### 
+
+## OLS - Interactions -----------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
+  "(8)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(9)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', '', '', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', '', '', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_qrt_bycomponent_interactions_REVISION.tex"
+  , escape = FALSE
+)
+
+## OLS - Lagged DV -----------------------------------------------------
+
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + CLI_l1, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_qrt_bycomponent_laggeddv_REVISION.tex"
+  , escape = FALSE
+)
+
+
+
+## OLS - Amount -----------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_amount_qrt_bycomponent_REVISION.tex"
+  , escape = FALSE
+)
+
+
+
+# Inspect model 6
+m6 <- models$`(6)`
+m6[["fixef_id"]][["Year"]] # year fixed effects: 2001-2020
+models$`(7)`[["fixef_id"]][["Firm"]] #  firm fixed effects: 614
+
+
+# modelsummary(
+#   models,
+#   stars = c('*' = .1, '**' = .05, '***' = .01),
+#   coef_map = cm
+#   ,gof_omit = 'AIC|BIC|Log.Lik|RMSE'
+# )
+
+### calculate F statistics for each model
+# fitstat
+
+# Calculate additional fit statistics
+# fitstat(models$`(1)`, ~ f + wf + wald + my)
+### 
+
+## OLS - Interactions - Amount -----------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
+  "(8)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(9)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', '', '', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', '', '', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', '', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_amount_qrt_bycomponent_interactions_REVISION.tex"
+  , escape = FALSE
+)
+
+## OLS - Lagged DV - Amount -----------------------------------------------------
+
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + log_CLI_amount_l1, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
+)
+
+### Get all adjusted pseudo R2
+adjusted_r2_df <- data.frame(
+  Test = rep("Adj. Pseudo R2", length(models)),
+  Value = sapply(models, function(model) {
+    r2(model, type = "apr2")
+  }),
+  Model = names(models)
+) %>%
+  # round to three decimals
+  mutate(Value = round(Value, 3)) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+
+### Get F stat for exposure variables
+# Apply the wald function to each model in the list
+models_f <- wald_results <- lapply(models, function(model) {
+  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
+})
+
+# Extract Wald test statistics for each model
+wald_stats <- lapply(models_f, function(w) {
+  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
+})
+
+wald_stats <- data.frame(
+  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
+  Value = c(
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
+    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
+  ),
+  Model = rep(names(models), 2)
+) %>%
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  mutate(across(everything(), as.character))
+
+### Add fixed effects checkmarks: as data.frame
+fes <- data.frame(
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  Model = names(models)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      TRUE ~ " "
+    )
+  )
+
+
+### Bind together
+stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+
+
+# Generate model summary with additional Wald test statistics
+modelsummary(
+  models,
+  stars = c('*' = .1, '**' = .05, '***' = .01),
+  coef_map = cm,
+  gof_map = "nobs"
+  , add_rows = stats
+  ,output = "results/tables/climate_ols_amount_qrt_bycomponent_laggeddv_REVISION.tex"
+  , escape = FALSE
+)
 
 ### w/ firm fixed effects ---------------------------------------------------
 # 
