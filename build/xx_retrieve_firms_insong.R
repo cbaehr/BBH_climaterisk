@@ -32,5 +32,8 @@ firms_exposed_lobby_CLI <- firms_exposed %>%
 
 # Save
 saveRDS(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI.rds")
+fwrite(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI.csv")
+
+glimpse(firms_exposed_lobby_CLI)
 
 ### END
