@@ -26,7 +26,10 @@ glimpse(df)
 #Normalize variables for interpretation 
 
 ## continuous variables in regression models
-df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
+df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", 
+                       "cc_sent_ew", "op_sent_ew", "rg_sent_ew", "ph_sent_ew",
+                       "cc_pos_ew", "op_pos_ew", "rg_pos_ew", "ph_pos_ew",
+                       "cc_neg_ew", "op_neg_ew", "rg_neg_ew", "ph_neg_ew")
 ## pull from main data
 df_wide_cont <- df[, df_wide_cont_vars]
 ## rescale to standard normal
@@ -97,7 +100,10 @@ df <- data.frame(df)
 #Normalize variables for interpretation 
 
 ## continuous variables in regression models
-df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew")
+df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", 
+                       "cc_sent_ew", "op_sent_ew", "rg_sent_ew", "ph_sent_ew",
+                       "cc_pos_ew", "op_pos_ew", "rg_pos_ew", "ph_pos_ew",
+                       "cc_neg_ew", "op_neg_ew", "rg_neg_ew", "ph_neg_ew")
 
 ## pull from main data
 df_wide_cont <- df[, df_wide_cont_vars]

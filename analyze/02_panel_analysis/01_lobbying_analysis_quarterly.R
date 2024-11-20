@@ -29,11 +29,26 @@ df <- df |>
 # Specify covariate names
 cm <- c("op_expo_ew" = "Opportunity Exposure",
         "rg_expo_ew" = "Regulatory Exposure",
-        "ph_expo_ew" = "Physical Exposure", 
+        "ph_expo_ew" = "Physical Exposure",
+        "op_sent_ew" = "Opportunity Sentiment",
+        "rg_sent_ew" = "Regulatory Sentiment",
+        "ph_sent_ew" = "Physical Sentiment",
         "cc_expo_ew" = "Overall Exposure",
         "op_expo_ew:rg_expo_ew" = "Opp. x Reg.",
         "op_expo_ew:ph_expo_ew" = "Opp. x Phy.",
         "rg_expo_ew:ph_expo_ew" = "Reg. x Phy.",
+        "op_expo_ew:op_sent_ew" = "Opp. x Sent.",
+        "rg_expo_ew:rg_sent_ew" = "Reg. x Sent.",
+        "ph_expo_ew:ph_sent_ew" = "Phy. x Sent.",
+        "op_expo_ew:cc_sent_ew" = "Opp. x General Sent.",
+        "cc_sent_ew:rg_expo_ew" = "Reg. x General Sent.",
+        "cc_sent_ew:ph_expo_ew" = "Phy. x General Sent.",
+        "op_expo_ew:op_pos_ew" = "Opp. x Pos.",
+        "rg_expo_ew:rg_pos_ew" = "Reg. x Pos.",
+        "ph_expo_ew:ph_pos_ew" = "Phy. x Pos.",
+        "op_expo_ew:op_neg_ew" = "Opp. x Neg.",
+        "rg_expo_ew:rg_neg_ew" = "Reg. x Neg.",
+        "ph_expo_ew:ph_neg_ew" = "Phy. x Neg.",
         "ebit" = "EBIT",
         "ebit_at" = "EBIT/Assets",
         "us_dummy" = "US HQ",
@@ -120,7 +135,10 @@ models <- list(
   "(4)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, family = "binomial", df, vcov = ~ Year + Firm),
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
   "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
-  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
+  "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm),
+  "(8)" = feglm(CLI ~ op_expo_ew*op_sent_ew + rg_expo_ew*rg_sent_ew + ph_expo_ew*ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(9)" = feglm(CLI ~ op_expo_ew*cc_sent_ew + rg_expo_ew*cc_sent_ew + ph_expo_ew*cc_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(10)" = feglm(CLI ~ op_expo_ew*op_pos_ew + rg_expo_ew*rg_pos_ew + ph_expo_ew*ph_pos_ew + op_expo_ew*op_neg_ew + rg_expo_ew*rg_neg_ew + ph_expo_ew*ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
 save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION.RData")
@@ -163,10 +181,10 @@ wald_stats <- data.frame(
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
-  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', ''),
-  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', ''),
-  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark'),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark'),
+  `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', '', '', '', ''),
+  `Industry FE` = c(' ', ' ', ' ', '\\checkmark', '', ' ', '', '', '', ''),
+  `Industry x Year FE` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', '\\checkmark', '\\checkmark', '', '', ''),
   Model = names(models)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
