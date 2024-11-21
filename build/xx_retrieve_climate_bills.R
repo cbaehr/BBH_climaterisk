@@ -27,6 +27,7 @@ lobby_text <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
 lobby_issue <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
 lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 
+glimpse(lobby_client)
 
 # check whether policy areas match bills
 # environmental protection + energy
