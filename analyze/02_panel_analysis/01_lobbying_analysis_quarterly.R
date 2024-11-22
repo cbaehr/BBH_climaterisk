@@ -33,6 +33,15 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
         "op_sent_ew" = "Opportunity Sentiment",
         "rg_sent_ew" = "Regulatory Sentiment",
         "ph_sent_ew" = "Physical Sentiment",
+        "op_pos_ew" = "Opportunity Pos. Sent.",
+        "rg_pos_ew" = "Regulatory Pos. Sent.",
+        "ph_pos_ew" = "Physical Pos. Sent.",
+        "op_neg_ew" = "Opportunity Neg. Sent.",
+        "rg_neg_ew" = "Regulatory Neg. Sent.",
+        "ph_neg_ew" = "Physical Neg. Sent.",
+        "op_risk_ew" = "Opportunity Risk",
+        "rg_risk_ew" = "Regulatory Risk",
+        "ph_risk_ew" = "Physical Risk",
         "cc_expo_ew" = "Overall Exposure",
         "op_expo_ew:rg_expo_ew" = "Opp. x Reg.",
         "op_expo_ew:ph_expo_ew" = "Opp. x Phy.",
@@ -136,9 +145,9 @@ models <- list(
   "(5)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
   "(6)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, family = "binomial", df, vcov = ~ Year + Firm),
   "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm),
-  "(8)" = feglm(CLI ~ op_expo_ew*op_sent_ew + rg_expo_ew*rg_sent_ew + ph_expo_ew*ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(9)" = feglm(CLI ~ op_expo_ew*cc_sent_ew + rg_expo_ew*cc_sent_ew + ph_expo_ew*cc_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
-  "(10)" = feglm(CLI ~ op_expo_ew*op_pos_ew + rg_expo_ew*rg_pos_ew + ph_expo_ew*ph_pos_ew + op_expo_ew*op_neg_ew + rg_expo_ew*rg_neg_ew + ph_expo_ew*ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm)
+  "(8)" = feglm(CLI ~ op_pos_ew + rg_pos_ew + ph_pos_ew + op_neg_ew + rg_neg_ew + ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(9)" = feglm(CLI ~ op_sent_ew + rg_sent_ew + ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(10)" = feglm(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
 save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION.RData")
@@ -153,29 +162,6 @@ adjusted_r2_df <- data.frame(
 ) %>%
   # round to three decimals
   mutate(Value = round(Value, 3)) %>%
-  pivot_wider(names_from = Model, values_from = Value) %>%
-  mutate(across(everything(), as.character))
-
-
-### Get F stat for exposure variables
-# Apply the wald function to each model in the list
-models_f <- wald_results <- lapply(models, function(model) {
-  wald(model, keep = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), vcov = vcov(model))
-})
-
-# Extract Wald test statistics for each model
-wald_stats <- lapply(models_f, function(w) {
-  c(F_stat = round(w$stat, 3), P_val = round(w$p, 3))
-})
-
-wald_stats <- data.frame(
-  Test = rep(c("Exposure F. Stat", "Exposure F p-val"), each = length(models)),
-  Value = c(
-    sapply(wald_stats, function(stat) sprintf("%.3f", stat["F_stat"])),
-    sapply(wald_stats, function(stat) sprintf("%.3f", stat["P_val"]))
-  ),
-  Model = rep(names(models), 2)
-) %>%
   pivot_wider(names_from = Model, values_from = Value) %>%
   mutate(across(everything(), as.character))
 
@@ -205,7 +191,7 @@ fes <- data.frame(
   
 
 ### Bind together
-stats <- bind_rows(adjusted_r2_df, wald_stats, fes)
+stats <- bind_rows(adjusted_r2_df, fes)
 
 
 # Generate model summary with additional Wald test statistics

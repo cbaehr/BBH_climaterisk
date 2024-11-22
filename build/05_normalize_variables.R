@@ -29,7 +29,8 @@ glimpse(df)
 df_wide_cont_vars <- c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", 
                        "cc_sent_ew", "op_sent_ew", "rg_sent_ew", "ph_sent_ew",
                        "cc_pos_ew", "op_pos_ew", "rg_pos_ew", "ph_pos_ew",
-                       "cc_neg_ew", "op_neg_ew", "rg_neg_ew", "ph_neg_ew")
+                       "cc_neg_ew", "op_neg_ew", "rg_neg_ew", "ph_neg_ew",
+                       "cc_risk_ew", "op_risk_ew", "rg_risk_ew", "ph_risk_ew")
 ## pull from main data
 df_wide_cont <- df[, df_wide_cont_vars]
 ## rescale to standard normal
