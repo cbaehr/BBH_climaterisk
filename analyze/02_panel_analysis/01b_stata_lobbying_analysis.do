@@ -1,8 +1,10 @@
 
 global tobit_annual 0
+global tobit_annual_sent 0
 global impute_annual 0
 global compare_annual 0
-global tobit_quarter 1
+global tobit_quarter 0
+global tobit_quarter_sent 1
 global impute_quarter 0
 global compare_quarter 0
 global tobit_quarter_target 0
@@ -91,17 +93,19 @@ label var reg_phy "Reg. x Phy."
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
@@ -113,6 +117,54 @@ outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_annual i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
 outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
+
+}
+
+if $tobit_annual_sent {
+	
+gen opp_sent = op_expo_ew*op_sent_ew
+gen reg_sent = rg_expo_ew*rg_sent_ew
+gen phy_sent = ph_expo_ew*ph_sent_ew
+label var op_sent_ew "Opportunity Sentiment"
+label var rg_sent_ew "Regulatory Sentiment"
+label var ph_sent_ew "Physical Sentiment"
+label var opp_sent "Opp. x Sent."
+label var reg_sent "Reg. x Sent."
+label var phy_sent "Phy. x Sent."
+
+gen opp_pos = op_expo_ew*op_pos_ew
+gen reg_pos = rg_expo_ew*rg_pos_ew
+gen phy_pos = ph_expo_ew*ph_pos_ew
+label var op_pos_ew "Pos. Opportunity Sent."
+label var rg_pos_ew "Pos. Regulatory Sent."
+label var ph_pos_ew "Pos. Physical Sent."
+label var opp_pos "Opp. x Pos. Sent."
+label var reg_pos "Reg. x Pos. Sent."
+label var phy_pos "Phy. x Pos. Sent."
+
+gen opp_neg = op_expo_ew*op_neg_ew
+gen reg_neg = rg_expo_ew*rg_neg_ew
+gen phy_neg = ph_expo_ew*ph_neg_ew
+label var op_neg_ew "Neg. Opportunity Sent."
+label var rg_neg_ew "Neg. Regulatory Sent."
+label var ph_neg_ew "Neg. Physical Sent."
+label var opp_neg "Opp. x Neg. Sent."
+label var reg_neg "Reg. x Neg. Sent."
+label var phy_neg "Phy. x Neg. Sent."
+
+label var op_risk_ew "Opportunity Risk"
+label var rg_risk_ew "Regulatory Risk"
+label var ph_risk_ew "Physical Risk"
+
+vcemway tobit log_CLI_amount_annual op_pos_ew rg_pos_ew ph_pos_ew op_neg_ew rg_neg_ew ph_neg_ew ebit ebit_at us_dummy total_lobby_annual i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_annual_sentiment_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+
+vcemway tobit log_CLI_amount_annual op_sent_ew rg_sent_ew ph_sent_ew ebit ebit_at us_dummy total_lobby_annual i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_annual_sentiment_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+
+vcemway tobit log_CLI_amount_annual op_risk_ew rg_risk_ew ph_risk_ew ebit ebit_at us_dummy total_lobby_annual i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_annual_sentiment_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(3)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+
 
 }
 
@@ -372,6 +424,54 @@ test op_expo_ew rg_expo_ew ph_expo_ew
 outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 restore
+
+}
+
+
+if $tobit_quarter_sent {
+	
+gen opp_sent = op_expo_ew*op_sent_ew
+gen reg_sent = rg_expo_ew*rg_sent_ew
+gen phy_sent = ph_expo_ew*ph_sent_ew
+label var op_sent_ew "Opportunity Sentiment"
+label var rg_sent_ew "Regulatory Sentiment"
+label var ph_sent_ew "Physical Sentiment"
+label var opp_sent "Opp. x Sent."
+label var reg_sent "Reg. x Sent."
+label var phy_sent "Phy. x Sent."
+
+gen opp_pos = op_expo_ew*op_pos_ew
+gen reg_pos = rg_expo_ew*rg_pos_ew
+gen phy_pos = ph_expo_ew*ph_pos_ew
+label var op_pos_ew "Pos. Opportunity Sent."
+label var rg_pos_ew "Pos. Regulatory Sent."
+label var ph_pos_ew "Pos. Physical Sent."
+label var opp_pos "Opp. x Pos. Sent."
+label var reg_pos "Reg. x Pos. Sent."
+label var phy_pos "Phy. x Pos. Sent."
+
+gen opp_neg = op_expo_ew*op_neg_ew
+gen reg_neg = rg_expo_ew*rg_neg_ew
+gen phy_neg = ph_expo_ew*ph_neg_ew
+label var op_neg_ew "Neg. Opportunity Sent."
+label var rg_neg_ew "Neg. Regulatory Sent."
+label var ph_neg_ew "Neg. Physical Sent."
+label var opp_neg "Opp. x Neg. Sent."
+label var reg_neg "Reg. x Neg. Sent."
+label var phy_neg "Phy. x Neg. Sent."
+
+label var op_risk_ew "Opportunity Risk"
+label var rg_risk_ew "Regulatory Risk"
+label var ph_risk_ew "Physical Risk"
+
+vcemway tobit log_CLI_amount_quarter op_pos_ew rg_pos_ew ph_pos_ew op_neg_ew rg_neg_ew ph_neg_ew ebit ebit_at us_dummy total_lobby_quarter i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_sentiment_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+
+vcemway tobit log_CLI_amount_quarter op_sent_ew rg_sent_ew ph_sent_ew ebit ebit_at us_dummy total_lobby_quarter i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_sentiment_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+
+vcemway tobit log_CLI_amount_quarter op_risk_ew rg_risk_ew ph_risk_ew ebit ebit_at us_dummy total_lobby_quarter i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_sentiment_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(3)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 }
 

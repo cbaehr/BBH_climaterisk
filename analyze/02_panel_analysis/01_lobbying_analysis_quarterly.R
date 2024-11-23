@@ -88,6 +88,9 @@ df %>%
   labs(x="Quarterly Lobbying Disbursement (2017-21)")
 ggsave("ajps_review/disburse_q_REVISION.pdf", width=15, height=8)
 
+cor(df$op_expo_ew, df$op_sent_ew, use="pairwise.complete.obs")
+cor(df$rg_expo_ew, df$rg_sent_ew, use="pairwise.complete.obs")
+cor(df$ph_expo_ew, df$ph_sent_ew, use="pairwise.complete.obs")
 
 # Lobbying Occurrence ------------------------------------------------------
 
