@@ -168,6 +168,24 @@ adjusted_r2_df <- data.frame(
   pivot_wider(names_from = Model, values_from = Value) %>%
   mutate(across(everything(), as.character))
 
+### Add Wald tests
+# compute_wald <- function(fixest_mod, var1, var2) {
+#   a <- fixest_mod$coefficients[var1] #var1 coef
+#   b <- fixest_mod$coefficients[var2] #var2 coef
+#   a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
+#   b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
+#   ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
+#   wald <- a-b / sqrt(a_cov + b_cov - 2 * ab_cov) #wald stat
+#   return(wald)
+# }
+# 
+# compute_wald(models[[1]], "op_expo_ew", "ph_expo_ew")
+# compute_wald(models[[1]], "rg_expo_ew", "ph_expo_ew")
+# wald <- lapply(models[1:7], FUN = function(x) {c(compute_wald(x, "op_expo_ew", "rg_expo_ew"), compute_wald(x, "op_expo_ew", "ph_expo_ew"), compute_wald(x, "rg_expo_ew", "ph_expo_ew"))})
+# #wald[8] <- c(compute_wald(models[[8]], "op_expo_ew", "rg_expo_ew"), compute_wald(models[[8]], "op_expo_ew", "ph_expo_ew"), compute_wald(models[[8]], "rg_expo_ew", "ph_expo_ew"))
+# do.call(cbind, wald)
+
+
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
   `Year FE` = c(' ', '', '\\checkmark', '\\checkmark', '', '\\checkmark', '', '', '', ''),
