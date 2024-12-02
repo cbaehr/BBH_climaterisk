@@ -6,7 +6,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(tidyverse, fixest, modelsummary, kableExtra)
+pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -88,9 +88,14 @@ df %>%
   labs(x="Quarterly Lobbying Disbursement (2017-21)")
 ggsave("ajps_review/disburse_q_REVISION.pdf", width=15, height=8)
 
-cor(df$op_expo_ew, df$op_sent_ew, use="pairwise.complete.obs")
-cor(df$rg_expo_ew, df$rg_sent_ew, use="pairwise.complete.obs")
-cor(df$ph_expo_ew, df$ph_sent_ew, use="pairwise.complete.obs")
+#cor(df$op_expo_ew, df$op_sent_ew, use="pairwise.complete.obs")
+#cor(df$rg_expo_ew, df$rg_sent_ew, use="pairwise.complete.obs")
+#cor(df$ph_expo_ew, df$ph_sent_ew, use="pairwise.complete.obs")
+expo_sent_cor <- cor(df[ , c("op_expo_ew", "op_sent_ew", "rg_expo_ew", "rg_sent_ew", "ph_expo_ew", "ph_sent_ew")], use="pairwise.complete.obs")
+colnames(expo_sent_cor) <- rownames(expo_sent_cor) <- c("Opp. Expo.", "Opp. Sent.", "Reg. Expo.", "Reg. Sent.", "Phy. Expo.", "Phy. Sent.")
+pdf("results/figures/descriptives/corrplot_expo_sent.pdf", width=5, height=5)
+corrplot(expo_sent_cor)
+dev.off()
 
 # Lobbying Occurrence ------------------------------------------------------
 
