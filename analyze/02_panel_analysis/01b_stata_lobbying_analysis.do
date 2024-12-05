@@ -50,27 +50,74 @@ if $tobit_annual {
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew, ll(0) ul(.) cluster(year isin)
 *test op_expo_ew rg_expo_ew ph_expo_ew
-est sto m1a
+
 test op_expo_ew = rg_expo_ew
 local f1a = r(F)
 test op_expo_ew = ph_expo_ew
 local f1b = r(F)
 test rg_expo_ew = ph_expo_ew
 local f1c = r(F)
+
+local n = e(N)
+local k = e(df_m)
+local pseudo_r2 = 1 - e(ll) / e(ll_0)
+local adj_pseudo_r2 = 1 - ((1 - `pseudo_r2') * (`n' - 1) / (`n' - `k' - 1))
+est sto m1a
+estadd scalar r2a = `adj_pseudo_r2'
+estadd scalar wald1 = `f1a'
+estadd scalar wald2 = `f1b'
+estadd scalar wald3 = `f1c'
+
 *outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
-outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', Wald F-Stat (Op-Rg), `f1a', Wald F-Stat (Op-Ph), `f1b', Wald F-Stat (Rg-Ph), `f1c') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', Wald F-Stat (Op-Rg), `f1a', Wald F-Stat (Op-Ph), `f1b', Wald F-Stat (Rg-Ph), `f1c') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual, ll(0) ul(.) cluster(year isin)
+
+test op_expo_ew = rg_expo_ew
+local f1a = r(F)
+test op_expo_ew = ph_expo_ew
+local f1b = r(F)
+test rg_expo_ew = ph_expo_ew
+local f1c = r(F)
+
+local n = e(N)
+local k = e(df_m)
+local pseudo_r2 = 1 - e(ll) / e(ll_0)
+local adj_pseudo_r2 = 1 - ((1 - `pseudo_r2') * (`n' - 1) / (`n' - `k' - 1))
 est sto m1b
-test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+estadd scalar r2a = `adj_pseudo_r2'
+estadd scalar wald1 = `f1a'
+estadd scalar wald2 = `f1b'
+estadd scalar wald3 = `f1c'
+
+*test op_expo_ew rg_expo_ew ph_expo_ew
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual i.year, ll(0) ul(.) cluster(year isin)
-est sto m1c
-test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
 
-esttab m1a m1b m1c using "$results/tobit_results_annual_DATA_REVISION.csv", replace csv
+test op_expo_ew = rg_expo_ew
+local f1a = r(F)
+test op_expo_ew = ph_expo_ew
+local f1b = r(F)
+test rg_expo_ew = ph_expo_ew
+local f1c = r(F)
+
+local n = e(N)
+local k = e(df_m)
+local pseudo_r2 = 1 - e(ll) / e(ll_0)
+local adj_pseudo_r2 = 1 - ((1 - `pseudo_r2') * (`n' - 1) / (`n' - `k' - 1))
+est sto m1c
+estadd scalar r2a = `adj_pseudo_r2'
+estadd scalar wald1 = `f1a'
+estadd scalar wald2 = `f1b'
+estadd scalar wald3 = `f1c'
+
+*test op_expo_ew rg_expo_ew ph_expo_ew
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+
+esttab m1a m1b m1c using "$results/tobit_results_annual_DATA_REVISION.csv", replace csv scalars(r2a wald1 wald2 wald3)
+
+
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 est sto m1d

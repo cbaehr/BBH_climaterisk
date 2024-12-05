@@ -141,7 +141,7 @@ l_q_iy_lgdv_Wald <- c(round(compute_wald(l_q_iy_lgdv, "op_expo_ew", "rg_expo_ew"
 
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
 
-o_q_iy <- models[[5]] #Column 5 - main result for firm-quarter panel, industry-by-year FE
+o_q_iy <- models[[5]] #Column 5 - main result for firm-quarter OLS panel, industry-by-year FE
 
 o_q_iy_ready <- c(o_q_iy$coefficients["op_expo_ew"], o_q_iy$se["op_expo_ew"],
                   o_q_iy$coefficients["rg_expo_ew"], o_q_iy$se["rg_expo_ew"],
@@ -149,7 +149,7 @@ o_q_iy_ready <- c(o_q_iy$coefficients["op_expo_ew"], o_q_iy$se["op_expo_ew"],
 
 o_q_iy_N <- o_q_iy$nobs
 
-o_q_iy_R <- round(r2(o_q_iy, type = "apr2"), 3) #adjusted R2
+o_q_iy_R <- round(r2(o_q_iy, type = "ar2"), 3) #adjusted R2
 
 o_q_iy_Wald <- c(round(compute_wald(o_q_iy, "op_expo_ew", "rg_expo_ew"), 3), 
                  round(compute_wald(o_q_iy, "op_expo_ew", "ph_expo_ew"), 3), 
@@ -182,13 +182,13 @@ load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION.RData")
 
 o_q_iy_spnd <- models[[5]] #Column 5 - interaction result for firm-quarter panel, industry-by-year FE
 
-o_q_iy_spnd_ready <- c(l_q_iy_intr$coefficients["op_expo_ew"], l_q_iy_intr$se["op_expo_ew"],
-                       l_q_iy_intr$coefficients["rg_expo_ew"], l_q_iy_intr$se["rg_expo_ew"],
-                       l_q_iy_intr$coefficients["ph_expo_ew"], l_q_iy_intr$se["ph_expo_ew"])
+o_q_iy_spnd_ready <- c(o_q_iy_spnd$coefficients["op_expo_ew"], o_q_iy_spnd$se["op_expo_ew"],
+                       o_q_iy_spnd$coefficients["rg_expo_ew"], o_q_iy_spnd$se["rg_expo_ew"],
+                       o_q_iy_spnd$coefficients["ph_expo_ew"], o_q_iy_spnd$se["ph_expo_ew"])
 
 o_q_iy_spnd_N <- o_q_iy_spnd$nobs
 
-o_q_iy_spnd_R <- round(r2(o_q_iy_spnd, type = "apr2"), 3) #adjusted R2
+o_q_iy_spnd_R <- round(r2(o_q_iy_spnd, type = "ar2"), 3) #adjusted R2
 
 o_q_iy_spnd_Wald <- c(round(compute_wald(o_q_iy_spnd, "op_expo_ew", "rg_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_spnd, "op_expo_ew", "ph_expo_ew"), 3), 
@@ -202,42 +202,49 @@ t_q_iy_ready <- process_stata(tobit, 3)
 
 t_q_iy_N <- as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=N")]))
 
-t_q_iy_Wald <- rep(0.000, 3) # need to fix
-t_q_iy_R <- 0.000 # need to fix
+t_q_iy_R <- round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=r2a")])), 3)
+
+t_q_iy_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald1")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald2")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald3")])), 3))
 
 ## --------------------------------------------------
 
 l_q_iy_ready_stars <- stars(l_q_iy_ready)
 o_q_iy_ready_stars <- stars(o_q_iy_ready)
+l_q_iyf_ready_stars <- stars(l_q_iyf_ready)
 l_q_iy_intr_ready_stars <- stars(l_q_iy_intr_ready)
 l_q_iy_lgdv_ready_stars <- stars(l_q_iy_lgdv_ready)
+l_q_iy_sent_ready_stars <- stars(l_q_iy_sent_ready)
 t_q_iy_ready_stars <- stars(t_q_iy_ready)
 o_q_iy_spnd_ready_stars <- stars(o_q_iy_spnd_ready)
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
+m8 <- list(tidy=l_q_iyf_ready_stars); class(m8) <- "modelsummary_list"
 m3 <- list(tidy=l_q_iy_intr_ready_stars); class(m3) <- "modelsummary_list"
 m4 <- list(tidy=l_q_iy_lgdv_ready_stars); class(m4) <- "modelsummary_list"
+m7 <- list(tidy=l_q_iy_sent_ready_stars); class(m7) <- "modelsummary_list"
 m5 <- list(tidy=t_q_iy_ready_stars); class(m5) <- "modelsummary_list"
 m6 <- list(tidy=o_q_iy_spnd_ready_stars); class(m6) <- "modelsummary_list"
 
-N <- c(l_q_iy_N, o_q_iy_N, l_q_iy_intr_N, l_q_iy_lgdv_N, t_q_iy_N, o_q_iy_spnd_N)
-Wald <- data.frame(l_q_iy_Wald, o_q_iy_Wald, l_q_iy_intr_Wald, l_q_iy_lgdv_Wald, t_q_iy_Wald, o_q_iy_spnd_Wald)
-R <- c(l_q_iy_R, o_q_iy_R, l_q_iy_intr_R, l_q_iy_lgdv_R, t_q_iy_R, o_q_iy_spnd_R)
+N <- c(l_q_iy_N, o_q_iy_N, l_q_iyf_N, l_q_iy_intr_N, l_q_iy_lgdv_N, l_q_iy_sent_N, t_q_iy_N, o_q_iy_spnd_N)
+Wald <- data.frame(l_q_iy_Wald, o_q_iy_Wald, l_q_iyf_Wald, l_q_iy_intr_Wald, l_q_iy_lgdv_Wald, l_q_iy_sent_Wald, t_q_iy_Wald, o_q_iy_spnd_Wald)
+R <- c(l_q_iy_R, o_q_iy_R, l_q_iyf_R, l_q_iy_intr_R, l_q_iy_lgdv_R, l_q_iy_sent_R, t_q_iy_R, o_q_iy_spnd_R)
 
-mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 2"=m3, "Logit 3"=m4,
+mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
                  "Tobit 1"=m5, "OLS 2"=m6)
 
 ### Add fixed effects checkmarks: as data.frame
 fes <- data.frame(
   `Num. Obs.` = as.character(N),
   `Adjusted R-Squared` = as.character(R),
-  `Industry x Year FE` = c(' ', ' ', '\\checkmark', ' ', ' ', ' '),
-  `Firm FE` = c(' ', ' ', ' ', ' ', ' ', ' '),
-  `Firm Controls` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Lagged DV` = c(' ', ' ', ' ', '\\checkmark', ' ', ' '),
-  `Climate Measure` = c('Exposure', 'Exposure', 'Exposure', 'Exposure', 'Exposure', 'Exposure'),
-  `Estimation` = c('Logit', 'OLS', 'Logit', 'Logit', 'Tobit', 'OLS'),
+  `Industry x Year FE` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Firm FE` = c(' ', ' ', '\\checkmark', ' ', ' ', ' ', ' ', ' '),
+  `Firm Controls` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
+  `Lagged DV` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', ' ', ' '),
+  `Climate Measure` = c('Exposure', 'Exposure', 'Exposure', 'Exposure', 'Exposure', 'Sentiment', 'Exposure', 'Exposure'),
+  `Estimation` = c('Logit', 'OLS', 'Logit', 'Logit', 'Logit', 'Logit', 'Tobit', 'OLS'),
   `Wald Stat (Opp - Reg = 0)` = as.character(Wald[1,]),
   `Wald Stat (Opp - Phy = 0)` = as.character(Wald[2,]),
   `Wald Stat (Reg - Phy = 0)` = as.character(Wald[3,]),
@@ -271,7 +278,7 @@ fes <- data.frame(
 #stats <- bind_rows(adjusted_r2_df, fes)
 stats <- bind_rows(fes)
 
-names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount")
+names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount")
 
 modelsummary(mod_list
              ,add_rows=stats
