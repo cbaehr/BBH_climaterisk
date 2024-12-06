@@ -97,6 +97,12 @@ pdf("results/figures/descriptives/corrplot_expo_sent.pdf", width=5, height=5)
 corrplot(expo_sent_cor)
 dev.off()
 
+expo_risk_cor <- cor(df[ , c("op_expo_ew", "op_risk_ew", "rg_expo_ew", "rg_risk_ew", "ph_risk_ew", "ph_risk_ew")], use="pairwise.complete.obs")
+colnames(expo_risk_cor) <- rownames(expo_risk_cor) <- c("Opp. Expo.", "Opp. Risk", "Reg. Expo.", "Reg. Risk", "Phy. Expo.", "Phy. Risk")
+pdf("results/figures/descriptives/corrplot_expo_risk.pdf", width=5, height=5)
+corrplot(expo_risk_cor)
+dev.off()
+
 # Lobbying Occurrence ------------------------------------------------------
 
 
