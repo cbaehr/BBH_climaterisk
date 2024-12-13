@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(tidyverse, fixest, modelsummary, kableExtra)
+pacman::p_load(haven, readxl, tidyverse, fixest, modelsummary, kableExtra, corrplot)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -24,6 +24,7 @@ df <- df |>
     `Industry x Year` = industry_year
   )
 
+
 # Specify covariate names
 cm <- c("op_expo_ew" = "Opportunity Exposure",
         "rg_expo_ew" = "Regulatory Exposure",
@@ -37,7 +38,8 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
         "us_dummy" = "US HQ",
         "total_lobby_annual" = "Total Lobbying (\\$)",
         "CLI_l1" = "Lagged DV",
-        "log_CLI_amount_l1" = "Lagged DV"
+        "log_CLI_amount_l1" = "Lagged DV",
+        "tenk_exposure" = "10-K Exposure"
 )
 
 # Change classes for analysis ---------------------------------------------
@@ -919,6 +921,54 @@ modelsummary(
   ,output = "results/tables/climate_ols_amount_year_bycomponent_laggeddv_REVISION.tex"
   , escape = FALSE
 )
+
+
+## Compare with 10-Ks -------------------------------------------------------------
+
+tenk_main <- read_dta("data/01_raw/SEC_climate_risk/Excerpt full info.dta")
+
+tenk_aux <- read.csv("data/01_raw/SEC_climate_risk/Ceres_Climate_Risk_Data_BJS - Ceres_Climate_Risk_Data_BJS.csv", 
+                     stringsAsFactors = F)
+
+tenk_main <- merge(tenk_main, tenk_aux, by="filename")
+tenk_main$year <- tenk_main$filingyear
+tenk_main$ticker <- tolower(tenk_main$ticker)
+
+tenk_cy <- tenk_main %>%
+  group_by(ticker, year) %>%
+  summarize(tenk_exposure = sum(as.numeric(relevance_score.x), na.rm=T))
+
+ticker <- read_xlsx("data/01_raw/orbis/bbh_orbis_tickersymbols.xlsx", sheet="Results")
+
+df_ticker <- merge(df, ticker, by.x="Firm", by.y="ISIN number") #224,446 of 227,847 obs. have a matching ticker
+
+df_ticker$`Ticker symbol` <- tolower(df_ticker$`Ticker symbol`)
+sum(tenk_cy$ticker %in% df_ticker$`Ticker symbol`) #41,727 of 46,190 10-K data obs. have matching 
+
+df_ticker <- merge(df_ticker, tenk_cy, by.x=c("Ticker symbol", "Year"), by.y=c("ticker", "year")) 
+#14,852 of 15,396 potential obs. in 10-K data have match in our panel
+
+cortest <- cor(df_ticker[ , c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "tenk_exposure")],
+               use="pairwise.complete.obs")
+colnames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
+rownames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
+
+pdf("results/figures/descriptives/corrplot_expo_tenk.pdf", width=5, height=5)
+corrplot(cortest)
+dev.off()
+
+df_ticker <- df_ticker %>%
+  mutate(cc_expo_ew = scale(cc_expo_ew),
+         tenk_exposure = scale(tenk_exposure))
+
+sautner_mod <- feglm(CLI ~ cc_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df_ticker, vcov = ~ Year + Firm)
+tenk_mod <- feglm(CLI ~ tenk_exposure + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df_ticker, vcov = ~ Year + Firm)
+out = list(sautner_mod, tenk_mod)
+save(out, file="data/03_final/climate_logit_yr_compare10K_MODELS_REVISION.RData")
+
+feglm(CLI ~ cc_expo_ew + tenk_exposure + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df_ticker, vcov = ~ Year + Firm) %>%
+  summary()
+
 
 
 # ### w/ firm fixed effecrs ---------------------------------------------------

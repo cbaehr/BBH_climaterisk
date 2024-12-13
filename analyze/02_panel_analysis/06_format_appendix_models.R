@@ -391,6 +391,58 @@ t_q_iy_risk_out <- c(`Num. Obs.` = t_q_iy_risk_N,
 
 ## --------------------------------------------------
 
+## 10-K to overall exposure comparison
+
+load("data/03_final/climate_logit_yr_compare10K_MODELS_REVISION.RData")
+
+l_y_iy_ovrl <- out[[1]] #Column 1 -- annual model with i-y FE for overall exposure
+l_y_iy_ovrl_ready <- round(c(l_y_iy_ovrl$coefficients["cc_expo_ew"], l_y_iy_ovrl$se["cc_expo_ew"]), 3)
+t <- l_y_iy_ovrl$coefficients["cc_expo_ew"] / l_y_iy_ovrl$se["cc_expo_ew"]
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+l_y_iy_ovrl_ready_stars <- data.frame(term="Exposure", estimate=paste0(l_y_iy_ovrl_ready[1], strs), std.error=l_y_iy_ovrl_ready[2])
+
+l_y_iy_ovrl_N <- l_y_iy_ovrl$nobs
+
+l_y_iy_ovrl_R <- round(r2(l_y_iy_ovrl, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_ovrl_out <- c(`Num. Obs.` = l_y_iy_ovrl_N,
+                     `Adjusted R-Squared` =  l_y_iy_ovrl_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Ovrl. Expo.',
+                     `Estimation` = 'Logit',
+                     `Wald Stat (Opp - Reg = 0)` = ' ',
+                     `Wald Stat (Opp - Phy = 0)` = ' ',
+                     `Wald Stat (Reg - Phy = 0)` = ' ')
+
+##
+
+l_y_iy_tenk <- out[[2]] #Column 1 -- annual model with i-y FE for 10-K exposure
+l_y_iy_tenk_ready <- round(c(l_y_iy_tenk$coefficients["tenk_exposure"], l_y_iy_tenk$se["tenk_exposure"]), 3)
+t <- l_y_iy_tenk$coefficients["tenk_exposure"] / l_y_iy_tenk$se["tenk_exposure"]
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+l_y_iy_tenk_ready_stars <- data.frame(term="Exposure", estimate=paste0(l_y_iy_tenk_ready[1], strs), std.error=l_y_iy_tenk_ready[2])
+
+l_y_iy_tenk_N <- l_y_iy_tenk$nobs
+
+l_y_iy_tenk_R <- round(r2(l_y_iy_tenk, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_tenk_out <- c(`Num. Obs.` = l_y_iy_tenk_N,
+                     `Adjusted R-Squared` =  l_y_iy_tenk_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = '10-K Expo.',
+                     `Estimation` = 'Logit',
+                     `Wald Stat (Opp - Reg = 0)` = ' ',
+                     `Wald Stat (Opp - Phy = 0)` = ' ',
+                     `Wald Stat (Reg - Phy = 0)` = ' ')
+
+## --------------------------------------------------
+
 l_q_iy_ready_stars <- stars(l_q_iy_ready)
 o_q_iy_ready_stars <- stars(o_q_iy_ready)
 l_q_iyf_ready_stars <- stars(l_q_iyf_ready)
@@ -404,8 +456,6 @@ t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
 
 
 
-
-
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
 m8 <- list(tidy=l_q_iyf_ready_stars); class(m8) <- "modelsummary_list"
@@ -416,9 +466,11 @@ m5 <- list(tidy=t_q_iy_ready_stars); class(m5) <- "modelsummary_list"
 m6 <- list(tidy=o_q_iy_spnd_ready_stars); class(m6) <- "modelsummary_list"
 m9 <- list(tidy=t_q_iy_sent_ready_stars); class(m9) <- "modelsummary_list"
 m10 <- list(tidy=t_q_iy_risk_ready_stars); class(m10) <- "modelsummary_list"
+m11 <- list(tidy=l_y_iy_ovrl_ready_stars); class(m11) <- "modelsummary_list"
+m12 <- list(tidy=l_y_iy_tenk_ready_stars); class(m12) <- "modelsummary_list"
 
 mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
-                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m9, "Tobit 4"=m10)
+                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m9, "Tobit 4"=m10, "Logit 6"=m11, "Logit 7"=m12)
 
 auxiliary <- data.frame(l_q_iy_out, 
                         o_q_iy_out,
@@ -429,7 +481,9 @@ auxiliary <- data.frame(l_q_iy_out,
                         t_q_iy_out,
                         o_q_iy_spnd_out,
                         t_q_iy_sent_out,
-                        t_q_iy_risk_out)
+                        t_q_iy_risk_out,
+                        l_y_iy_ovrl_out,
+                        l_y_iy_tenk_out)
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -460,7 +514,7 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount", "Amount", "Amount")
+names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount", "Amount", "Amount", "Dummy", "Dummy")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
