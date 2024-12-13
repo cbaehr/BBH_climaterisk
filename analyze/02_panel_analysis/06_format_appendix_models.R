@@ -122,6 +122,7 @@ l_q_iy_out <- c(`Num. Obs.` = l_q_iy_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'Logit',
+                `Panel` = 'Firm-Qtr.',
                 `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_Wald[3]))
@@ -150,6 +151,7 @@ l_q_iyf_out <- c(`Num. Obs.` = l_q_iyf_N,
                  `Lagged DV` = ' ',
                  `Climate Measure` = 'Exposure',
                  `Estimation` = 'Logit',
+                 `Panel` = 'Firm-Qtr.',
                  `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iyf_Wald[1]),
                  `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iyf_Wald[2]),
                  `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iyf_Wald[3]))
@@ -178,6 +180,7 @@ l_q_iy_sent_out <- c(`Num. Obs.` = l_q_iy_sent_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Sentiment',
                      `Estimation` = 'Logit',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_sent_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_sent_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_sent_Wald[3]))
@@ -207,6 +210,7 @@ l_q_iy_lgdv_out <- c(`Num. Obs.` = l_q_iy_lgdv_N,
                      `Lagged DV` = '\\checkmark',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'Logit',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_lgdv_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_lgdv_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_lgdv_Wald[3]))
@@ -237,6 +241,7 @@ o_q_iy_out <- c(`Num. Obs.` = o_q_iy_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
+                `Panel` = 'Firm-Qtr.',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_Wald[3]))
@@ -271,6 +276,7 @@ l_q_iy_intr_out <- c(`Num. Obs.` = l_q_iy_intr_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'Logit',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_intr_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_intr_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_intr_Wald[3]))
@@ -301,6 +307,7 @@ o_q_iy_spnd_out <- c(`Num. Obs.` = o_q_iy_spnd_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_spnd_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_spnd_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_spnd_Wald[3]))
@@ -330,6 +337,7 @@ t_q_iy_out <- c(`Num. Obs.` = t_q_iy_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'Tobit',
+                `Panel` = 'Firm-Qtr.',
                 `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_Wald[3]))
@@ -359,6 +367,7 @@ t_q_iy_sent_out <- c(`Num. Obs.` = t_q_iy_sent_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Sentiment',
                      `Estimation` = 'Tobit',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_sent_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_sent_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_sent_Wald[3]))
@@ -385,6 +394,7 @@ t_q_iy_risk_out <- c(`Num. Obs.` = t_q_iy_risk_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Risk',
                      `Estimation` = 'Tobit',
+                     `Panel` = 'Firm-Qtr.',
                      `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_risk_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_risk_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_risk_Wald[3]))
@@ -413,6 +423,7 @@ l_y_iy_ovrl_out <- c(`Num. Obs.` = l_y_iy_ovrl_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Ovrl. Expo.',
                      `Estimation` = 'Logit',
+                     `Panel` = 'Firm-Year',
                      `Wald Stat (Opp - Reg = 0)` = ' ',
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -437,6 +448,7 @@ l_y_iy_tenk_out <- c(`Num. Obs.` = l_y_iy_tenk_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = '10-K Expo.',
                      `Estimation` = 'Logit',
+                     `Panel` = 'Firm-Year',
                      `Wald Stat (Opp - Reg = 0)` = ' ',
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -453,8 +465,6 @@ t_q_iy_ready_stars <- stars(t_q_iy_ready)
 o_q_iy_spnd_ready_stars <- stars(o_q_iy_spnd_ready)
 t_q_iy_sent_ready_stars <- stars(t_q_iy_sent_ready)
 t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
-
-
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
@@ -508,8 +518,10 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
       Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
       Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
       Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Panel" ~ "Panel",
       Test == "Lagged.DV" ~ "Lagged DV",
-      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
       TRUE ~ " "
     )
   )
