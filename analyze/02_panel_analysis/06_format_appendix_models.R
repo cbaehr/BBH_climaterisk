@@ -53,29 +53,43 @@ compute_wald <- function(fixest_mod, var1, var2) {
   return(wald)
 }
 
-process_stata <- function(output, colnum) {
-  if(any(output$X.=="=op_expo_ew")) {
+process_stata <- function(output, colnum, type) {
+  #if(any(output$X.=="=op_expo_ew")) {
+  if(type=="exposure") {
     op_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=op_expo_ew"), colnum]))
-  } else {
+    op_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=op_expo_ew")+1, colnum]))
+  } else if(type=="sentiment") {
     op_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=op_sent_ew"), colnum]))
+    op_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=op_sent_ew")+1, colnum]))
+  } else {
+    op_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=op_risk_ew"), colnum]))
+    op_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=op_risk_ew")+1, colnum]))
   }
-  op_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=op_expo_ew")+1, colnum]))
+  
   op_se <- op_coef/op_tstat
   
-  if(any(output$X.=="=rg_expo_ew")) {
+  if(type=="exposure") {
     rg_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=rg_expo_ew"), colnum]))
-  } else {
+    rg_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=rg_expo_ew")+1, colnum]))
+  } else if(type=="sentiment") {
     rg_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=rg_sent_ew"), colnum]))
+    rg_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=rg_sent_ew")+1, colnum]))
+  } else {
+    rg_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=rg_risk_ew"), colnum]))
+    rg_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=rg_risk_ew")+1, colnum]))
   }
-  rg_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=rg_expo_ew")+1, colnum]))
   rg_se <- rg_coef/rg_tstat
   
-  if(any(output$X.=="=ph_expo_ew")) {
+  if(type=="exposure") {
     ph_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=ph_expo_ew"), colnum]))
-  } else {
+    ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=ph_expo_ew")+1, colnum]))
+  } else if(type=="sentiment") {
     ph_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=ph_sent_ew"), colnum]))
+    ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=ph_sent_ew")+1, colnum]))
+  } else {
+    ph_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=ph_risk_ew"), colnum]))
+    ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=ph_risk_ew")+1, colnum]))
   }
-  ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=ph_expo_ew")+1, colnum]))
   ph_se <- ph_coef/ph_tstat
   
   out <- c(op_coef, op_se, rg_coef, rg_se, ph_coef, ph_se)
@@ -99,6 +113,19 @@ l_q_iy_R <- round(r2(l_q_iy, type = "apr2"), 3) #adjusted R2
 l_q_iy_Wald <- c(round(compute_wald(l_q_iy, "op_expo_ew", "rg_expo_ew"), 3), 
                  round(compute_wald(l_q_iy, "op_expo_ew", "ph_expo_ew"), 3), 
                  round(compute_wald(l_q_iy, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+l_q_iy_out <- c(`Num. Obs.` = l_q_iy_N,
+                `Adjusted R-Squared` =  l_q_iy_R,
+                `Industry x Year FE` = '\\checkmark',
+                `Firm FE` = ' ',
+                `Firm Controls` = '\\checkmark',
+                `Lagged DV` = ' ',
+                `Climate Measure` = 'Exposure',
+                `Estimation` = 'Logit',
+                `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_Wald[1]),
+                `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_Wald[2]),
+                `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_Wald[3]))
+
 ## --------------------------------------------------
 
 l_q_iyf <- models[[7]] #Column 7 - main result for firm-quarter panel, industry-by-year AND FIRM FE
@@ -115,6 +142,18 @@ l_q_iyf_Wald <- c(round(compute_wald(l_q_iyf, "op_expo_ew", "rg_expo_ew"), 3),
                  round(compute_wald(l_q_iyf, "op_expo_ew", "ph_expo_ew"), 3), 
                  round(compute_wald(l_q_iyf, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
+l_q_iyf_out <- c(`Num. Obs.` = l_q_iyf_N,
+                 `Adjusted R-Squared` =  l_q_iyf_R,
+                 `Industry x Year FE` = '\\checkmark',
+                 `Firm FE` = '\\checkmark',
+                 `Firm Controls` = '\\checkmark',
+                 `Lagged DV` = ' ',
+                 `Climate Measure` = 'Exposure',
+                 `Estimation` = 'Logit',
+                 `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iyf_Wald[1]),
+                 `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iyf_Wald[2]),
+                 `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iyf_Wald[3]))
+
 
 ## --------------------------------------------------
 
@@ -130,6 +169,18 @@ l_q_iy_sent_R <- round(r2(l_q_iy_sent, type = "apr2"), 3) #adjusted R2
 l_q_iy_sent_Wald <- c(round(compute_wald(l_q_iy_sent, "op_sent_ew", "rg_sent_ew"), 3), 
                       round(compute_wald(l_q_iy_sent, "op_sent_ew", "ph_sent_ew"), 3),
                       round(compute_wald(l_q_iy_sent, "rg_sent_ew", "ph_sent_ew"), 3)) #Wald stats
+
+l_q_iy_sent_out <- c(`Num. Obs.` = l_q_iy_sent_N,
+                     `Adjusted R-Squared` =  l_q_iy_sent_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Sentiment',
+                     `Estimation` = 'Logit',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_sent_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_sent_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_sent_Wald[3]))
 
 ## --------------------------------------------------
 
@@ -148,6 +199,17 @@ l_q_iy_lgdv_Wald <- c(round(compute_wald(l_q_iy_lgdv, "op_expo_ew", "rg_expo_ew"
                       round(compute_wald(l_q_iy_lgdv, "op_expo_ew", "ph_expo_ew"), 3),
                       round(compute_wald(l_q_iy_lgdv, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
+l_q_iy_lgdv_out <- c(`Num. Obs.` = l_q_iy_lgdv_N,
+                     `Adjusted R-Squared` =  l_q_iy_lgdv_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = '\\checkmark',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'Logit',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_lgdv_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_lgdv_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_lgdv_Wald[3]))
 
 ## --------------------------------------------------
 
@@ -166,6 +228,18 @@ o_q_iy_R <- round(r2(o_q_iy, type = "ar2"), 3) #adjusted R2
 o_q_iy_Wald <- c(round(compute_wald(o_q_iy, "op_expo_ew", "rg_expo_ew"), 3), 
                  round(compute_wald(o_q_iy, "op_expo_ew", "ph_expo_ew"), 3), 
                  round(compute_wald(o_q_iy, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+o_q_iy_out <- c(`Num. Obs.` = o_q_iy_N,
+                `Adjusted R-Squared` =  o_q_iy_R,
+                `Industry x Year FE` = '\\checkmark',
+                `Firm FE` = ' ',
+                `Firm Controls` = '\\checkmark',
+                `Lagged DV` = ' ',
+                `Climate Measure` = 'Exposure',
+                `Estimation` = 'OLS',
+                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_Wald[1]),
+                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_Wald[2]),
+                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_Wald[3]))
 
 ## --------------------------------------------------
 
@@ -188,6 +262,19 @@ l_q_iy_intr_Wald <- c(round(compute_wald(l_q_iy_intr, "op_expo_ew", "rg_expo_ew"
                  round(compute_wald(l_q_iy_intr, "op_expo_ew", "ph_expo_ew"), 3), 
                  round(compute_wald(l_q_iy_intr, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
+
+l_q_iy_intr_out <- c(`Num. Obs.` = l_q_iy_intr_N,
+                     `Adjusted R-Squared` =  l_q_iy_intr_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'Logit',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_intr_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_intr_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_intr_Wald[3]))
+
 ## --------------------------------------------------
 
 load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION.RData")
@@ -206,6 +293,18 @@ o_q_iy_spnd_Wald <- c(round(compute_wald(o_q_iy_spnd, "op_expo_ew", "rg_expo_ew"
                       round(compute_wald(o_q_iy_spnd, "op_expo_ew", "ph_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_spnd, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
+o_q_iy_spnd_out <- c(`Num. Obs.` = o_q_iy_spnd_N,
+                     `Adjusted R-Squared` =  o_q_iy_spnd_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'OLS',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_spnd_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_spnd_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_spnd_Wald[3]))
+
 ## --------------------------------------------------
 
 ## Tobit Amount Main Models
@@ -213,7 +312,7 @@ o_q_iy_spnd_Wald <- c(round(compute_wald(o_q_iy_spnd, "op_expo_ew", "rg_expo_ew"
 #tobit <- read.csv("results/model_Data/tobit_results_annual_DATA_REVISION.csv", stringsAsFactors=F)
 tobit <- read.csv("results/model_Data/tobit_results_quarterly_DATA_REVISION.csv", stringsAsFactors=F)
 
-t_q_iy_ready <- process_stata(tobit, 3)
+t_q_iy_ready <- process_stata(tobit, 3, "exposure")
 
 t_q_iy_N <- as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=N")]))
 
@@ -223,6 +322,18 @@ t_q_iy_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wa
                  round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald2")])), 3),
                  round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald3")])), 3))
 
+t_q_iy_out <- c(`Num. Obs.` = t_q_iy_N,
+                `Adjusted R-Squared` =  t_q_iy_R,
+                `Industry x Year FE` = '\\checkmark',
+                `Firm FE` = ' ',
+                `Firm Controls` = '\\checkmark',
+                `Lagged DV` = ' ',
+                `Climate Measure` = 'Exposure',
+                `Estimation` = 'Tobit',
+                `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_Wald[1]),
+                `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_Wald[2]),
+                `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_Wald[3]))
+
 ## --------------------------------------------------
 
 ## Tobit amount sentiment models
@@ -230,7 +341,7 @@ t_q_iy_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wa
 #tobit <- read.csv("results/model_Data/tobit_results_annual_DATA_REVISION.csv", stringsAsFactors=F)
 tobit_sent <- read.csv("results/model_Data/tobit_results_quarterly_sentiment_DATA_REVISION.csv", stringsAsFactors=F)
 
-t_q_iy_sent_ready <- process_stata(tobit_sent, 2)
+t_q_iy_sent_ready <- process_stata(tobit_sent, 2, "sentiment")
 
 t_q_iy_sent_N <- as.numeric(gsub("=", "", tobit_sent$X..1.[which(tobit_sent$X.=="=N")]))
 
@@ -240,7 +351,43 @@ t_q_iy_sent_Wald <- c(round(as.numeric(gsub("=", "", tobit_sent$X..1.[which(tobi
                       round(as.numeric(gsub("=", "", tobit_sent$X..1.[which(tobit_sent$X.=="=wald2")])), 3), 
                       round(as.numeric(gsub("=", "", tobit_sent$X..1.[which(tobit_sent$X.=="=wald3")])), 3))
 
+t_q_iy_sent_out <- c(`Num. Obs.` = t_q_iy_sent_N,
+                     `Adjusted R-Squared` =  t_q_iy_sent_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Sentiment',
+                     `Estimation` = 'Tobit',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_sent_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_sent_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_sent_Wald[3]))
 
+## --------------------------------------------------
+
+## Tobit amount risk models
+
+t_q_iy_risk_ready <- process_stata(tobit_sent, 3, "risk") # third column of the "tobit_sent" model table is risk
+
+t_q_iy_risk_N <- as.numeric(gsub("=", "", tobit_sent$X..2.[which(tobit_sent$X.=="=N")]))
+
+t_q_iy_risk_R <- round(as.numeric(gsub("=", "", tobit_sent$X..2.[which(tobit_sent$X.=="=r2a")])), 3)
+
+t_q_iy_risk_Wald <- c(round(as.numeric(gsub("=", "", tobit_sent$X..2.[which(tobit_sent$X.=="=wald1")])), 3), 
+                      round(as.numeric(gsub("=", "", tobit_sent$X..2.[which(tobit_sent$X.=="=wald2")])), 3), 
+                      round(as.numeric(gsub("=", "", tobit_sent$X..2.[which(tobit_sent$X.=="=wald3")])), 3))
+
+t_q_iy_risk_out <- c(`Num. Obs.` = t_q_iy_risk_N,
+                     `Adjusted R-Squared` =  t_q_iy_risk_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Risk',
+                     `Estimation` = 'Tobit',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_risk_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_risk_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_risk_Wald[3]))
 
 ## --------------------------------------------------
 
@@ -252,7 +399,12 @@ l_q_iy_lgdv_ready_stars <- stars(l_q_iy_lgdv_ready)
 l_q_iy_sent_ready_stars <- stars(l_q_iy_sent_ready)
 t_q_iy_ready_stars <- stars(t_q_iy_ready)
 o_q_iy_spnd_ready_stars <- stars(o_q_iy_spnd_ready)
-t_q_iy_ready_sent_stars <- stars(t_q_iy_sent_ready)
+t_q_iy_sent_ready_stars <- stars(t_q_iy_sent_ready)
+t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
+
+
+
+
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
@@ -262,30 +414,26 @@ m4 <- list(tidy=l_q_iy_lgdv_ready_stars); class(m4) <- "modelsummary_list"
 m7 <- list(tidy=l_q_iy_sent_ready_stars); class(m7) <- "modelsummary_list"
 m5 <- list(tidy=t_q_iy_ready_stars); class(m5) <- "modelsummary_list"
 m6 <- list(tidy=o_q_iy_spnd_ready_stars); class(m6) <- "modelsummary_list"
-m9 <- list(tidy=t_q_iy_ready_sent_stars); class(m9) <- "modelsummary_list"
-
-
-N <- c(l_q_iy_N, o_q_iy_N, l_q_iyf_N, l_q_iy_intr_N, l_q_iy_lgdv_N, l_q_iy_sent_N, t_q_iy_N, o_q_iy_spnd_N, t_q_iy_sent_N)
-Wald <- data.frame(l_q_iy_Wald, o_q_iy_Wald, l_q_iyf_Wald, l_q_iy_intr_Wald, l_q_iy_lgdv_Wald, l_q_iy_sent_Wald, t_q_iy_Wald, o_q_iy_spnd_Wald, t_q_iy_sent_Wald)
-R <- c(l_q_iy_R, o_q_iy_R, l_q_iyf_R, l_q_iy_intr_R, l_q_iy_lgdv_R, l_q_iy_sent_R, t_q_iy_R, o_q_iy_spnd_R, t_q_iy_sent_R)
+m9 <- list(tidy=t_q_iy_sent_ready_stars); class(m9) <- "modelsummary_list"
+m10 <- list(tidy=t_q_iy_risk_ready_stars); class(m10) <- "modelsummary_list"
 
 mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
-                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m9)
+                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m9, "Tobit 4"=m10)
 
-### Add fixed effects checkmarks: as data.frame
-fes <- data.frame(
-  `Num. Obs.` = as.character(N),
-  `Adjusted R-Squared` = as.character(R),
-  `Industry x Year FE` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Firm FE` = c(' ', ' ', '\\checkmark', ' ', ' ', ' ', ' ', ' ', ' '),
-  `Firm Controls` = c('\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark', '\\checkmark'),
-  `Lagged DV` = c(' ', ' ', ' ', ' ', '\\checkmark', ' ', ' ', ' ', ' '),
-  `Climate Measure` = c('Exposure', 'Exposure', 'Exposure', 'Exposure', 'Exposure', 'Sentiment', 'Exposure', 'Exposure', 'Sentiment'),
-  `Estimation` = c('Logit', 'OLS', 'Logit', 'Logit', 'Logit', 'Logit', 'Tobit', 'OLS', 'Tobit'),
-  `Wald Stat (Opp - Reg = 0)` = as.character(Wald[1,]),
-  `Wald Stat (Opp - Phy = 0)` = as.character(Wald[2,]),
-  `Wald Stat (Reg - Phy = 0)` = as.character(Wald[3,]),
-  `Model` = names(mod_list)) %>%
+auxiliary <- data.frame(l_q_iy_out, 
+                        o_q_iy_out,
+                        l_q_iyf_out,
+                        l_q_iy_intr_out,
+                        l_q_iy_lgdv_out,
+                        l_q_iy_sent_out,
+                        t_q_iy_out,
+                        o_q_iy_spnd_out,
+                        t_q_iy_sent_out,
+                        t_q_iy_risk_out)
+model_names <- names(mod_list)
+auxiliary <- rbind(auxiliary, "Model"=model_names)
+
+auxiliary_out <- data.frame(t(auxiliary)) %>%
   # invert dataframe
   pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
   # to wider
@@ -312,13 +460,10 @@ fes <- data.frame(
     )
   )
 
-#stats <- bind_rows(adjusted_r2_df, fes)
-stats <- bind_rows(fes)
-
-names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount", "Amount")
+names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount", "Amount", "Amount")
 
 modelsummary(mod_list
-             ,add_rows=stats
+             ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test.tex"
              )
 
