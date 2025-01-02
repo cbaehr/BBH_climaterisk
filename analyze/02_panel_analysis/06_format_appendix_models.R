@@ -535,6 +535,18 @@ modelsummary(mod_list
 
 
 
+## Error Correction Model --------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION.RData")
+
+modelsummary(models,
+             stars = c('*' = .1, '**' = .05, '***' = .01),
+             add_rows = data.frame(t(matrix(c("DV", "Lobby Y/N Chg.", "Lobby Amt. Chg.", "Lobby Y/N Chg.", "Lobby Amt. Chg.")))),
+             output="results/tables/appendix_table_errorcorrect_test.tex")
+
+
+
+
 
 
 

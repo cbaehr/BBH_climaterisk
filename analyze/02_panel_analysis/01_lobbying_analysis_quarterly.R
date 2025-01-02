@@ -73,7 +73,16 @@ df$log_CLI_amount <- log(df$CLI_amount_quarter + 1)
 df <- df %>%
   group_by(Firm) %>%
   mutate(CLI_l1 = lag(CLI, n=1, order_by=yearqtr),
-         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=yearqtr))
+         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=yearqtr),
+         op_expo_ew_l1 = lag(op_expo_ew, n=1, order_by=yearqtr),
+         rg_expo_ew_l1 = lag(rg_expo_ew, n=1, order_by=yearqtr),
+         ph_expo_ew_l1 = lag(ph_expo_ew, n=1, order_by=yearqtr))
+
+df$CLI_chg <- df$CLI - df$CLI_l1
+df$log_CLI_amount_chg <- df$log_CLI_amount - df$log_CLI_amount_l1
+df$op_expo_ew_chg <- df$op_expo_ew - df$op_expo_ew_l1
+df$rg_expo_ew_chg <- df$rg_expo_ew - df$rg_expo_ew_l1
+df$ph_expo_ew_chg <- df$ph_expo_ew - df$ph_expo_ew_l1
 
 glimpse(df)
 
@@ -1035,6 +1044,26 @@ modelsummary(
   ,output = "results/tables/climate_ols_amount_qrt_bycomponent_laggeddv_REVISION.tex"
   , escape = FALSE
 )
+
+
+
+## OLS - Error Correction -----------------------------------------------------
+
+
+
+
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, df, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION.RData")
+
+
 
 ### w/ firm fixed effects ---------------------------------------------------
 # 
