@@ -54,7 +54,6 @@ compute_wald <- function(fixest_mod, var1, var2) {
 }
 
 process_stata <- function(output, colnum, type) {
-  #if(any(output$X.=="=op_expo_ew")) {
   if(type=="exposure") {
     op_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=op_expo_ew"), colnum]))
     op_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=op_expo_ew")+1, colnum]))
@@ -92,7 +91,30 @@ process_stata <- function(output, colnum, type) {
   }
   ph_se <- ph_coef/ph_tstat
   
-  out <- c(op_coef, op_se, rg_coef, rg_se, ph_coef, ph_se)
+  if( type!="exposure") {
+    out <- c(op_coef, op_se, rg_coef, rg_se, ph_coef, ph_se)
+  } else if( output[which(output$X. == "=opp_reg"), colnum] != "=") {
+    
+    op_rg_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=opp_reg"), colnum]))
+    op_rg_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=opp_reg")+1, colnum]))
+    op_rg_se <- op_rg_coef / op_rg_tstat
+    
+    op_ph_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=opp_phy"), colnum]))
+    op_ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=opp_phy")+1, colnum]))
+    op_ph_se <- op_ph_coef / op_ph_tstat
+    
+    rg_ph_coef <- as.numeric(gsub("=|\\*", "", output[which(output$X.=="=reg_phy"), colnum]))
+    rg_ph_tstat <- as.numeric(gsub("=|\\(|\\)", "", output[which(output$X.=="=reg_phy")+1, colnum]))
+    rg_ph_se <- rg_ph_coef / rg_ph_tstat
+    
+    out <- c(op_coef, op_se, rg_coef, rg_se, ph_coef, ph_se, 
+             op_rg_coef, op_rg_se, op_ph_coef, op_ph_se, rg_ph_coef, rg_ph_se)
+    names(out) <- c("op_expo_ew", "op_expo_ew", "rg_expo_ew", "rg_expo_ew", "ph_expo_ew", "ph_expo_ew", 
+                    "op_expo_ew:rg_expo_ew", "op_expo_ew:rg_expo_ew", "op_expo_ew:ph_expo_ew", "op_expo_ew:ph_expo_ew",
+                    "rg_expo_ew:ph_expo_ew", "rg_expo_ew:ph_expo_ew")
+  } else {
+    out <- c(op_coef, op_se, rg_coef, rg_se, ph_coef, ph_se)
+  }
   return(out)
 }
 
@@ -321,13 +343,13 @@ tobit <- read.csv("results/model_Data/tobit_results_quarterly_DATA_REVISION.csv"
 
 t_q_iy_ready <- process_stata(tobit, 3, "exposure")
 
-t_q_iy_N <- as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=N")]))
+t_q_iy_N <- as.numeric(gsub("=", "", tobit$X..2.[which(tobit$X.=="=N")]))
 
-t_q_iy_R <- round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=r2a")])), 3)
+t_q_iy_R <- round(as.numeric(gsub("=", "", tobit$X..2.[which(tobit$X.=="=r2a")])), 3)
 
-t_q_iy_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald1")])), 3),
-                 round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald2")])), 3),
-                 round(as.numeric(gsub("=", "", tobit$X..3.[which(tobit$X.=="=wald3")])), 3))
+t_q_iy_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..2.[which(tobit$X.=="=wald1")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..2.[which(tobit$X.=="=wald2")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..2.[which(tobit$X.=="=wald3")])), 3))
 
 t_q_iy_out <- c(`Num. Obs.` = t_q_iy_N,
                 `Adjusted R-Squared` =  t_q_iy_R,
@@ -341,6 +363,35 @@ t_q_iy_out <- c(`Num. Obs.` = t_q_iy_N,
                 `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_Wald[3]))
+
+## --------------------------------------------------
+
+
+
+## Tobit amount main models with interaction
+
+t_q_iy_intr_ready <- process_stata(tobit, 5, "exposure")
+
+t_q_iy_intr_N <- as.numeric(gsub("=", "", tobit$X..4.[which(tobit$X.=="=N")]))
+
+t_q_iy_intr_R <- round(as.numeric(gsub("=", "", tobit$X..4.[which(tobit$X.=="=r2a")])), 3)
+
+t_q_iy_intr_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..4.[which(tobit$X.=="=wald1")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..4.[which(tobit$X.=="=wald2")])), 3),
+                 round(as.numeric(gsub("=", "", tobit$X..4.[which(tobit$X.=="=wald3")])), 3))
+
+t_q_iy_intr_out <- c(`Num. Obs.` = t_q_iy_intr_N,
+                     `Adjusted R-Squared` =  t_q_iy_intr_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'Tobit',
+                     `Panel` = 'Firm-Qtr.',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_intr_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_intr_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_intr_Wald[3]))
 
 ## --------------------------------------------------
 
@@ -465,6 +516,7 @@ t_q_iy_ready_stars <- stars(t_q_iy_ready)
 o_q_iy_spnd_ready_stars <- stars(o_q_iy_spnd_ready)
 t_q_iy_sent_ready_stars <- stars(t_q_iy_sent_ready)
 t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
+t_q_iy_intr_ready_stars <- stars(t_q_iy_intr_ready)
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
@@ -478,9 +530,10 @@ m9 <- list(tidy=t_q_iy_sent_ready_stars); class(m9) <- "modelsummary_list"
 m10 <- list(tidy=t_q_iy_risk_ready_stars); class(m10) <- "modelsummary_list"
 m11 <- list(tidy=l_y_iy_ovrl_ready_stars); class(m11) <- "modelsummary_list"
 m12 <- list(tidy=l_y_iy_tenk_ready_stars); class(m12) <- "modelsummary_list"
+m13 <- list(tidy=t_q_iy_intr_ready_stars); class(m13) <- "modelsummary_list"
 
 mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
-                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m9, "Tobit 4"=m10, "Logit 6"=m11, "Logit 7"=m12)
+                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m13, "Tobit 4"=m9, "Tobit 5"=m10, "Logit 6"=m11, "Logit 7"=m12)
 
 auxiliary <- data.frame(l_q_iy_out, 
                         o_q_iy_out,
@@ -490,6 +543,7 @@ auxiliary <- data.frame(l_q_iy_out,
                         l_q_iy_sent_out,
                         t_q_iy_out,
                         o_q_iy_spnd_out,
+                        t_q_iy_intr_out,
                         t_q_iy_sent_out,
                         t_q_iy_risk_out,
                         l_y_iy_ovrl_out,
@@ -526,7 +580,7 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Dummy", "Amount", "Amount", "Amount", "Amount", "Dummy", "Dummy")
+names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Amount", "Amount", "Amount", "Amount", "Amount", "Occur.", "Occur.")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
