@@ -190,7 +190,15 @@ df_pm <- df_pm |>
     treat_op_median = ifelse(is.na(treat_op_median), 0, treat_op_median),
     treat_op_increase = ifelse(is.na(treat_op_increase), 0, treat_op_increase),
     treat_op_100per = ifelse(is.na(treat_op_100per), 0, treat_op_100per),
-    treat_op_200per = ifelse(is.na(treat_op_200per), 0, treat_op_200per)
+    treat_op_200per = ifelse(is.na(treat_op_200per), 0, treat_op_200per),
+    treat_rg_median = ifelse(is.na(treat_rg_median), 0, treat_rg_median),
+    treat_rg_increase = ifelse(is.na(treat_rg_increase), 0, treat_rg_increase),
+    treat_rg_100per = ifelse(is.na(treat_rg_100per), 0, treat_rg_100per),
+    treat_rg_200per = ifelse(is.na(treat_rg_200per), 0, treat_rg_200per),
+    treat_ph_median = ifelse(is.na(treat_ph_median), 0, treat_ph_median),
+    treat_ph_increase = ifelse(is.na(treat_ph_increase), 0, treat_ph_increase),
+    treat_ph_100per = ifelse(is.na(treat_ph_100per), 0, treat_ph_100per),
+    treat_ph_200per = ifelse(is.na(treat_ph_200per), 0, treat_ph_200per)
   )
 
 
