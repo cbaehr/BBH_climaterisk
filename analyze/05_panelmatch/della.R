@@ -323,10 +323,23 @@ time_id <- "t"
 lag <- 4
 lead <- c(0:7)
 
-# Loop through ------------------------------------------------------------
+## Optimize memory usage before running loops ------------------------------
+
+# Clear unnecessary objects from memory
+rm(list=setdiff(ls(), c("df_pm", "treatments", "outcomes", "covariates", "figure_path", "dataframes_path")))
+gc()
+
+# Convert df_pm to data.table for better memory efficiency
+data <- as.data.table(df_pm)
+rm(df_pm)
+gc()
+
+## Modified loop structure ------------------------------------------------
 
 # Run the function for all combinations of treatments and outcomes
 for (treatment in treatments) {
+  # Clear memory at start of each iteration
+  gc()
   
   # Visualize Treatment Distribution
   treatment_hist <- DisplayTreatment(
@@ -342,34 +355,57 @@ for (treatment in treatments) {
     dense.plot = TRUE
   )
   
-  # Saving the histogram
+  # Save and clear plot from memory
   ggsave(
     filename = paste0(treatment, "_hist.pdf"),
     plot = treatment_hist,
     path = figure_path,
     height = 8, width = 8
   )
+  rm(treatment_hist)
+  gc()
   
   for (outcome in outcomes) {
     message(paste("Running analysis for treatment:", treatment, " and outcome:", outcome))
-    results <- run_panelmatch(
-      data, 
-      treatment,
-      outcome, 
-      covariates, 
-      lag = lag, 
-      lead = lead, 
-      figure_path = figure_path, 
-      dataframes_path = dataframes_path
-    )
-    # Save dataframes
-    results_df <- results$results_df
-    covariate_balance_df <- results$covariate_balance_df
+    
+    # Save results incrementally after each iteration
+    tryCatch({
+      results <- run_panelmatch(
+        data, 
+        treatment,
+        outcome, 
+        covariates, 
+        lag = lag, 
+        lead = lead, 
+        figure_path = figure_path, 
+        dataframes_path = dataframes_path
+      )
+      
+      # Immediately write results to disk
+      fwrite(results$results_df, 
+             file = paste0(dataframes_path, "panelmatch_results_", treatment, "_", outcome, ".csv"))
+      fwrite(results$covariate_balance_df, 
+             file = paste0(dataframes_path, "panelmatch_covbal_", treatment, "_", outcome, ".csv"))
+      
+      # Clear results from memory
+      rm(results)
+      gc()
+      
+    }, error = function(e) {
+      message(paste("Error in iteration:", treatment, outcome))
+      message(e)
+    })
   }
 }
 
+# After all iterations, combine the individual files
+results_files <- list.files(dataframes_path, pattern = "panelmatch_results_.*\\.csv$", full.names = TRUE)
+covbal_files <- list.files(dataframes_path, pattern = "panelmatch_covbal_.*\\.csv$", full.names = TRUE)
 
-# Write
+results_df <- rbindlist(lapply(results_files, fread))
+covariate_balance_df <- rbindlist(lapply(covbal_files, fread))
+
+# Write final combined results
 fwrite(results_df, file = paste0(dataframes_path,"panelmatch_results.csv"))
 fwrite(covariate_balance_df, file = paste0(dataframes_path,"panelmatch_covariate_balance_df.csv"))
 
