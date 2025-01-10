@@ -4,7 +4,7 @@ global tobit_annual_sent 0
 global impute_annual 0
 global compare_annual 0
 global tobit_quarter 1
-global tobit_quarter_sent 1
+global tobit_quarter_sent 0
 global impute_quarter 0
 global compare_quarter 0
 global tobit_quarter_target 0
@@ -68,7 +68,7 @@ estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
 
-*outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+*outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 outreg2 using "$results/tobit_results_annual_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', Wald F-Stat (Op-Rg), `f1a', Wald F-Stat (Op-Ph), `f1b', Wald F-Stat (Rg-Ph), `f1c') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual, ll(0) ul(.) cluster(year isin)
@@ -91,7 +91,7 @@ estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
 
 *test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual i.year, ll(0) ul(.) cluster(year isin)
 
@@ -113,7 +113,7 @@ estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
 
 *test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2a)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
 
 esttab m1a m1b m1c using "$results/tobit_results_annual_DATA_REVISION.csv", replace csv scalars(r2a wald1 wald2 wald3)
 
@@ -122,12 +122,12 @@ esttab m1a m1b m1c using "$results/tobit_results_annual_DATA_REVISION.csv", repl
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 est sto m1d
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 est sto m1e
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 preserve
 egen meanCLI = mean(CLI_annual), by(isin)
@@ -139,12 +139,12 @@ drop if meanCLI==0
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_annual i.year i.firm_n, ll(0) ul(.) cluster(year isin)
 est sto m1f
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_annual i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 est sto m1g
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_annual_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
 
 *esttab m1a m1b m1c m1d m1e m1f m1g using "$results/tobit_results_annual_DATA_REVISION.csv", replace csv
 
@@ -160,37 +160,37 @@ label var reg_phy "Reg. x Phy."
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy, ll(0) ul(.) cluster(year isin)
 est sto m2a
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual, ll(0) ul(.) cluster(year isin)
 est sto m2b
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year, ll(0) ul(.) cluster(year isin)
 est sto m2c
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 est sto m2d
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_annual i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 est sto m2e
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_annual i.year i.firm_n, ll(0) ul(.) cluster(year isin)
 est sto m2f
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
 
 vcemway tobit log_CLI_amount_annual op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_annual i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 est sto m2g
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_annual_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n o.firm_n i.firm_n yeard isind) noomit
 
 }
 
@@ -366,19 +366,19 @@ set more off
 if $tobit_quarter {
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew, ll(0) ul(.) cluster(year isin)
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew = rg_expo_ew
@@ -397,7 +397,7 @@ estadd scalar r2a = `adj_pseudo_r2'
 estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 preserve
 egen meanCLI = mean(CLI_quarter), by(isin)
@@ -423,7 +423,7 @@ estadd scalar r2a = `adj_pseudo_r2'
 estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew = rg_expo_ew
@@ -442,7 +442,7 @@ estadd scalar r2a = `adj_pseudo_r2'
 estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
-outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 restore
 
@@ -458,19 +458,20 @@ label var reg_phy "Reg. x Phy."
 
 sort isin year
 by isin: gen CLI_amount_quarter_l1 = CLI_amount_quarter[_n-1] if year==year[_n-1]+1
+egen CLI_amount_quarter_l1_z = std(CLI_amount_quarter_l1)
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_quarter i.year, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew = rg_expo_ew
 local f1a = r(F)
@@ -488,7 +489,7 @@ estadd scalar r2a = `adj_pseudo_r2'
 estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 preserve
 egen meanCLI = mean(CLI_quarter), by(isin)
@@ -499,17 +500,17 @@ drop if meanCLI==0
 *tobit2 log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual yeard* isind*, ll(0) fcluster(isin) tcluster(year)
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_quarter i.year i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_quarter i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 restore
 
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1 i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1_z i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 
 
@@ -519,9 +520,9 @@ drop if meanCLI==0
 *tabulate year, generate(yeard)
 *tabulate isin, generate(isind)
 
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1 i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew opp_reg opp_phy reg_phy ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1_z i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_interactions_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 restore
 
@@ -531,17 +532,17 @@ restore
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew CLI_amount_quarter_l1, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1_z, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1 i.year, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1_z i.year, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1 i.year i.industry_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1_z i.year i.industry_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1 i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter CLI_amount_quarter_l1_z i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew = rg_expo_ew
 local f1a = r(F)
 test op_expo_ew = ph_expo_ew
@@ -558,7 +559,7 @@ estadd scalar r2a = `adj_pseudo_r2'
 estadd scalar wald1 = `f1a'
 estadd scalar wald2 = `f1b'
 estadd scalar wald3 = `f1c'
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 preserve
 egen meanCLI = mean(CLI_quarter), by(isin)
@@ -567,13 +568,13 @@ drop if meanCLI==0
 *tabulate isin, generate(isind)
 
 *tobit2 log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_annual yeard* isind*, ll(0) fcluster(isin) tcluster(year)
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1 i.year i.firm_n, ll(0) ul(.) cluster(year isin)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1_z i.year i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
-vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1 i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
+vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter CLI_amount_quarter_l1_z i.industry_year_n i.firm_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_quarterly_laggeddv_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", Y) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 
 restore
 
@@ -622,11 +623,11 @@ vcemway tobit log_CLI_amount_quarter op_pos_ew rg_pos_ew ph_pos_ew op_neg_ew rg_
 outreg2 using "$results/tobit_results_quarterly_sentiment_REVISION.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 vcemway tobit log_CLI_amount_quarter op_sent_ew rg_sent_ew ph_sent_ew ebit ebit_at us_dummy total_lobby_quarter i.industry_year_n, ll(0) ul(.) cluster(year isin)
-test op_expo_ew = rg_expo_ew
+test op_sent_ew = rg_sent_ew
 local f1a = r(F)
-test op_expo_ew = ph_expo_ew
+test op_sent_ew = ph_sent_ew
 local f1b = r(F)
-test rg_expo_ew = ph_expo_ew
+test rg_sent_ew = ph_sent_ew
 local f1c = r(F)
 
 local n = e(N)
@@ -641,11 +642,11 @@ estadd scalar wald3 = `f1c'
 outreg2 using "$results/tobit_results_quarterly_sentiment_REVISION.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n) noomit
 
 vcemway tobit log_CLI_amount_quarter op_risk_ew rg_risk_ew ph_risk_ew ebit ebit_at us_dummy total_lobby_quarter i.industry_year_n, ll(0) ul(.) cluster(year isin)
-test op_expo_ew = rg_expo_ew
+test op_risk_ew = rg_risk_ew
 local f1a = r(F)
-test op_expo_ew = ph_expo_ew
+test op_risk_ew = ph_risk_ew
 local f1b = r(F)
-test rg_expo_ew = ph_expo_ew
+test rg_risk_ew = ph_risk_ew
 local f1c = r(F)
 
 local n = e(N)
@@ -765,11 +766,11 @@ if $tobit_quarter_target {
 
 vcemway tobit log_CLI_EPA_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_targets_quarterly.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("EPA") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_targets_quarterly.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("EPA") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 vcemway tobit log_CLI_DOE_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_targets_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("DOE") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_targets_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("DOE") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 }
 
@@ -783,23 +784,23 @@ gen log_CLI_ENG_amount_quarter = log(CLI_ENG_amount_quarter + 1)
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_issue_quarterly.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("CLI") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_issue_quarterly.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("CLI") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 vcemway tobit log_CLI_CAW_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("CAW") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("CAW") drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 vcemway tobit log_CLI_ENG_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("ENG") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("ENG") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 vcemway tobit log_CLI_ENV_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("ENV") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("ENV") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 vcemway tobit log_CLI_FUE_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.year i.industry_n i.industry_year_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("FUE") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
+outreg2 using "$results/climate_tobit_issue_quarterly.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("FUE") label drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n) addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y) 
 
 }
 
@@ -807,19 +808,19 @@ if $tobit_quarter_fe {
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_qtrFE.tex", replace eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(1)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
+outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(2)") label addtext("Year FE", N, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.yearqtr_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.yearqtr_n o.yearqtr_n)
+outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(3)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.yearqtr_n o.yearqtr_n)
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.yearqtr_n i.industry_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n i.yearqtr_n o.yearqtr_n i.industry_yearqtr_n o.industry_yearqtr_n)
+outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(4)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", N, "Firm FE", N) drop(i.year i.industry_n i.yearqtr_n o.yearqtr_n i.industry_yearqtr_n o.industry_yearqtr_n)
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at us_dummy total_lobby_quarter i.yearqtr_n i.industry_n i.industry_yearqtr_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.industry_yearqtr_n o.industry_yearqtr_n) noomit
+outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(5)") label addtext("Year FE", Y, "Industry FE", Y, "Year*Industry FE", Y, "Firm FE", N) drop(i.year i.industry_n i.industry_year_n o.industry_year_n i.industry_yearqtr_n o.industry_yearqtr_n) noomit
 
 preserve
 egen meanCLI = mean(CLI_quarter), by(isin)
@@ -827,7 +828,7 @@ drop if meanCLI==0
 
 vcemway tobit log_CLI_amount_quarter op_expo_ew rg_expo_ew ph_expo_ew ebit ebit_at total_lobby_quarter i.yearqtr_n i.isin_n, ll(0) ul(.) cluster(year isin)
 test op_expo_ew rg_expo_ew ph_expo_ew
-outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)', F-stat, `r(F)', F p-val, `r(p)') noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.yearqtr_n o.yearqtr_n i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
+outreg2 using "$results/tobit_results_qtrFE.tex", append eqdrop(sigma) addstat(Adjusted R-Squared, `e(r2_p)' ) noni nocons ctitle("(6)") label addtext("Year FE", Y, "Industry FE", N, "Year*Industry FE", N, "Firm FE", Y) drop(i.year i.yearqtr_n o.yearqtr_n i.industry_n i.industry_year_n o.industry_year_n i.isin_n o.isin_n o.firm_n i.firm_n yeard isind) noomit
 restore
 
 }
