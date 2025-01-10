@@ -332,6 +332,13 @@ data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes, covariat
 rm(df_pm)
 gc()
 
+# show class of all columns
+sapply(data, class)
+
+# Transform all numeric columns to integer
+data <- data |>
+  mutate(across(where(is.numeric), as.integer))
+
 ## Modified loop structure ------------------------------------------------
 
 # Run the function for all combinations of treatments and outcomes
