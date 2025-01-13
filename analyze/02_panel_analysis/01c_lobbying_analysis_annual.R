@@ -1247,3 +1247,50 @@ feglm(CLI ~ cc_expo_ew + tenk_exposure + ebit + ebit_at + us_dummy + total_lobby
 
 ###Scatterplot of climate attention and total lobbying 
 
+## Coalition DV Analysis --------------------------------------------------------------
+
+# load data
+df <- read.csv("data/03_final/lobbying_df_w_directionality_REVISE.csv", stringsAsFactors = F)
+
+# Rename fixed effects variables
+df <- df |>
+  rename(
+    Firm = isin,
+    Year = year,
+    Industry = industry,
+    `Industry x Year` = industry_year
+  )
+
+# Change classes for analysis ---------------------------------------------
+
+
+df <- df %>% 
+  mutate( CLI = as.numeric( CLI_annual ),
+          log_CLI_amount = log(CLI_amount_annual + 1))
+
+df <- df %>%
+  group_by(Firm) %>%
+  mutate(CLI_l1 = lag(CLI, n=1, order_by=Year),
+         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=Year))
+
+table(df$CLI, useNA = "ifany")
+class(df$cc_expo_ew)
+
+## Overall climate lobbying, overall exposure for annual by specific attention component
+models <- list(
+  "(1)" = feglm(pro_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(2)" = feols(pro_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(3)" = feglm(contra_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(4)" = feols(contra_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(5)" = feglm(sup_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(6)" = feols(sup_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(7)" = feglm(opp_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),
+  "(8)" = feols(opp_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm)
+)
+
+save(models, file="results/model_Data/climate_coalitions_annual_bycomponent_MODELS_REVISION.RData")
+
+
+
+
+
