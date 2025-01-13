@@ -395,6 +395,34 @@ t_q_iy_intr_out <- c(`Num. Obs.` = t_q_iy_intr_N,
 
 ## --------------------------------------------------
 
+## Tobit amount lagged dv
+
+
+t_q_iy_lgdv_ready <- process_stata(tobit, 6, "exposure") #sixth column, but model 5
+
+t_q_iy_lgdv_N <- as.numeric(gsub("=", "", tobit$X..5.[which(tobit$X.=="=N")]))
+
+t_q_iy_lgdv_R <- round(as.numeric(gsub("=", "", tobit$X..5.[which(tobit$X.=="=r2a")])), 3)
+
+t_q_iy_lgdv_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..5.[which(tobit$X.=="=wald1")])), 3),
+                      round(as.numeric(gsub("=", "", tobit$X..5.[which(tobit$X.=="=wald2")])), 3),
+                      round(as.numeric(gsub("=", "", tobit$X..5.[which(tobit$X.=="=wald3")])), 3))
+
+t_q_iy_lgdv_out <- c(`Num. Obs.` = t_q_iy_lgdv_N,
+                     `Adjusted R-Squared` =  t_q_iy_lgdv_R,
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = '\\checkmark',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'Tobit',
+                     `Panel` = 'Firm-Qtr.',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_lgdv_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_lgdv_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_lgdv_Wald[3]))
+
+## --------------------------------------------------
+
 ## Tobit amount sentiment models
 
 #tobit <- read.csv("results/model_Data/tobit_results_annual_DATA_REVISION.csv", stringsAsFactors=F)
@@ -517,6 +545,7 @@ o_q_iy_spnd_ready_stars <- stars(o_q_iy_spnd_ready)
 t_q_iy_sent_ready_stars <- stars(t_q_iy_sent_ready)
 t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
 t_q_iy_intr_ready_stars <- stars(t_q_iy_intr_ready)
+t_q_iy_lgdv_ready_stars <- stars(t_q_iy_lgdv_ready)
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
@@ -531,9 +560,10 @@ m10 <- list(tidy=t_q_iy_risk_ready_stars); class(m10) <- "modelsummary_list"
 m11 <- list(tidy=l_y_iy_ovrl_ready_stars); class(m11) <- "modelsummary_list"
 m12 <- list(tidy=l_y_iy_tenk_ready_stars); class(m12) <- "modelsummary_list"
 m13 <- list(tidy=t_q_iy_intr_ready_stars); class(m13) <- "modelsummary_list"
+m14 <- list(tidy=t_q_iy_lgdv_ready_stars); class(m14) <- "modelsummary_list"
 
 mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
-                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m13, "Tobit 4"=m9, "Tobit 5"=m10, "Logit 6"=m11, "Logit 7"=m12)
+                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m13, "Tobit 4"=m14, "Tobit 5"=m9, "Tobit 6"=m10, "Logit 6"=m11, "Logit 7"=m12)
 
 auxiliary <- data.frame(l_q_iy_out, 
                         o_q_iy_out,
@@ -544,6 +574,7 @@ auxiliary <- data.frame(l_q_iy_out,
                         t_q_iy_out,
                         o_q_iy_spnd_out,
                         t_q_iy_intr_out,
+                        t_q_iy_lgdv_out,
                         t_q_iy_sent_out,
                         t_q_iy_risk_out,
                         l_y_iy_ovrl_out,
@@ -580,7 +611,7 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Amount", "Amount", "Amount", "Amount", "Amount", "Occur.", "Occur.")
+names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Occur.", "Occur.")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
@@ -593,10 +624,17 @@ modelsummary(mod_list
 
 load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION.RData")
 
+models <- models[1:2] # drop the firm fixed effect EC models
+
+cm_ec <- c("op_expo_ew_l1"="Opportunity$_{t-1}$", "rg_expo_ew_l1"="Regulatory$_{t-1}$", "ph_expo_ew_l1"="Physical$_{t-1}$",
+           "op_expo_ew_chg"="Opportunity $\\Delta$", "rg_expo_ew_chg"="Regulatory $\\Delta$", "ph_expo_ew_chg"="Physical $\\Delta$")
+
 modelsummary(models,
              stars = c('*' = .1, '**' = .05, '***' = .01),
-             add_rows = data.frame(t(matrix(c("DV", "Lobby Y/N Chg.", "Lobby Amt. Chg.", "Lobby Y/N Chg.", "Lobby Amt. Chg.")))),
-             output="results/tables/appendix_table_errorcorrect_test.tex")
+             coef_map = cm_ec,
+             add_rows = data.frame(t(matrix(c("DV", "Occur. Chg.", "Amount Chg.")))),
+             output="results/tables/appendix_table_errorcorrect_test.tex",
+             escape=F)
 
 
 
