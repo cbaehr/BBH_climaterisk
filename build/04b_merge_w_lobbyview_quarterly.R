@@ -45,6 +45,8 @@ lobby_text$issue_text <- gsub("[^A-z0-9. ]", " ", lobby_text$issue_text)
 lobby_text$issue_text <- gsub("`|\\^|\\[|\\]|\\\\|_", " ", lobby_text$issue_text)
 lobby_text$issue_text <- gsub("\\s+", " ", lobby_text$issue_text) # remove redundant spaces
 
+lobby_text$issue_ordi <- as.integer(lobby_text$issue_ordi)
+
 lobby_issuetext <- merge(lobby_issue, lobby_text)
 
 ## sometimes multiple issue codes or government entities per lobby report
@@ -533,6 +535,8 @@ lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 ## that ENV issue codes for a whole year are actually for a specific quarter. If we want to make these
 ## quarterly, we can do that later.
 lobbying_firmquarter <- lobbying_firmquarter[,!names(lobbying_firmquarter) %in% c("issue_code", "gov_entity", "issue_text")]
+
+save(lobbying_firmquarter, file="data/02_processed/lobbying_df_quarterly_REVISE.rds")
 
 #####
 
