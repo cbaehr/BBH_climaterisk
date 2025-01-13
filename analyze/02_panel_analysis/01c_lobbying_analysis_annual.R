@@ -1276,6 +1276,15 @@ df <- df %>%
 table(df$CLI, useNA = "ifany")
 class(df$cc_expo_ew)
 
+sum(is.na(df$pro_CLI))
+sum(is.na(df$contra_CLI))
+sum(is.na(df$sup_climate_action))
+sum(is.na(df$opp_climate_action))
+
+## make pro/anti climate lobbying NA if no association membership data for that firm
+df$pro_CLI[is.na(df$sup_climate_action)] <- NA
+df$contra_CLI[is.na(df$sup_climate_action)] <- NA
+
 ## Overall climate lobbying, overall exposure for annual by specific attention component
 models <- list(
   "(1)" = feglm(pro_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm),

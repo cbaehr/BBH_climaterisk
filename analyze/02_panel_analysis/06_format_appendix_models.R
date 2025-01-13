@@ -532,6 +532,125 @@ l_y_iy_tenk_out <- c(`Num. Obs.` = l_y_iy_tenk_N,
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
 
+## Pro-Climate Lobbying outcome --------------------------------------------------
+
+load("results/model_Data/climate_coalitions_annual_bycomponent_MODELS_REVISION.RData")
+
+l_y_iy_posdir <- models[[1]] #Column 1 - main (annual) logit specification with pro-climate lobbying outcome (based on coalition data)
+
+l_y_iy_posdir_ready <- c(l_y_iy_posdir$coefficients["op_expo_ew"], l_y_iy_posdir$se["op_expo_ew"],
+                         l_y_iy_posdir$coefficients["rg_expo_ew"], l_y_iy_posdir$se["rg_expo_ew"],
+                         l_y_iy_posdir$coefficients["ph_expo_ew"], l_y_iy_posdir$se["ph_expo_ew"])
+
+l_y_iy_posdir_N <- l_y_iy_posdir$nobs
+
+l_y_iy_posdir_R <- round(r2(l_y_iy_posdir, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_posdir_Wald <- c(round(compute_wald(l_y_iy_posdir, "op_expo_ew", "rg_expo_ew"), 3), 
+                 round(compute_wald(l_y_iy_posdir, "op_expo_ew", "ph_expo_ew"), 3), 
+                 round(compute_wald(l_y_iy_posdir, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+l_y_iy_posdir_out <- c(`Num. Obs.` = l_y_iy_posdir_N,
+                `Adjusted R-Squared` =  l_y_iy_posdir_R,
+                `Industry x Year FE` = '\\checkmark',
+                `Firm FE` = ' ',
+                `Firm Controls` = '\\checkmark',
+                `Lagged DV` = ' ',
+                `Climate Measure` = 'Exposure',
+                `Estimation` = 'Logit',
+                `Panel` = 'Firm-Year',
+                `Wald Stat (Opp - Reg = 0)` = as.character(l_y_iy_posdir_Wald[1]),
+                `Wald Stat (Opp - Phy = 0)` = as.character(l_y_iy_posdir_Wald[2]),
+                `Wald Stat (Reg - Phy = 0)` = as.character(l_y_iy_posdir_Wald[3]))
+
+## Anti-Climate Lobbying outcome --------------------------------------------------
+
+l_y_iy_negdir <- models[[3]] #Column 1 - main (annual) logit specification with pro-climate lobbying outcome (based on coalition data)
+
+l_y_iy_negdir_ready <- c(l_y_iy_negdir$coefficients["op_expo_ew"], l_y_iy_negdir$se["op_expo_ew"],
+                         l_y_iy_negdir$coefficients["rg_expo_ew"], l_y_iy_negdir$se["rg_expo_ew"],
+                         l_y_iy_negdir$coefficients["ph_expo_ew"], l_y_iy_negdir$se["ph_expo_ew"])
+
+l_y_iy_negdir_N <- l_y_iy_negdir$nobs
+
+l_y_iy_negdir_R <- round(r2(l_y_iy_negdir, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_negdir_Wald <- c(round(compute_wald(l_y_iy_negdir, "op_expo_ew", "rg_expo_ew"), 3), 
+                        round(compute_wald(l_y_iy_negdir, "op_expo_ew", "ph_expo_ew"), 3), 
+                        round(compute_wald(l_y_iy_negdir, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+l_y_iy_negdir_out <- c(`Num. Obs.` = l_y_iy_negdir_N,
+                       `Adjusted R-Squared` =  l_y_iy_negdir_R,
+                       `Industry x Year FE` = '\\checkmark',
+                       `Firm FE` = ' ',
+                       `Firm Controls` = '\\checkmark',
+                       `Lagged DV` = ' ',
+                       `Climate Measure` = 'Exposure',
+                       `Estimation` = 'Logit',
+                       `Panel` = 'Firm-Year',
+                       `Wald Stat (Opp - Reg = 0)` = as.character(l_y_iy_negdir_Wald[1]),
+                       `Wald Stat (Opp - Phy = 0)` = as.character(l_y_iy_negdir_Wald[2]),
+                       `Wald Stat (Reg - Phy = 0)` = as.character(l_y_iy_negdir_Wald[3]))
+
+## Pro-Climate Coalition outcome --------------------------------------------------
+
+l_y_iy_procoal <- models[[5]] #Column 5 - main (annual) logit specification with pro-climate coalition outcome (based on coalition data)
+
+l_y_iy_procoal_ready <- c(l_y_iy_procoal$coefficients["op_expo_ew"], l_y_iy_procoal$se["op_expo_ew"],
+                          l_y_iy_procoal$coefficients["rg_expo_ew"], l_y_iy_procoal$se["rg_expo_ew"],
+                          l_y_iy_procoal$coefficients["ph_expo_ew"], l_y_iy_procoal$se["ph_expo_ew"])
+
+l_y_iy_procoal_N <- l_y_iy_procoal$nobs
+
+l_y_iy_procoal_R <- round(r2(l_y_iy_procoal, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_procoal_Wald <- c(round(compute_wald(l_y_iy_procoal, "op_expo_ew", "rg_expo_ew"), 3), 
+                        round(compute_wald(l_y_iy_procoal, "op_expo_ew", "ph_expo_ew"), 3), 
+                        round(compute_wald(l_y_iy_procoal, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+l_y_iy_procoal_out <- c(`Num. Obs.` = l_y_iy_procoal_N,
+                       `Adjusted R-Squared` =  l_y_iy_procoal_R,
+                       `Industry x Year FE` = '\\checkmark',
+                       `Firm FE` = ' ',
+                       `Firm Controls` = '\\checkmark',
+                       `Lagged DV` = ' ',
+                       `Climate Measure` = 'Exposure',
+                       `Estimation` = 'Logit',
+                       `Panel` = 'Firm-Year',
+                       `Wald Stat (Opp - Reg = 0)` = as.character(l_y_iy_procoal_Wald[1]),
+                       `Wald Stat (Opp - Phy = 0)` = as.character(l_y_iy_procoal_Wald[2]),
+                       `Wald Stat (Reg - Phy = 0)` = as.character(l_y_iy_procoal_Wald[3]))
+
+## Anti-Climate Coalition outcome --------------------------------------------------
+
+l_y_iy_anticoal <- models[[7]] #Column 7 - main (annual) logit specification with anti-climate coalition outcome (based on coalition data)
+
+l_y_iy_anticoal_ready <- c(l_y_iy_anticoal$coefficients["op_expo_ew"], l_y_iy_anticoal$se["op_expo_ew"],
+                           l_y_iy_anticoal$coefficients["rg_expo_ew"], l_y_iy_anticoal$se["rg_expo_ew"],
+                           l_y_iy_anticoal$coefficients["ph_expo_ew"], l_y_iy_anticoal$se["ph_expo_ew"])
+
+l_y_iy_anticoal_N <- l_y_iy_anticoal$nobs
+
+l_y_iy_anticoal_R <- round(r2(l_y_iy_anticoal, type = "apr2"), 3) #adjusted R2
+
+l_y_iy_anticoal_Wald <- c(round(compute_wald(l_y_iy_anticoal, "op_expo_ew", "rg_expo_ew"), 3), 
+                         round(compute_wald(l_y_iy_anticoal, "op_expo_ew", "ph_expo_ew"), 3), 
+                         round(compute_wald(l_y_iy_anticoal, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+l_y_iy_anticoal_out <- c(`Num. Obs.` = l_y_iy_anticoal_N,
+                        `Adjusted R-Squared` =  l_y_iy_anticoal_R,
+                        `Industry x Year FE` = '\\checkmark',
+                        `Firm FE` = ' ',
+                        `Firm Controls` = '\\checkmark',
+                        `Lagged DV` = ' ',
+                        `Climate Measure` = 'Exposure',
+                        `Estimation` = 'Logit',
+                        `Panel` = 'Firm-Year',
+                        `Wald Stat (Opp - Reg = 0)` = as.character(l_y_iy_anticoal_Wald[1]),
+                        `Wald Stat (Opp - Phy = 0)` = as.character(l_y_iy_anticoal_Wald[2]),
+                        `Wald Stat (Reg - Phy = 0)` = as.character(l_y_iy_anticoal_Wald[3]))
+
+
 ## --------------------------------------------------
 
 l_q_iy_ready_stars <- stars(l_q_iy_ready)
@@ -546,6 +665,10 @@ t_q_iy_sent_ready_stars <- stars(t_q_iy_sent_ready)
 t_q_iy_risk_ready_stars <- stars(t_q_iy_risk_ready)
 t_q_iy_intr_ready_stars <- stars(t_q_iy_intr_ready)
 t_q_iy_lgdv_ready_stars <- stars(t_q_iy_lgdv_ready)
+l_y_iy_posdir_ready_stars <- stars(l_y_iy_posdir_ready)
+l_y_iy_negdir_ready_stars <- stars(l_y_iy_negdir_ready)
+l_y_iy_procoal_ready_stars <- stars(l_y_iy_procoal_ready)
+l_y_iy_anticoal_ready_stars <- stars(l_y_iy_anticoal_ready)
 
 m1 <- list(tidy=l_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iy_ready_stars); class(m2) <- "modelsummary_list"
@@ -561,9 +684,14 @@ m11 <- list(tidy=l_y_iy_ovrl_ready_stars); class(m11) <- "modelsummary_list"
 m12 <- list(tidy=l_y_iy_tenk_ready_stars); class(m12) <- "modelsummary_list"
 m13 <- list(tidy=t_q_iy_intr_ready_stars); class(m13) <- "modelsummary_list"
 m14 <- list(tidy=t_q_iy_lgdv_ready_stars); class(m14) <- "modelsummary_list"
+m15 <- list(tidy=l_y_iy_posdir_ready_stars); class(m15) <- "modelsummary_list"
+m16 <- list(tidy=l_y_iy_negdir_ready_stars); class(m16) <- "modelsummary_list"
+m17 <- list(tidy=l_y_iy_procoal_ready_stars); class(m17) <- "modelsummary_list"
+m18 <- list(tidy=l_y_iy_anticoal_ready_stars); class(m18) <- "modelsummary_list"
 
 mod_list <- list("Logit 1"=m1, "OLS 1"=m2, "Logit 5"=m8, "Logit 2"=m3, "Logit 3"=m4, "Logit 4"=m7,
-                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m13, "Tobit 4"=m14, "Tobit 5"=m9, "Tobit 6"=m10, "Logit 6"=m11, "Logit 7"=m12)
+                 "Tobit 1"=m5, "OLS 2"=m6, "Tobit 3"=m13, "Tobit 4"=m14, "Tobit 5"=m9, "Tobit 6"=m10, "Logit 6"=m11, "Logit 7"=m12, "Logit 8"=m15, 
+                 "Logit 9"=m16, "Logit 10"=m17, "Logit 11"=m18)
 
 auxiliary <- data.frame(l_q_iy_out, 
                         o_q_iy_out,
@@ -578,7 +706,11 @@ auxiliary <- data.frame(l_q_iy_out,
                         t_q_iy_sent_out,
                         t_q_iy_risk_out,
                         l_y_iy_ovrl_out,
-                        l_y_iy_tenk_out)
+                        l_y_iy_tenk_out,
+                        l_y_iy_posdir_out,
+                        l_y_iy_negdir_out, 
+                        l_y_iy_procoal_out,
+                        l_y_iy_anticoal_out)
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -611,7 +743,8 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Occur.", "Occur.")
+names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Occur.", "Occur.", 
+                     "Occ. (Pro)", "Occ. (Anti)", "Coal. (Pro)", "Coal. (Anti)")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
