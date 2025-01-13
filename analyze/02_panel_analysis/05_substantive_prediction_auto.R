@@ -31,23 +31,23 @@ df$CLI <- as.numeric(df$CLI_quarter)
 load("data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
 
 ## select the model from column 4 (year and industry FE separate)
-mod <- models[[4]]
-#mod5 <- models[[5]]
+#mod <- models[[4]]
+mod5 <- models[[5]]
 
 ## grab all relevant covariates for Ford 2019 q4
-inp <- df[which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4) ,
-          c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-               "total_lobby_quarter", "Year", "Industry")]
-# inp <- df[which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4) ,
+# inp <- df[which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4) ,
 #           c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-#                "total_lobby_quarter", "Industry x Year")]
+#                "total_lobby_quarter", "Year", "Industry")]
+gm <- which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4)
+inp <- df[gm , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", 
+                 "total_lobby_quarter", "Industry x Year")]
 
 #temp <- df[ , c("conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter", "Industry x Year")]
 
 #temp <- temp[which(temp$conm == "GENERAL MOTORS COMPANY") , ]
 
 ## predict for Ford 2019 q4
-test1 <- predict(object = mod, newdata = inp, type = "response")
+test1 <- predict(object = mod5, newdata = inp, type = "response")
 
 ## find index of toyota 2019 q4
 replace <- which(df$conm == "TOYOTA MOTOR CORPORATION" & df$year == 2019 & df$qtr == 4)
@@ -56,11 +56,71 @@ inp$op_expo_ew <- df$op_expo_ew[replace]
 
 ## predicted probability of exposure for Ford with Toyota's opportunity 
 ## score (all in 2019q4)
-test2 <- predict(object = mod, newdata = inp, type = "response")
+test2 <- predict(object = mod5, newdata = inp, type = "response")
 
 
 test1
 test2
+
+df$op_expo_ew[gm]
+df$op_expo_ew[replace]
+cdf <- ecdf(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")])
+hist(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")])
+
+sum(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")] > df$op_expo_ew[gm], na.rm=T) / length(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019" & !is.na(df$op_expo_ew))])
+cdf(df$op_expo_ew[gm]) # GM 86th percentile of opportunity exposure in Auto in 2019
+cdf(df$op_expo_ew[replace]) # Toyota 38th percentile of opportunity exposure in Auto in 2019
+
+## Set covars to median I-Y, 20th vs. 80th percentile expo. ----------------------------------------------------
+
+iy <- df[which(df$`Industry x Year` == "Transport Manufacturing 2019") , ]
+
+syn_firm <- data.frame("op_expo_ew" = mean(iy$op_expo_ew, na.rm=T),
+                       "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                       "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                       "ebit" = median(iy$ebit, na.rm=T),
+                       "ebit_at" = median(iy$ebit, na.rm=T),
+                       "us_dummy" = 1,
+                       "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                       "Industry x Year" = "Transport Manufacturing 2019")
+names(syn_firm)[8] <- "Industry x Year"
+
+test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+syn_firm$op_expo_ew <- syn_firm$op_expo_ew + 2*sd(iy$op_expo_ew, na.rm=T)
+test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+test1
+test2
+
+syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                       "rg_expo_ew" = mean(iy$rg_expo_ew, na.rm=T),
+                       "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                       "ebit" = median(iy$ebit, na.rm=T),
+                       "ebit_at" = median(iy$ebit, na.rm=T),
+                       "us_dummy" = 1,
+                       "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                       "Industry x Year" = "Transport Manufacturing 2019")
+names(syn_firm)[8] <- "Industry x Year"
+test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+syn_firm$rg_expo_ew <- syn_firm$rg_expo_ew + 2*sd(iy$rg_expo_ew, na.rm=T)
+test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+test1
+test2
+
+syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                       "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                       "ph_expo_ew" = mean(iy$ph_expo_ew, na.rm=T),
+                       "ebit" = median(iy$ebit, na.rm=T),
+                       "ebit_at" = median(iy$ebit, na.rm=T),
+                       "us_dummy" = 1,
+                       "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                       "Industry x Year" = "Transport Manufacturing 2019")
+names(syn_firm)[8] <- "Industry x Year"
+test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+syn_firm$ph_expo_ew <- syn_firm$ph_expo_ew + 2*sd(iy$ph_expo_ew, na.rm=T)
+test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+test1
+test2
+
 
 ###
 
