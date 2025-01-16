@@ -316,7 +316,7 @@ dataframes_path <- "figures/panelmatch/reduced/dataframes/"
 # Define key identifiers
 unit_id <- "id"
 time_id <- "t"
-lag <- 4
+lag <- 2
 lead <- c(0:3)
 
 ## Optimize memory usage before running loops ------------------------------
