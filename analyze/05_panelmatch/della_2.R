@@ -255,14 +255,14 @@ covariate_balance_df <- data.frame(
 # Define treatments, outcomes, and covariates
 treatments <- c(
   "treat_op_median",
+  "treat_rg_median",
+  "treat_ph_median",
   "treat_op_increase",
   "treat_op_100per",
   "treat_op_200per" ,
-  "treat_rg_median",
   "treat_rg_increase",
   "treat_rg_100per",
   "treat_rg_200per",
-  "treat_ph_median",
   "treat_ph_increase",
   "treat_ph_100per",
   "treat_ph_200per"
@@ -285,8 +285,8 @@ covariates <- c(
 
 ## Specify paths -----------------------------------------------------------
 
-figure_path <- "figures/panelmatch/"
-dataframes_path <- "figures/panelmatch/dataframes/"
+figure_path <- "figures/panelmatch/reduced/"
+dataframes_path <- "figures/panelmatch/reduced/dataframes/"
 
 # # Create folders if they don't exist
 # dir.create(figure_path, showWarnings = FALSE)
@@ -317,7 +317,7 @@ dataframes_path <- "figures/panelmatch/dataframes/"
 unit_id <- "id"
 time_id <- "t"
 lag <- 4
-lead <- c(0:7)
+lead <- c(0:3)
 
 ## Optimize memory usage before running loops ------------------------------
 
