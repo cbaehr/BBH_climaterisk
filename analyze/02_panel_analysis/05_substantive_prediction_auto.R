@@ -26,28 +26,31 @@ df <- df |>
 
 df$CLI <- as.numeric(df$CLI_quarter)
 
+df$log_CLI_amount <- log(df$CLI_amount_quarter + 1)
+
 ###
 
-load("data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
+#load("data/03_final/climate_logit_qrt_bycomponent_MODELS.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
 
 ## select the model from column 4 (year and industry FE separate)
-mod <- models[[4]]
-#mod5 <- models[[5]]
+#mod <- models[[4]]
+mod5 <- models[[5]]
 
 ## grab all relevant covariates for Ford 2019 q4
-inp <- df[which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4) ,
-          c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-               "total_lobby_quarter", "Year", "Industry")]
-# inp <- df[which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4) ,
+# inp <- df[which(df$conm == "FORD MOTOR CO" & df$year == 2019 & df$qtr == 4) ,
 #           c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy",
-#                "total_lobby_quarter", "Industry x Year")]
+#                "total_lobby_quarter", "Year", "Industry")]
+gm <- which(df$conm == "GENERAL MOTORS COMPANY" & df$year == 2019 & df$qtr == 4)
+inp <- df[gm , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", 
+                 "total_lobby_quarter", "Industry x Year")]
 
 #temp <- df[ , c("conm", "year", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter", "Industry x Year")]
 
 #temp <- temp[which(temp$conm == "GENERAL MOTORS COMPANY") , ]
 
 ## predict for Ford 2019 q4
-test1 <- predict(object = mod, newdata = inp, type = "response")
+test1 <- predict(object = mod5, newdata = inp, type = "response")
 
 ## find index of toyota 2019 q4
 replace <- which(df$conm == "TOYOTA MOTOR CORPORATION" & df$year == 2019 & df$qtr == 4)
@@ -56,11 +59,311 @@ inp$op_expo_ew <- df$op_expo_ew[replace]
 
 ## predicted probability of exposure for Ford with Toyota's opportunity 
 ## score (all in 2019q4)
-test2 <- predict(object = mod, newdata = inp, type = "response")
+test2 <- predict(object = mod5, newdata = inp, type = "response")
 
 
 test1
 test2
+
+df$op_expo_ew[gm]
+df$op_expo_ew[replace]
+cdf <- ecdf(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")])
+hist(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")])
+
+sum(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019")] > df$op_expo_ew[gm], na.rm=T) / length(df$op_expo_ew[which(df$`Industry x Year` =="Transport Manufacturing 2019" & !is.na(df$op_expo_ew))])
+cdf(df$op_expo_ew[gm]) # GM 86th percentile of opportunity exposure in Auto in 2019
+cdf(df$op_expo_ew[replace]) # Toyota 38th percentile of opportunity exposure in Auto in 2019
+
+## Set covars to median I-Y, 20th vs. 80th percentile expo. ----------------------------------------------------
+
+unique(grep("Transport Manufacturing", df$`Industry x Year`, value=T))
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  for(j in 1:4) {
+    iyq <- iy[which(iy$qtr == j) , ]
+    syn_firm <- data.frame("op_expo_ew" = mean(iyq$op_expo_ew, na.rm=T) - sd(iyq$op_expo_ew, na.rm=T),
+                           "rg_expo_ew" = median(iyq$rg_expo_ew, na.rm=T),
+                           "ph_expo_ew" = median(iyq$ph_expo_ew, na.rm=T),
+                           "ebit" = median(iyq$ebit, na.rm=T),
+                           "ebit_at" = median(iyq$ebit, na.rm=T),
+                           "us_dummy" = 1,
+                           "total_lobby_quarter" = median(iyq$total_lobby_quarter, na.rm=T),
+                           "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+    names(syn_firm)[8] <- "Industry x Year"
+    
+    test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    syn_firm$op_expo_ew <- syn_firm$op_expo_ew + 2*sd(iyq$op_expo_ew, na.rm=T)
+    test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    out <- c(out, test2 - test1)
+    out_pct <- c(out_pct, (test2 - test1) / test1)
+  }
+  
+  
+}
+summary(out)
+summary(out_pct)
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  for(j in 1:4) {
+    iyq <- iy[which(iy$qtr == j) , ]
+    syn_firm <- data.frame("op_expo_ew" = median(iyq$op_expo_ew, na.rm=T),
+                           "rg_expo_ew" = mean(iyq$rg_expo_ew, na.rm=T) - sd(iyq$rg_expo_ew, na.rm=T),
+                           "ph_expo_ew" = median(iyq$ph_expo_ew, na.rm=T),
+                           "ebit" = median(iyq$ebit, na.rm=T),
+                           "ebit_at" = median(iyq$ebit, na.rm=T),
+                           "us_dummy" = 1,
+                           "total_lobby_quarter" = median(iyq$total_lobby_quarter, na.rm=T),
+                           "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+    names(syn_firm)[8] <- "Industry x Year"
+    
+    test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    syn_firm$rg_expo_ew <- syn_firm$rg_expo_ew + 2*sd(iyq$rg_expo_ew, na.rm=T)
+    test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    out <- c(out, test2 - test1)
+    out_pct <- c(out_pct, (test2 - test1) / test1)
+  }
+}
+summary(out)
+summary(out_pct)
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  for(j in 1:4) {
+    iyq <- iy[which(iy$qtr == j) , ]
+    syn_firm <- data.frame("op_expo_ew" = median(iyq$op_expo_ew, na.rm=T),
+                           "rg_expo_ew" = median(iyq$rg_expo_ew, na.rm=T),
+                           "ph_expo_ew" = mean(iyq$ph_expo_ew, na.rm=T) - sd(iyq$ph_expo_ew, na.rm=T),
+                           "ebit" = median(iyq$ebit, na.rm=T),
+                           "ebit_at" = median(iyq$ebit, na.rm=T),
+                           "us_dummy" = 1,
+                           "total_lobby_quarter" = median(iyq$total_lobby_quarter, na.rm=T),
+                           "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+    names(syn_firm)[8] <- "Industry x Year"
+    
+    test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    syn_firm$ph_expo_ew <- syn_firm$ph_expo_ew + 2*sd(iyq$ph_expo_ew, na.rm=T)
+    test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+    out <- c(out, test2 - test1)
+    out_pct <- c(out_pct, (test2 - test1) / test1)
+  }
+}
+summary(out)
+summary(out_pct)
+
+## OLS Occurrence prediction ---------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
+mod5 <- models[[5]]
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = mean(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$op_expo_ew <- syn_firm$op_expo_ew + 2*sd(iy$op_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+P_inc <- paste0(round(mean(out), 3)*100, "%")
+sprintf("Probability of lobbying on climate issues increases by %s", P_inc)
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = mean(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$rg_expo_ew <- syn_firm$rg_expo_ew + 2*sd(iy$rg_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+P_inc <- paste0(round(mean(out), 3)*100, "%")
+sprintf("Probability of lobbying on climate issues increases by %s", P_inc)
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = mean(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$ph_expo_ew <- syn_firm$ph_expo_ew + 2*sd(iy$ph_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+P_inc <- paste0(round(mean(out), 3)*100, "%")
+sprintf("Probability of lobbying on climate issues increases by %s", P_inc)
+
+## OLS Amount prediction ---------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION.RData")
+mod5 <- models[[5]]
+
+unique(grep("Transport Manufacturing", df$`Industry x Year`, value=T))
+
+iy <- df[which(df$`Industry x Year` == "Transport Manufacturing 2019") , ]
+
+# syn_firm <- data.frame("op_expo_ew" = mean(iy$op_expo_ew, na.rm=T),
+#                        "rg_expo_ew" = mean(iy$rg_expo_ew, na.rm=T),
+#                        "ph_expo_ew" = mean(iy$ph_expo_ew, na.rm=T),
+#                        "ebit" = mean(iy$ebit, na.rm=T),
+#                        "ebit_at" = mean(iy$ebit, na.rm=T),
+#                        "us_dummy" = 1,
+#                        "total_lobby_quarter" = mean(iy$total_lobby_quarter, na.rm=T),
+#                        "Industry x Year" = "Transport Manufacturing 2019")
+# names(syn_firm)[8] <- "Industry x Year"
+
+syn_firm <- df[which(df$`Industry x Year`=="Transport Manufacturing 2019" & df$conm=="GENERAL MOTORS COMPANY" & df$qtr==4),
+               c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "us_dummy", "total_lobby_quarter", "Industry x Year")]
+exp(df$log_CLI_amount[which(df$`Industry x Year`=="Transport Manufacturing 2019" & df$conm=="GENERAL MOTORS COMPANY" & df$qtr==4)])
+
+test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+#syn_firm$op_expo_ew <- syn_firm$op_expo_ew + 2*sd(iy$op_expo_ew, na.rm=T)
+syn_firm$op_expo_ew <- df$op_expo_ew[which(df$`Industry x Year`=="Transport Manufacturing 2019" & df$conm=="TOYOTA MOTOR CORPORATION" & df$qtr==4)]
+exp(df$log_CLI_amount[which(df$`Industry x Year`=="Transport Manufacturing 2019" & df$conm=="TOYOTA MOTOR CORPORATION" & df$qtr==4)])
+test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+amount1 <- exp(test1)
+amount2 <- exp(test2)
+
+(amount1 - amount2) / amount2
+(302667.7 - 195556.6) / 195556.6
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = mean(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$op_expo_ew <- syn_firm$op_expo_ew + 2*sd(iy$op_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+summary(out)
+summary(out_pct)
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = mean(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = median(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$rg_expo_ew <- syn_firm$rg_expo_ew + 2*sd(iy$rg_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+summary(out)
+summary(out_pct)
+
+
+for(i in 2001:2020) {
+  if(i==2001) {out <- c(); out_pct <- c()}
+  iy <- df[which(df$`Industry x Year` == sprintf("Transport Manufacturing %s", i)) , ]
+  
+  syn_firm <- data.frame("op_expo_ew" = median(iy$op_expo_ew, na.rm=T),
+                         "rg_expo_ew" = median(iy$rg_expo_ew, na.rm=T),
+                         "ph_expo_ew" = mean(iy$ph_expo_ew, na.rm=T),
+                         "ebit" = median(iy$ebit, na.rm=T),
+                         "ebit_at" = median(iy$ebit, na.rm=T),
+                         "us_dummy" = 1,
+                         "total_lobby_quarter" = median(iy$total_lobby_quarter, na.rm=T),
+                         "Industry x Year" = sprintf("Transport Manufacturing %s", i))
+  names(syn_firm)[8] <- "Industry x Year"
+  
+  test1 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  syn_firm$ph_expo_ew <- syn_firm$ph_expo_ew + 2*sd(iy$ph_expo_ew, na.rm=T)
+  test2 <- predict(object = mod5, newdata = syn_firm, type = "response")
+  #sprintf("Probability of lobbying moves from %s to %s", test1, test2)
+  amount1 <- exp(test1)
+  amount2 <- exp(test2)
+  out <- c(out, amount2 - amount1)
+  out_pct <- c(out_pct, (amount2 - amount1) / amount1)
+}
+summary(out)
+summary(out_pct)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###
 
