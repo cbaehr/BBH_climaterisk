@@ -12,20 +12,21 @@ pacman::p_load(data.table, tidyverse, haven)
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
-setwd("/Users/christianbaehr/Downloads/lobbyview_20250103/")
-
 # load lobbying data
-#lobby_client <- fread("data/01_raw/lobbyview/dataset___client_level.csv")
-lobby_client <- fread("clients_codebook/clients.csv")
-#lobby_text <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
-lobby_text <- fread("issue_text_codebook/issue_text.csv")
-#lobby_issue <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
-lobby_issue <- fread("issues_codebook/issues.csv")
-#lobby_report <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
-lobby_report <- fread("reports_codebook/reports.csv")
+lobby_client_old <- fread("data/01_raw/lobbyview/dataset___client_level.csv")
+lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
 
-#lobby_report <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___report_level.csv")
-lobby_issue_old <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___issue_level.csv")
+lobby_text_old <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
+lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+
+lobby_issue_old <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
+lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+#
+lobby_report_old <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
+lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
+
+# lobby_report <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___report_level.csv")
+# lobby_issue_old <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___issue_level.csv")
 
 lobby_report$report_quarter_code <- ifelse(lobby_report$filing_period_code=="H1", 12,
                                            ifelse(lobby_report$filing_period_code=="H2", 34,
