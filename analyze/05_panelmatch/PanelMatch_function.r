@@ -25,7 +25,7 @@ theme_vincent <- function (fontsize = 15, facet_alt = F) {
 run_panelmatch <- function(data,
                            treatment,
                            outcome,
-                           covariates,
+                           covariates = NULL,
                            lag = 2,
                            lead = 0:1,
                            unit_id = "id",
@@ -44,19 +44,17 @@ run_panelmatch <- function(data,
                            ) {
   tryCatch({
     # Match individuals on covariates and lagged outcome
-    cov_formula_cb <-
-      as.formula(paste("~", paste(covariates, collapse = " + ")))
+    if (!is.null(covariates)) {
+      cov_formula_cb <- as.formula(paste("~", paste(covariates, collapse = " + ")))
+      match_formula_cb <- as.formula(paste("~", paste(c(covariates, outcome), collapse = " + ")))
+    } else {
+      cov_formula_cb <- as.formula("~ 1")
+      match_formula_cb <- as.formula(paste("~", outcome))
+    }
     
-    # Adding the lag of the outcome variable
-    lagged_outcome <- sprintf("I(lag(%s, 1:%d))", outcome, lag)
+    # # Adding the lag of the outcome variable
+    # lagged_outcome <- sprintf("I(lag(%s, 1:%d))", outcome, lag)
     
-    # match formula
-    match_formula_cb <-
-      as.formula(paste("~", paste(
-        c(covariates, lagged_outcome), collapse = " + "
-      )))
-    
-  
     # Create scatterplot if requested
     if (cb_plots == TRUE) {
       
@@ -91,7 +89,7 @@ run_panelmatch <- function(data,
     balance_scatter(
       matched_set_list = list(match$att),
       data = data,
-      covariates = c(covariates, outcome)
+      covariates = if (!is.null(covariates)) c(covariates, outcome) else outcome
     )
     # Close the pdf file
     dev.off()
@@ -161,12 +159,13 @@ run_panelmatch <- function(data,
     # Create matched set
     message(paste("Create matched set for ATT & placebo without lagged outcome"))
     
-    # Match individuals on covariates and lagged outcome
-    cov_formula <-
-      as.formula(paste("~", paste(covariates, collapse = " + ")))
-    
-    match_formula <-
-      as.formula(paste("~", paste(covariates, collapse = " + ")))
+    if (!is.null(covariates)) {
+      cov_formula <- as.formula(paste("~", paste(covariates, collapse = " + ")))
+      match_formula <- as.formula(paste("~", paste(covariates, collapse = " + ")))
+    } else {
+      cov_formula <- as.formula("~ 1")
+      match_formula <- as.formula("~ 1")
+    }
     
     match <- PanelMatch(
       lag = lag,
