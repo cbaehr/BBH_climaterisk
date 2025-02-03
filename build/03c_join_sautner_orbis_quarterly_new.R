@@ -187,7 +187,7 @@ duplicates |>
 
 ### Note: changed from client_uuid to lob_id
 
-numrows <- aggregate(duplicates$lob_id, by=list(duplicates$bvdid, duplicates$isin, duplicates$gvkey), FUN=function(x) is.na(x))
+numrows <- aggregate(duplicates$lob_id, by=list(duplicates$bvdid, duplicates$isin, duplicates$gvkey), FUN=function(x) is.na(x), simplify=F)
 names(numrows) <- c("bvdid", "isin", "gvkey", "NAs") # give meaningful names
 
 duplicates <- merge(duplicates, numrows) # fold back into the duplicates data -- without specifying a merge variable, this will use all three of the IDs to merge
@@ -200,11 +200,12 @@ dim(duplicates)
 head(duplicates$NAs, 10)
 
 # Create NA_col column that is TRUE if there are exactly 2 rows and one is NA
-duplicates$NA_col <- apply(duplicates$NAs, 1, function(x) {
-    # Convert to numeric and check if we have exactly one TRUE and one FALSE
-    sum(x) == 1
-})
+# duplicates$NA_col <- apply(duplicates$NAs, 1, function(x) {
+#     # Convert to numeric and check if we have exactly one TRUE and one FALSE
+#     sum(x) == 1
+# })
 
+duplicates$NA_col <- sapply(duplicates$NAs, FUN = function(x) {length(x)==2 & sum(x)==1}) # TRUE if exactly two rows with this ID combo AND one is NA
 duplicates$keep_override <- duplicates$NA_col & !is.na(duplicates$lob_id) # if NA_col condition TRUE and this particular rows lob_id is not NA, we want to keep it
 
 summary(duplicates$keep_override)
