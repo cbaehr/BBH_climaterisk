@@ -99,56 +99,66 @@ lobby_issuetext_nodup <- aggregate(lobby_issuetext[, c("general_issue_code", "go
 
 glimpse(lobby_issuetext_nodup)
 
-#####
+# #####
 
-## there are some cases in the exposure_orbis data with multiple client_uuids for 
-## a single isin code. These are ok to include -- we already made sure we arent duplicating
-## data. However, to properly merge the lobbyview data with the exposure_orbis data,
-## we need to treat the various members of the same isin with the same client_uuid. 
-## this will ensure they all get fed into the same aggregation process. I reassign
-## new client_uuids that are unique at the isin level -- they are just
-## "client_uuid1|client_uuid2|client_uuid3|..."
+# ## there are some cases in the exposure_orbis data with multiple client_uuids for 
+# ## a single isin code. These are ok to include -- we already made sure we arent duplicating
+# ## data. However, to properly merge the lobbyview data with the exposure_orbis data,
+# ## we need to treat the various members of the same isin with the same client_uuid. 
+# ## this will ensure they all get fed into the same aggregation process. I reassign
+# ## new client_uuids that are unique at the isin level -- they are just
+# ## "client_uuid1|client_uuid2|client_uuid3|..."
 
-exposure_orbis_wide <- read.csv("data/02_processed/exposure_orbis_client_quarter_wide_REVISE.csv", stringsAsFactors = F)
-relevant <- exposure_orbis_wide[grepl("\\|", exposure_orbis_wide$client_uuid), ] # these are the only client_uuids we need to worry about
-glimpse(relevant)
-relevant |>
-  tibble() |>
-  select(client_uuid) |>
-  head()
+# exposure_orbis_wide <- read.csv("data/02_processed/exposure_orbis_client_quarter_wide_REVISE_NEW.csv", stringsAsFactors = F)
 
-getid <- function(x) {
-  id <- grep(x, relevant$client_uuid)
-  if(length(id)>0) {
-    return(id)
-  } else {
-    return(NA)
-  }
-}
+# # duplicates?
+# exposure_orbis_wide |>
+#   count(gvkey, isin, bvdid, lob_id) |>
+#   filter(n > 1)
+# # none
 
-## identify which members in lobby_client have a client_uuid that falls into one
-## of the "new" client_uuids I define. I also identify the index of the corresponding
-## "new" client_uuid in exposure_orbis.
-glimpse(lobby_client)
-alt_ids <- sapply(lobby_client$client_uuid, FUN=function(x) getid(x))
-table(length(alt_ids)) # they all match with at most one client_uuid in exposure_orbis
 
-## now create a new variable in lobby_client that is an "alternative" client_uuid
-## it is either the "new" client_uuid from exposure_orbis, or if there is no need for 
-## a "new" id, it is just the original (same) client_uuid as before
-client_uuid_alt <- relevant$client_uuid[alt_ids]
-lobby_client$client_uuid_alt <- ifelse(is.na(client_uuid_alt), lobby_client$client_uuid, client_uuid_alt)
+# relevant <- exposure_orbis_wide[grepl("\\|", exposure_orbis_wide$lob_id), ] # these are the only client_uuids we need to worry about
+# glimpse(relevant)
+# relevant |>
+#   tibble() |>
+#   select(lob_id) |>
+#   head()
+
+# getid <- function(x) {
+#   id <- grep(x, relevant$client_uuid)
+#   if(length(id)>0) {
+#     return(id)
+#   } else {
+#     return(NA)
+#   }
+# }
+
+# ## identify which members in lobby_client have a client_uuid that falls into one
+# ## of the "new" client_uuids I define. I also identify the index of the corresponding
+# ## "new" client_uuid in exposure_orbis.
+# glimpse(lobby_client)
+# alt_ids <- sapply(lobby_client$client_uuid, FUN=function(x) getid(x))
+# table(length(alt_ids)) # they all match with at most one client_uuid in exposure_orbis
+
+# ## now create a new variable in lobby_client that is an "alternative" client_uuid
+# ## it is either the "new" client_uuid from exposure_orbis, or if there is no need for 
+# ## a "new" id, it is just the original (same) client_uuid as before
+# client_uuid_alt <- relevant$client_uuid[alt_ids]
+# lobby_client$client_uuid_alt <- ifelse(is.na(client_uuid_alt), lobby_client$client_uuid, client_uuid_alt)
 
 #View(lobby_client[1:1000, ])
 
 #####
 
 lobbying <- merge(lobby_report, lobby_issuetext_nodup, all.x = T)
-lobbying <- merge(lobbying, lobby_client, by = "client_uuid", all.x = T)
+lobbying <- merge(lobbying, lobby_client, by = "lob_id", all.x = T)
+
+glimpse(lobbying)
 
 lobbying$report_quarter_code <- as.character(lobbying$report_quarter_code)
 
-lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
+# lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
 
 ## we match with firm data based on BvDID, so all clients under the same bvdid are assigned a consistent name
 
@@ -156,7 +166,8 @@ lobbying$amount <- gsub("\\$|,", "", lobbying$amount)
 
 ## just treat lobbying amount as zero if missing -> wont affect the amount calculations, because
 ## missing would just be dropped. But makes the mapply easier
-lobbying$amount[which(lobbying$amount=="")] <- 0
+# lobbying$amount[which(lobbying$amount=="")] <- 0
+lobbying <- lobbying |> mutate(amount = ifelse(is.na(amount), 0, amount))
 lobbying$gov_entity[lobbying$gov_entity==""] <- NA
 
 # collapse.char <- aggregate(lobbying[, c("client_uuid", "client_name", "report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
@@ -165,16 +176,15 @@ lobbying$gov_entity[lobbying$gov_entity==""] <- NA
 # collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
 #                            by=list(lobbying$report_year, lobbying$client_uuid),
 #                            FUN = function(x) paste(x, collapse = "|"))
-collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_uuid", "registrant_name", "report_quarter_code", "amount")],
-                           by=list(lobbying$report_year, lobbying$client_uuid_alt),
-                           FUN = function(x) paste(x, collapse = "|"))
+glimpse(lobbying)
+
+collapse.char <- aggregate(lobbying[, c("report_uuid", "issue_code", "gov_entity", "issue_text", "registrant_id", "registrant_name", "report_quarter_code", "amount")],
+                         by=list(lobbying$filing_year, lobbying$lob_id),
+                         FUN = function(x) paste(x, collapse = "|"))
 lobbying_firmyear <- collapse.char
-# names(lobbying_firmyear) <- c("report_year", "bvdid", "client_uuid", "client_name", 
-#                               "report_uuid", "issue_code", "gov_entity", "issue_text", 
-#                               "registrant_uuid", "registrant_name", "report_quarter_code", "amount_num")
-names(lobbying_firmyear) <- c("report_year", "client_uuid",
-                              "report_uuid", "issue_code", "gov_entity", "issue_text",
-                              "registrant_uuid", "registrant_name", "report_quarter_code", "amount_num")
+names(lobbying_firmyear) <- c("filing_year", "lob_id",
+                            "report_uuid", "issue_code", "gov_entity", "issue_text",
+                            "registrant_id", "registrant_name", "report_quarter_code", "amount_num")
 # collapse.num <- aggregate(lobbying[, c("amount_num")],
 #                    by=list(lobbying$report_year, lobbying$bvdid),
 #                    FUN = function(x) sum(x, na.rm = T))
@@ -189,6 +199,8 @@ lobbying_firmyear$n_issue_codes <- str_count(lobbying_firmyear$issue_code, "\\|"
 rm(list = setdiff(ls(), "lobbying_firmyear"))
 
 #####
+
+glimpse(lobbying_firmyear)
 
 ## any appearance of climate issues in a year
 lobbying_firmyear$CLI_annual <- grepl("ENV|CAW|ENG|FUE", lobbying_firmyear$issue_code)
@@ -333,6 +345,11 @@ lobbying_firmyear$CLI_amount_q1 <- climate_amount_q1
 lobbying_firmyear$CLI_amount_q2 <- climate_amount_q2
 lobbying_firmyear$CLI_amount_q3 <- climate_amount_q3
 lobbying_firmyear$CLI_amount_q4 <- climate_amount_q4
+
+glimpse(lobbying_firmyear)
+
+summary(lobbying_firmyear$CLI_amount_q1)
+# Variation there
 
 # env_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("ENV", y))}[[1]])})
 # caw_issue_proportion <- lapply(issue_code_split, FUN = function(x) {sapply(strsplit(x, ";"), FUN = function(y) {mean(grepl("CAW", y))}[[1]])})
@@ -534,11 +551,12 @@ print(column_check)
 # Optionally, print out the columns that are missing
 missing_columns <- flat_moving_list[!column_check]
 print(missing_columns)
-
+# none
 
 ## reshape data from wide to long format
+names(lobbying_firmyear)
 
-lobbying_firmyear$unique_id <- paste(lobbying_firmyear$client_uuid, lobbying_firmyear$report_year)
+lobbying_firmyear$unique_id <- paste(lobbying_firmyear$lob_id, lobbying_firmyear$filing_year)
 
 lobbying_firmquarter <- reshape(lobbying_firmyear,
                                 direction="long",
@@ -584,22 +602,32 @@ lobbying_firmquarter$qtr <- gsub("q", "", lobbying_firmquarter$qtr)
 ## quarterly, we can do that later.
 lobbying_firmquarter <- lobbying_firmquarter[,!names(lobbying_firmquarter) %in% c("issue_code", "gov_entity", "issue_text")]
 
-save(lobbying_firmquarter, file="data/02_processed/lobbying_df_quarterly_REVISE.rds")
+save(lobbying_firmquarter, file="data/02_processed/lobbying_df_quarterly_REVISE_NEW.rds")
+
+
 
 #####
 
-exposure_orbis_long <- read.csv("data/02_processed/exposure_orbis_client_quarter_long_REVISE.csv", stringsAsFactors = F)
+# Exposure Orbis Long --------------------------------------------------------
+
+exposure_orbis_long <- read.csv("data/02_processed/exposure_orbis_client_quarter_long_REVISE_NEW.csv", stringsAsFactors = F)
+
+glimpse(exposure_orbis_long)
 
 #out <- merge(exposure_orbis, lobbying_firmyear, by.x = c("bvdid", "year"), by.y = c("bvdid", "report_year"))
-exposure_orbis_lobbyview_long <- merge(exposure_orbis_long, lobbying_firmquarter, by.x = c("client_uuid", "year", "qtr"), by.y = c("client_uuid", "report_year", "qtr"), all.x=T)
+exposure_orbis_lobbyview_long <- merge(exposure_orbis_long, lobbying_firmquarter, by.x = c("lob_id", "year", "qtr"), by.y = c("lob_id", "filing_year", "qtr"), all.x=T)
 #out3 <- merge(exposure_orbis_long, lobbying_firmyear, by.x = c("client_uuid", "year"), by.y = c("client_uuid", "report_year"))
 
 sum(duplicated(exposure_orbis_lobbyview_long[, c("isin", "year", "qtr")]))
+# none
 sum(duplicated(exposure_orbis_lobbyview_long[, c("gvkey", "year", "qtr")]))
+# 14,720
 sum(duplicated(exposure_orbis_lobbyview_long[, c("bvdid", "year", "qtr")]))
-sum(duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1)) #good
+# none
+sum(duplicated(exposure_orbis_lobbyview_long[, c("lob_id", "year", "qtr")]) & exposure_orbis_lobbyview_long$lob_id!=(-1)) #good
+# none
 
-test <- (duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")]) & exposure_orbis_lobbyview_long$client_uuid!=(-1)) | (duplicated(exposure_orbis_lobbyview_long[, c("client_uuid", "year", "qtr")], fromLast=T) & exposure_orbis_lobbyview_long$client_uuid!=(-1))
+test <- (duplicated(exposure_orbis_lobbyview_long[, c("lob_id", "year", "qtr")]) & exposure_orbis_lobbyview_long$lob_id!=(-1)) | (duplicated(exposure_orbis_lobbyview_long[, c("lob_id", "year", "qtr")], fromLast=T) & exposure_orbis_lobbyview_long$lob_id!=(-1))
 if(sum(test)>0) {
   exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!test), ]
   stop("Still need to deal with these additional duplicates!")
@@ -633,8 +661,11 @@ exposure_orbis_lobbyview_long$at[invalid_orbis] <- NA
 exposure_orbis_lobbyview_long$ebit_at[invalid_orbis] <- NA
 
 #View(exposure_orbis_lobbyview_long[which(exposure_orbis_lobbyview_long$ebit_at<(-1000)), ])
-drop_clipper2011 <- exposure_orbis_lobbyview_long$conm=="CLIPPER WINDPOWER HOLDINGS LTD" & exposure_orbis_lobbyview_long$year==2011
-exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipper2011), ]
+exposure_orbis_lobbyview_long |>
+  filter(bvdid == "US911975651") |>
+  select(conm, year, qtr, ebit_at)
+# drop_clipper2011 <- exposure_orbis_lobbyview_long$conm=="CLIPPER WINDPOWER HOLDINGS LTD" & exposure_orbis_lobbyview_long$year==2011
+# exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long[which(!drop_clipper2011), ]
 
 exposure_orbis_lobbyview_long$CLI_quarter <- as.numeric(exposure_orbis_lobbyview_long$CLI_quarter)
 exposure_orbis_lobbyview_long$CLI_quarter[is.na(exposure_orbis_lobbyview_long$CLI_quarter)] <- 0
@@ -699,10 +730,10 @@ names(exposure_orbis_lobbyview_long)
 glimpse(exposure_orbis_lobbyview_long)
 
 ## write csv
-fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.csv")
+fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
 
 # write rdata
-write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE.rds")
+write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 
 
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")

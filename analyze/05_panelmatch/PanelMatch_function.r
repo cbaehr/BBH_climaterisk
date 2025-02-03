@@ -43,135 +43,121 @@ run_panelmatch <- function(data,
                            cb_plots = FALSE
                            ) {
   tryCatch({
-    # Match individuals on covariates and lagged outcome
-    if (!is.null(covariates)) {
-      cov_formula_cb <- as.formula(paste("~", paste(covariates, collapse = " + ")))
-      match_formula_cb <- as.formula(paste("~", paste(c(covariates, outcome), collapse = " + ")))
-    } else {
-      cov_formula_cb <- as.formula("~ 1")
-      match_formula_cb <- as.formula(paste("~", outcome))
-    }
-    
-    # # Adding the lag of the outcome variable
-    # lagged_outcome <- sprintf("I(lag(%s, 1:%d))", outcome, lag)
-    
     # Create scatterplot if requested
-    if (cb_plots == TRUE) {
+    if (cb_plots == TRUE && !is.null(covariates)) {  # Only do covariate balance plots if covariates exist
+      # Create matched set for covariate balance
+      message(paste("Create matched set for covariate balance with lagged outcome"))
       
-    # Create matched set
-    message(paste("Create matched set for covariate balance with lagged outcome"))
-    
-    match <- PanelMatch(
-      lag = lag,
-      time.id = time_id,
-      unit.id = unit_id,
-      covs.formula = match_formula_cb,
-      treatment = treatment,
-      refinement.method = refinement.method,
-      data = data,
-      match.missing = TRUE,
-      qoi = "att",
-      outcome.var = outcome,
-      lead = lead,
-      forbid.treatment.reversal = forbid_treatment_reversal,
-      placebo.test = FALSE
-    )
-    
-    # Create a scatter plot to analyze covariate balance
-    message(paste("Create a scatter plot to analyze covariate balance"))
-    
-    pdf(paste0(figure_path,
-               treatment,
-               "_",
-               outcome,
-               "_cb_scat.pdf"))
-    
-    balance_scatter(
-      matched_set_list = list(match$att),
-      data = data,
-      covariates = if (!is.null(covariates)) c(covariates, outcome) else outcome
-    )
-    # Close the pdf file
-    dev.off()
-    
-    # Create covariate balance before treatment
-    message(paste("Analyze covariate balance before treatment"))
-    
-    
-    # Note that this includes covariates as well as outcome
-    cb <- as_tibble(
-      get_covariate_balance(
-        match$att,
-        data = data,
-        covariates = c(covariates, outcome),
-        plot = FALSE
-      ),
-      rownames = "t"
-    ) |>
-      pivot_longer(
-        cols = c(covariates, outcome),
-        names_to = "covariate",
-        values_to = "covbal"
-      ) |>
-      mutate(
-        t = as.integer(str_replace(t, "t_", "-")),
+      match <- PanelMatch(
+        lag = lag,
+        time.id = time_id,
+        unit.id = unit_id,
+        covs.formula = as.formula(paste("~", paste(c(covariates, outcome), collapse = " + "))),
         treatment = treatment,
-        outcome = outcome
+        refinement.method = refinement.method,
+        data = data,
+        match.missing = TRUE,
+        qoi = "att",
+        outcome.var = outcome,
+        lead = lead,
+        forbid.treatment.reversal = forbid_treatment_reversal,
+        placebo.test = FALSE
       )
-    
-    # cb df
-    covariate_balance_df <- rbind(covariate_balance_df, cb)
-    
-    # Create Covariance Balance Plot
-    # Create a named color vector where the outcome is "black" and all other covariates are "grey"
-    all_vars <- c(covariates, outcome)
-    color_mapping <-
-      setNames(rep("grey", length(all_vars)), all_vars)
-    color_mapping[outcome] <- "black"
-    
-    # Plot
-    cb_plot <- cb |>
-      ggplot(aes(x = t, y = covbal, color = covariate)) +
-      geom_line() +
-      scale_color_manual(values = color_mapping) +
-      geom_hline(yintercept = 0, linetype = "dotted") +
-      geom_vline(xintercept = -1, linetype = "dashed") +
-      scale_x_continuous(breaks = scales::breaks_extended(n = lag)) +
-      scale_y_continuous(limits = c(-.5, .5)) +
-      theme_vincent() +
-      theme(
-        legend.position = "none"
-      ) +
-      labs(y = "Standardized Mean Difference of Covariates", x = "Time periods relative to administration of treatment")
-    
-    # Save
-    ggsave(
-      filename = paste0(treatment, "_", outcome, "_cb_pre.pdf"),
-      plot = cb_plot,
-      path = figure_path,
-      height = covariate_balance_height,
-      width = covariate_balance_width
-    )
-    
-    
+      
+      # Create a scatter plot to analyze covariate balance
+      message(paste("Create a scatter plot to analyze covariate balance"))
+      
+      pdf(paste0(figure_path,
+                 treatment,
+                 "_",
+                 outcome,
+                 "_cb_scat.pdf"))
+      
+      balance_scatter(
+        matched_set_list = list(match$att),
+        data = data,
+        covariates = if (!is.null(covariates)) c(covariates, outcome) else outcome
+      )
+      # Close the pdf file
+      dev.off()
+      
+      # Create covariate balance before treatment
+      message(paste("Analyze covariate balance before treatment"))
+      
+      
+      # Note that this includes covariates as well as outcome
+      cb <- as_tibble(
+        get_covariate_balance(
+          match$att,
+          data = data,
+          covariates = c(covariates, outcome),
+          plot = FALSE
+        ),
+        rownames = "t"
+      ) |>
+        pivot_longer(
+          cols = c(covariates, outcome),
+          names_to = "covariate",
+          values_to = "covbal"
+        ) |>
+        mutate(
+          t = as.integer(str_replace(t, "t_", "-")),
+          treatment = treatment,
+          outcome = outcome
+        )
+      
+      # cb df
+      covariate_balance_df <- rbind(covariate_balance_df, cb)
+      
+      # Create Covariance Balance Plot
+      # Create a named color vector where the outcome is "black" and all other covariates are "grey"
+      all_vars <- c(covariates, outcome)
+      color_mapping <-
+        setNames(rep("grey", length(all_vars)), all_vars)
+      color_mapping[outcome] <- "black"
+      
+      # Plot
+      cb_plot <- cb |>
+        ggplot(aes(x = t, y = covbal, color = covariate)) +
+        geom_line() +
+        scale_color_manual(values = color_mapping) +
+        geom_hline(yintercept = 0, linetype = "dotted") +
+        geom_vline(xintercept = -1, linetype = "dashed") +
+        scale_x_continuous(breaks = scales::breaks_extended(n = lag)) +
+        scale_y_continuous(limits = c(-.5, .5)) +
+        theme_vincent() +
+        theme(
+          legend.position = "none"
+        ) +
+        labs(y = "Standardized Mean Difference of Covariates", x = "Time periods relative to administration of treatment")
+      
+      # Save
+      ggsave(
+        filename = paste0(treatment, "_", outcome, "_cb_pre.pdf"),
+        plot = cb_plot,
+        path = figure_path,
+        height = covariate_balance_height,
+        width = covariate_balance_width
+      )
+      
+      
     }
     
-    # Create matched set
-    message(paste("Create matched set for ATT & placebo without lagged outcome"))
+    # Create matched set for ATT & placebo
+    message(paste("Create matched set for ATT & placebo"))
     
-    if (!is.null(covariates)) {
-      cov_formula <- as.formula(paste("~", paste(covariates, collapse = " + ")))
-      match_formula <- as.formula(paste("~", paste(covariates, collapse = " + ")))
+    # Create formula only if covariates exist
+    covs_formula <- if (!is.null(covariates) && length(covariates) > 0) {
+      as.formula(paste("~", paste(covariates, collapse = " + ")))
     } else {
-      cov_formula <- as.formula("~ 1")
-      match_formula <- as.formula("~ 1")
+      NULL
     }
     
     match <- PanelMatch(
       lag = lag,
       time.id = time_id,
       unit.id = unit_id,
-      covs.formula = match_formula,
+      covs.formula = covs_formula,  # Use the safely created formula
       treatment = treatment,
       refinement.method = refinement.method,
       data = data,

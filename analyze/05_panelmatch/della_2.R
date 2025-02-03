@@ -223,29 +223,31 @@ df_pm <- df_pm %>%
 
 ## Create empty dataframes for results -------------------------------------
 
-# Create an empty dataframe to store the results
-results_df <- data.frame(
-  treatment = character(),
-  outcome = character(),
-  t = numeric(),
-  estimate = numeric(),
-  conf.low = numeric(),
-  conf.high = numeric(),
-  conf.low90 = numeric(),
-  conf.high90 = numeric(),
-  stringsAsFactors = FALSE
-)
+# Initialize empty dataframes if they don't exist
+if (!exists("results_df")) {
+  results_df <- data.frame(
+    treatment = character(),
+    outcome = character(),
+    t = numeric(),
+    estimate = numeric(),
+    conf.low = numeric(),
+    conf.high = numeric(),
+    conf.low90 = numeric(),
+    conf.high90 = numeric(),
+    stringsAsFactors = FALSE
+  )
+}
 
-# Create an empty dataframe to store covariate balances
-covariate_balance_df <- data.frame(
-  treatment = character(),
-  outcome = character(),
-  t = numeric(),
-  covariate = character(),
-  covbal = numeric(),
-  model = character(),
-  stringsAsFactors = FALSE
-)
+if (!exists("covariate_balance_df")) {
+  covariate_balance_df <- data.frame(
+    treatment = character(),
+    outcome = character(),
+    t = numeric(),
+    covariate = character(),
+    covbal = numeric(),
+    stringsAsFactors = FALSE
+  )
+}
 
 
 # Define treatments, outcomes, covariates ---------------------------------
@@ -254,28 +256,28 @@ covariate_balance_df <- data.frame(
 
 # Define treatments, outcomes, and covariates
 treatments <- c(
-  "treat_op_median",
-  "treat_rg_median",
-  "treat_ph_median",
-  "treat_op_increase",
-  "treat_op_100per",
-  "treat_op_200per" ,
-  "treat_rg_increase",
-  "treat_rg_100per",
-  "treat_rg_200per",
-  "treat_ph_increase",
-  "treat_ph_100per",
-  "treat_ph_200per"
+  "treat_op_median" # ,
+  # "treat_rg_median",
+  # "treat_ph_median",
+  # "treat_op_increase",
+  # "treat_op_100per",
+  # "treat_op_200per" ,
+  # "treat_rg_increase",
+  # "treat_rg_100per",
+  # "treat_rg_200per",
+  # "treat_ph_increase",
+  # "treat_ph_100per",
+  # "treat_ph_200per"
 )
 
 outcomes <- c(
-  "CLI",
+  # "CLI",
   "log_CLI_amount"
 )
 
-covariates <- c(
-  "ebit_cat", "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
-)
+# covariates <- c(
+# "ebit_cat", "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
+# )
 
 # # number of missingness in the covariates
 # missing <- df_pm |>
@@ -328,7 +330,8 @@ rm(list=setdiff(ls(), c("df_pm", "treatments", "outcomes", "covariates", "figure
 gc()
 
 # Keep as data.frame but remove unnecessary columns
-data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes, covariates)])
+data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes #, covariates
+                                )])
 rm(df_pm)
 gc()
 
@@ -346,29 +349,29 @@ for (treatment in treatments) {
   # Clear memory at start of each iteration
   gc()
   
-  # Visualize Treatment Distribution
-  treatment_hist <- DisplayTreatment(
-    unit.id = unit_id,
-    time.id = time_id,
-    legend.position = "bottom",
-    xlab = "Wave",
-    ylab = "ID",
-    title = "",
-    treatment = treatment,
-    data = data,
-    hide.y.tick.label = TRUE,
-    dense.plot = TRUE
-  )
-  
-  # Save and clear plot from memory
-  ggsave(
-    filename = paste0(treatment, "_hist.pdf"),
-    plot = treatment_hist,
-    path = figure_path,
-    height = 8, width = 8
-  )
-  rm(treatment_hist)
-  gc()
+  # # Visualize Treatment Distribution
+  # treatment_hist <- DisplayTreatment(
+  #   unit.id = unit_id,
+  #   time.id = time_id,
+  #   legend.position = "bottom",
+  #   xlab = "Wave",
+  #   ylab = "ID",
+  #   title = "",
+  #   treatment = treatment,
+  #   data = data,
+  #   hide.y.tick.label = TRUE,
+  #   dense.plot = TRUE
+  # )
+  # 
+  # # Save and clear plot from memory
+  # ggsave(
+  #   filename = paste0(treatment, "_hist.pdf"),
+  #   plot = treatment_hist,
+  #   path = figure_path,
+  #   height = 8, width = 8
+  # )
+  # rm(treatment_hist)
+  # gc()
   
   for (outcome in outcomes) {
     message(paste("Running analysis for treatment:", treatment, " and outcome:", outcome))
