@@ -15,7 +15,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 
 # Rename fixed effects variables
 df <- df |>
@@ -242,6 +242,8 @@ modelsummary(
 
 ## OLS Occurrence - Targets --------------------------------------------------------
 
+df$CLI_CONG_quarter <- (df$CLI_HOUS_quarter + df$CLI_SEN_quarter > 0) * 1
+
 models <- list(
   "EPA" = feols(CLI_EPA_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
   "DOE" = feols(CLI_DOE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df),
@@ -257,7 +259,7 @@ models <- list(
   "WTHS" = feols(CLI_WTHS_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION_NEW.RData")
 
 ## OLS Amount - Targets --------------------------------------------------------
 
@@ -278,7 +280,7 @@ models <- list(
   "WTHS" = feols(log(CLI_WTHS_amount_quarter+1) ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
 
 ### END

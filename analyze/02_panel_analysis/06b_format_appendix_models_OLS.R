@@ -132,7 +132,7 @@ process_stata <- function(output, colnum, type) {
 
 ## Main OLS ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 o_q_iy <- models[[5]] #Column 5 - main result for firm-quarter panel, industry-by-year FE
 
 o_q_iy_ready <- c(o_q_iy$coefficients["op_expo_ew"], o_q_iy$se["op_expo_ew"],
@@ -249,7 +249,7 @@ o_q_risk_iy_out <- c(`Num. Obs.` = o_q_risk_iy_N,
 
 ## Occ: Interact ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_REVISION_NEW.RData")
 
 o_q_iy_intr <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
@@ -284,7 +284,7 @@ o_q_iy_intr_out <- c(`Num. Obs.` = o_q_iy_intr_N,
 
 ## Occ: Lagged DV ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RData")
 
 o_q_iy_ldv <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
@@ -317,7 +317,7 @@ o_q_iy_ldv_out <- c(`Num. Obs.` = o_q_iy_ldv_N,
 
 ## Occ: Congress Target OLS ------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION_NEW.RData")
 
 o_q_iy_cong <- models[["CONG"]]
 
@@ -419,7 +419,7 @@ o_q_iy_doe_out <- c(`Num. Obs.` = o_q_iy_doe_N,
 
 ## Amt: Main OLS ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 o_q_iy_amt <- models[[5]] #Column 5 - main result for firm-quarter panel, industry-by-year FE
 
 o_q_iy_amt_ready <- c(o_q_iy_amt$coefficients["op_expo_ew"], o_q_iy_amt$se["op_expo_ew"],
@@ -536,7 +536,7 @@ o_q_risk_iy_amt_out <- c(`Num. Obs.` = o_q_risk_iy_amt_N,
 
 ## Amt: Interact ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_interaction_amount_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_interaction_amount_MODELS_REVISION_NEW.RData")
 
 o_q_iy_amt_intr <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
@@ -571,7 +571,7 @@ o_q_iy_amt_intr_out <- c(`Num. Obs.` = o_q_iy_amt_intr_N,
 
 ## Amt: Lagged DV ---------------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION_NEW.RData")
 
 o_q_iy_amt_ldv <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
@@ -604,7 +604,7 @@ o_q_iy_amt_ldv_out <- c(`Num. Obs.` = o_q_iy_amt_ldv_N,
 
 ## Amt: Congress Target ---------------------------------------------
 
-load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION.RData")
+load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
 o_q_iy_amt_cong <- models[["CONG"]] #Column 5 - industry-by-year FE with interactions
 
@@ -797,7 +797,7 @@ names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.",
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
-             ,output="results/tables/appendix_table_test_ols.tex"
+             ,output="results/tables/appendix_table_test_ols_NEW.tex"
 )
 
 

@@ -15,7 +15,22 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+
+df_old <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+compare <- function(varname) {
+  m1 <- round(mean(df[which(df$year<2020) , varname], na.rm=T), 5)
+  m2 <- round(mean(df_old[which(df_old$year<2020) , varname], na.rm=T), 5)
+  s1 <- round(sd(df[which(df$year<2020) , varname], na.rm=T), 5)
+  s2 <- round(sd(df_old[which(df_old$year<2020) , varname], na.rm=T), 5)
+  return(cat(i, "\n", sprintf("Old df: mean = %s SD = %s \nNew df: mean = %s SD = %s", m2, s2, m1, s1), "\n"))
+}
+
+for(i in grep("CLI_", names(df), value=T)) {print(compare(i))}
+## Significant diffs for EPA
+## Add SPO to the data
+## Significant diffs for NOAA
+## Significant diffs for a few others, but not to the degree of implausibility
 
 # Rename fixed effects variables
 df <- df |>
@@ -173,7 +188,7 @@ models <- list(
   "(10)" = feglm(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -283,7 +298,7 @@ models <- list(
   "(9)" = feglm(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_logit_qrt_bycomponent_interactions_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_interactions_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -375,7 +390,7 @@ models <- list(
   "(7)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, family = "binomial", df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_logit_qrt_bycomponent_laggeddv_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -471,7 +486,7 @@ models <- list(
   "(10)" = feols(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -586,7 +601,7 @@ models <- list(
   "(9)" = feols(CLI ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -678,7 +693,7 @@ models <- list(
   "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RData")
 
 
 ### Get all adjusted pseudo R2
@@ -773,7 +788,7 @@ models <- list(
   "(10)" = feols(log_CLI_amount ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 
 ### Get all adjusted pseudo R2
 adjusted_r2_df <- data.frame(
@@ -888,7 +903,7 @@ models <- list(
   "(9)" = feols(log_CLI_amount ~ op_expo_ew*rg_expo_ew + op_expo_ew*ph_expo_ew + rg_expo_ew*ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_amount_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_amount_MODELS_REVISION_NEW.RData")
 
 
 ### Get all adjusted pseudo R2
@@ -981,7 +996,7 @@ models <- list(
   "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION_NEW.RData")
 
 
 ### Get all adjusted pseudo R2
@@ -1076,7 +1091,7 @@ models <- list(
   "(4)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, df, vcov = ~ Year + Firm)
 )
 
-save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION.RData")
+save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
 
 

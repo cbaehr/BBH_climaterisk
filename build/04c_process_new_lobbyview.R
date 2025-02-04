@@ -256,20 +256,29 @@ lobbying_firmyear$CLI_q4 <- mapply(FUN = function(x1, x2) {any(x1 & x2)}, climat
 
 
 
-gov_entity_split <- lapply(lobbying_firmyear$gov_entity, FUN = function(x) strsplit(x, "\\|")[[1]])
+gov_entity_split <- lapply(toupper(lobbying_firmyear$gov_entity), FUN = function(x) strsplit(x, "\\|")[[1]])
+
+test <- strsplit(unlist(gov_entity_split), ";")
+test <- unlist(test)
+sort(unique(test))
+
+View(lobbying_firmyear[which(lobbying_firmyear$lob_id=="f55a30bb-9185-58ae-981a-36d39d6d3406") , ])
+test2 <- lobbying_firmyear$gov_entity[which(lobbying_firmyear$lob_id=="f55a30bb-9185-58ae-981a-36d39d6d3406") ]
+
+grep("ENVIRONMENTAL PROTECTION AGENCY", toupper(test2))
 
 # define the set of relevant agencies
-agencies <- c(DOE="DEPARTMENT OF ENERGY",
+agencies <- c(DOE="ENERGY, DEPT OF",
               EPA="ENVIRONMENTAL PROTECTION AGENCY",
               FEMA="FEDERAL EMERGENCY MANAGEMENT AGENCY",
               COEQ="COUNCIL ON ENVIRONMENTAL QUALITY",
-              DOT="DEPARTMENT OF TRANSPORTATION",
-              DOTY="DEPARTMENT OF THE TREASURY",
-              DOA="DEPARTMENT OF AGRICULTURE",
-              NOAA="NATIONAL OCEANIC AND ATMOSPHERIC ADMINISTRATION",
-              HOUS="HOUSE",
+              DOT="TRANSPORTATION, DEPT OF",
+              DOTY="TREASURY, DEPT OF",
+              DOA="AGRICULTURE, DEPT OF",
+              NOAA="NATL OCEANIC & ATMOSPHERIC ADMINISTRATION",
+              HOUS="HOUSE OF REPRESENTATIVES",
               SEN="SENATE",
-              WTHS="WHITE HOUSE")
+              WTHS="WHITE HOUSE OFFICE")
 
 # looping through agencies to build agency specific lobbying dummies by year/quarter
 for(i in 1:length(agencies)) {
