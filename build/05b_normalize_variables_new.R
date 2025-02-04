@@ -53,7 +53,7 @@ additional_vars <- c("ebit", "ebit_at", "us_dummy", "total_lobby_quarter")
 
 # Standardize and create new columns with '_scaled' suffix
 for (var in additional_vars) {
-  df[[paste0(var, "_scaled")]] <- scale(df[[var]], center = TRUE, scale = TRUE)
+  df[[paste0(var, "_scaled")]] <- as.numeric(scale(df[[var]], center = TRUE, scale = TRUE))
 }
 
 # check
