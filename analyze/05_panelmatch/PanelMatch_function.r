@@ -41,7 +41,7 @@ run_panelmatch <- function(data,
                            placebo_iterations = 100,
                            se_method = "conditional",
                            cb_plots = FALSE
-                           ) {
+) {
   tryCatch({
     # Create scatterplot if requested
     if (cb_plots == TRUE && !is.null(covariates)) {  # Only do covariate balance plots if covariates exist
@@ -146,28 +146,38 @@ run_panelmatch <- function(data,
     # Create matched set for ATT & placebo
     message(paste("Create matched set for ATT & placebo"))
     
-    # Create formula only if covariates exist
-    covs_formula <- if (!is.null(covariates) && length(covariates) > 0) {
-      as.formula(paste("~", paste(covariates, collapse = " + ")))
+    if (!is.null(covariates) && length(covariates) > 0) {
+      match <- PanelMatch(
+        lag = lag,
+        time.id = time_id,
+        unit.id = unit_id,
+        covs.formula = as.formula(paste("~", paste(covariates, collapse = " + "))),
+        treatment = treatment,
+        refinement.method = refinement.method,
+        data = data,
+        match.missing = TRUE,
+        qoi = "att",
+        outcome.var = outcome,
+        lead = lead,
+        forbid.treatment.reversal = forbid_treatment_reversal,
+        placebo.test = TRUE
+      )
     } else {
-      NULL
+      match <- PanelMatch(
+        lag = lag,
+        time.id = time_id,
+        unit.id = unit_id,
+        treatment = treatment,
+        refinement.method = refinement.method,
+        data = data,
+        match.missing = TRUE,
+        qoi = "att",
+        outcome.var = outcome,
+        lead = lead,
+        forbid.treatment.reversal = forbid_treatment_reversal,
+        placebo.test = TRUE
+      )
     }
-    
-    match <- PanelMatch(
-      lag = lag,
-      time.id = time_id,
-      unit.id = unit_id,
-      covs.formula = covs_formula,  # Use the safely created formula
-      treatment = treatment,
-      refinement.method = refinement.method,
-      data = data,
-      match.missing = TRUE,
-      qoi = "att",
-      outcome.var = outcome,
-      lead = lead,
-      forbid.treatment.reversal = forbid_treatment_reversal,
-      placebo.test = TRUE
-    )
     
     
     # Estimate ATT
@@ -231,7 +241,7 @@ run_panelmatch <- function(data,
     
     # Bind with tmp_results
     tmp_results <- rbind(tmp_results, placebo_df |> mutate(treatment = treatment, outcome = outcome))
-  
+    
     # Add these results to the overall dataframe
     results_df <- rbind(results_df, tmp_results)
     

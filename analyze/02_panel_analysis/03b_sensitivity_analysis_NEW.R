@@ -17,7 +17,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
-df_old <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
+
+# df_old <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 
 names(df)
 
@@ -56,7 +57,7 @@ df <- df |>
   arrange(yearqtr) |>
   # for one year
   mutate(#log_co2_l1 = lag(log_co2, 1),
-    total_lobby_l1 = lag(total_lobby_quarter_scaled, 1)) |>
+    CLI_lag = lag(CLI, 1)) |>
   #ungroup
   ungroup()
 
@@ -94,7 +95,7 @@ df$`Total Lobbying`<- df$total_lobby_quarter_scaled
 
 df$CLI <- as.numeric(df$CLI_quarter)
 
-m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at_scaled + us_dummy_scaled + `Total Lobbying` | industry_year, df, vcov = ~ yearqtr + isin)
+m_occurrence <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at_scaled + us_dummy_scaled + `Total Lobbying` | industry_year, df, vcov = ~ year + isin)
 
 # Opportunity
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_occurrence_op_qty.pdf", width = 6, height = 6)
@@ -146,7 +147,7 @@ dev.off()
 
 # Amount --------------------------------------------------------------
 
-m_amount <- feols(CLI_amount_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + `Total Lobbying` | year + industry + industry_year, df, vcov = ~ year + isin)
+m_amount <- feols(CLI_amount_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit_at_scaled + us_dummy_scaled + `Total Lobbying` | industry_year, df, vcov = ~ year + isin)
 
 # Opportunity
 pdf("~/Dropbox (Princeton)/BBH/BBH1/results/Figures/sensitivity/sensitivity_plots_amount_op_qrt.pdf", width = 6, height = 6)
@@ -197,76 +198,38 @@ plot(
 dev.off()
 
 
+# 1. Start with minimal reporting as recommended by Cinelli & Hazlett
+sensitivity_results <- sensemakr(model = m_occurrence,
+                                treatment = "op_expo_ew",
+                                benchmark_covariates = c("rg_expo_ew", "ph_expo_ew", "ebit_at_scaled", "us_dummy_scaled"),
+                                kd = 1:5) # Test up to 5x stronger confounders
 
-# Enhanced Sensitivity Analysis ----------------------------------------------
+# Get standardized reporting table
+ovb_minimal_reporting(sensitivity_results, format = "latex")
 
-glimpse(df)
+# 2. Add benchmark analysis using observed covariates
+# This helps contextualize the robustness values by comparing to known confounders
+benchmark_out <- ovb_bounds(model = m_occurrence,
+                           treatment = "op_expo_ew",
+                           benchmark_covariates = c("rg_expo_ew", "ph_expo_ew", "ebit_at_scaled", "us_dummy_scaled"),
+                           kd = 1:5)
 
-# Create lagged DV
-df <- df %>%
-  group_by(isin) %>%
-  arrange(year, report_quarter_code) %>%
-  mutate(
-    CLI_lag = lag(CLI),
-    CLI_amount_lag = lag(CLI_amount_quarter)
-  ) %>%
-  ungroup()
+# 3. Create contour plots showing both point estimates and t-values
+plot1 <- plot(sensitivity_results) # Point estimates
+plot2 <- plot(sensitivity_results, sensitivity.of = "t-value") # Statistical significance
 
-# Models with lagged DV
-m_occurrence_lag <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + CLI_lag + 
-                         ebit + ebit_at + us_dummy + `Total Lobbying` | 
-                         industry_year, df, vcov = ~ year + isin)
+# 4. Examine extreme scenarios
+plot3 <- plot(sensitivity_results, 
+             type = "extreme",
+             r2yz.dx = c(1, .75, .5, .25)) # Test multiple strength levels
 
-m_amount_lag <- feols(CLI_amount_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + 
-                     CLI_amount_lag + ebit + ebit_at + us_dummy + `Total Lobbying` | 
-                     year + industry + industry_year, df, vcov = ~ year + isin)
-
-# Minimal reporting for main results
-cat("\nMinimal Sensitivity Reporting - Occurrence Model:\n")
-ovb_minimal_reporting(m_occurrence, treatment = "op_expo_ew")
-ovb_minimal_reporting(m_occurrence, treatment = "rg_expo_ew")
-ovb_minimal_reporting(m_occurrence, treatment = "ph_expo_ew")
-
-cat("\nMinimal Sensitivity Reporting - Amount Model:\n")
-ovb_minimal_reporting(m_amount, treatment = "op_expo_ew")
-ovb_minimal_reporting(m_amount, treatment = "rg_expo_ew")
-ovb_minimal_reporting(m_amount, treatment = "ph_expo_ew")
-
-# Compare relative strength of confounders
-# For occurrence model
-occurrence_sensitivity <- sensemakr(m_occurrence,
-                                  treatment = "op_expo_ew",
-                                  benchmark_covariates = c("`Total Lobbying`", "CLI_lag", "ebit"),
-                                  kd = 1:3)
-
-# For amount model
-amount_sensitivity <- sensemakr(m_amount,
-                              treatment = "op_expo_ew",
-                              benchmark_covariates = c("`Total Lobbying`", "CLI_amount_lag", "ebit"),
-                              kd = 1:3)
-
-# Create plots comparing strength of observed confounders to robustness values
-pdf("results/Figures/sensitivity/sensitivity_benchmark_occurrence.pdf", width = 8, height = 6)
-plot(occurrence_sensitivity, type = "extreme", cex.lab = 1)
-dev.off()
-
-pdf("results/Figures/sensitivity/sensitivity_benchmark_amount.pdf", width = 8, height = 6)
-plot(amount_sensitivity, type = "extreme", cex.lab = 1)
-dev.off()
-
-# Contour plots showing joint confounding
-pdf("results/Figures/sensitivity/contour_occurrence.pdf", width = 8, height = 6)
-ovb_contour_plot(m_occurrence, treatment = "op_expo_ew",
-                 benchmark_covariates = c("`Total Lobbying`", "CLI_lag"),
-                 r2dz.x = seq(0, 0.4, 0.05),
-                 r2yz.dx = seq(0, 0.4, 0.05))
-dev.off()
-
-pdf("results/Figures/sensitivity/contour_amount.pdf", width = 8, height = 6)
-ovb_contour_plot(m_amount, treatment = "op_expo_ew",
-                 benchmark_covariates = c("`Total Lobbying`", "CLI_amount_lag"),
-                 r2dz.x = seq(0, 0.4, 0.05),
-                 r2yz.dx = seq(0, 0.4, 0.05))
-dev.off()
+# 5. Add verbal interpretation discussing:
+# - How the robustness values compare to observed benchmarks
+# - Why confounders of the required strength are unlikely given:
+#   a) Theoretical mechanisms
+#   b) Prior literature
+#   c) Data collection process
+#   d) Institutional context
+#   e) Comparison to observed variable strengths
 
 # END

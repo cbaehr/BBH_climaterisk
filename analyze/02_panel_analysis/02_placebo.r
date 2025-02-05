@@ -5,7 +5,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, haschaR, broom, fixest, readxl, kableExtra)
+pacman::p_load(data.table, tidyverse, haschaR, broom, fixest, readxl, kableExtra, equivtest)
 
 # prevent scientific notation
 options(scipen = 999)
@@ -565,10 +565,198 @@ ggsave("results/figures/regressions/placebos_sample.pdf", width = 8, height = 4)
 
 codes <- read_excel("data/01_raw/lobbyview/lobbying_issue_codes.xlsx")
 
+nrow(codes)
+
 codes |> kbl(format = "latex", booktabs = T, longtable = T,
              caption = "Lobbying Report Issue Codes") |> 
   save_kable("data/01_raw/lobbyview/lobbying_issue_codes.tex")
 
+# Create simple text combining issue codes and descriptions
+codes |>
+  mutate(
+    Description = str_replace_all(Description, "&", "\\\\&"),
+    Description = str_replace_all(Description, "/", " / "),
+    combined_text = paste0(Code, " = ", Description)
+  ) |>
+  pull(combined_text) |>
+  paste(collapse = ", ") |>
+  cat()
+
+
+
+
+# Equivalence testing -----------------------------------------------------
+
+# Load data
+df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
+
+names(df)
+
+?equiv.t.test
+
+# Function to run TOST for each exposure type and issue
+run_tost_analysis <- function(data, dv, exposures = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), 
+                            eps_sub = 0.1, alpha = 0.05) {
+  
+  results <- data.frame()
+  
+  for(exposure in exposures) {
+    # Get treatment and control groups based on exposure within industry-quarter groups
+    grouped_data <- data %>%
+      group_by(industry, yearqtr) %>%
+      mutate(
+        exposure_group = ifelse(!!sym(exposure) > median(!!sym(exposure), na.rm = TRUE), 
+                              "high", "low")
+      ) %>%
+      ungroup()
+    
+    # Split into high and low exposure groups
+    high_exposure <- grouped_data %>% 
+      filter(exposure_group == "high") %>% 
+      pull(!!sym(dv))
+    
+    low_exposure <- grouped_data %>% 
+      filter(exposure_group == "low") %>% 
+      pull(!!sym(dv))
+    
+    # Skip if either group is empty
+    if(length(high_exposure) == 0 || length(low_exposure) == 0) {
+      results <- rbind(results, data.frame(
+        issue = dv,
+        exposure = exposure,
+        rejected_null = NA,
+        lower_t = NA,
+        upper_t = NA,
+        stringsAsFactors = FALSE
+      ))
+      next
+    }
+    
+    # Run TOST
+    tost_result <- try(tost(high_exposure, low_exposure, eps_sub = eps_sub, alpha = alpha), silent = TRUE)
+    
+    if(inherits(tost_result, "try-error")) {
+      # If test fails, add row with NAs
+      results <- rbind(results, data.frame(
+        issue = dv,
+        exposure = exposure,
+        rejected_null = NA,
+        lower_t = NA,
+        upper_t = NA,
+        stringsAsFactors = FALSE
+      ))
+    } else {
+      # If test succeeds, add results
+      results <- rbind(results, data.frame(
+        issue = dv,
+        exposure = exposure,
+        rejected_null = tost_result$reject,
+        lower_t = tost_result$t.lower,
+        upper_t = tost_result$t.upper,
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+  
+  return(results)
+}
+
+# For occurrence
+# Get all issue variables (CLI_*_quarter)
+occurrence_vars <- names(df)[grep("^CLI_.*_quarter$", names(df))]
+occurrence_vars <- occurrence_vars[!occurrence_vars %in% 
+                                 c("CLI_CAW_quarter", "CLI_ENV_quarter", "CLI_ENG_quarter", 
+                                   "CLI_FUE_quarter", "CLI_NA_quarter", "CLI_REL_quarter")]
+
+# Run TOST for each occurrence variable
+occurrence_results <- do.call(rbind, lapply(occurrence_vars, function(x) {
+  run_tost_analysis(df, x)
+}))
+
+# For expenditure
+# Get all amount variables (amount_num_*)
+expenditure_vars <- names(df)[grep("^amount_num_", names(df))]
+expenditure_vars <- expenditure_vars[!expenditure_vars %in% 
+                                   c("amount_num_CAW", "amount_num_ENV", "amount_num_ENG", 
+                                     "amount_num_FUE", "amount_num_REL")]
+
+# Run TOST for each expenditure variable
+expenditure_results <- do.call(rbind, lapply(expenditure_vars, function(x) {
+  run_tost_analysis(df, x)
+}))
+
+# Combine results
+all_results <- rbind(
+  cbind(occurrence_results, type = "Occurrence"),
+  cbind(expenditure_results, type = "Expenditure")
+)
+
+# Clean up issue codes
+all_results <- all_results %>%
+  mutate(
+    issue = str_remove(issue, "CLI_"),
+    issue = str_remove(issue, "_quarter"),
+    issue = str_remove(issue, "amount_num_"),
+    exposure = case_when(
+      exposure == "op_expo_ew" ~ "Opportunity",
+      exposure == "rg_expo_ew" ~ "Regulatory",
+      exposure == "ph_expo_ew" ~ "Physical"
+    )
+  )
+
+# Save results
+fwrite(all_results, "results/Tables/equivalence_test_results.csv")
+
+# Create summary visualization
+ggplot(all_results, aes(x = exposure, y = issue, fill = rejected_null)) +
+  facet_wrap(~type) +
+  geom_tile() +
+  scale_fill_manual(values = c("white", "red"), 
+                    labels = c("Not Equivalent", "Equivalent")) +
+  labs(x = "Exposure Type", y = "Issue", fill = "Test Result") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("results/figures/regressions/equivalence_tests.pdf", width = 10, height = 12)
 
 
 ### END
+
+# Test run for a single exposure and outcome
+test_exposure <- "op_expo_ew"
+test_outcome <- "CLI_CON_quarter"  # Using Homeland Security as test placebo
+
+# Group data and create exposure groups
+test_grouped <- df %>%
+  group_by(industry, yearqtr) %>%
+  mutate(
+    exposure_group = ifelse(!!sym(test_exposure) > median(!!sym(test_exposure), na.rm = TRUE), 
+                          "high", "low")
+  ) %>%
+  ungroup()
+
+# Split into high and low exposure groups
+high_exposure <- test_grouped %>% 
+  filter(exposure_group == "high") %>% 
+  pull(!!sym(test_outcome))
+
+low_exposure <- test_grouped %>% 
+  filter(exposure_group == "low") %>% 
+  pull(!!sym(test_outcome))
+
+# Print summary statistics
+print("Summary of test groups:")
+print(paste("High exposure group n:", length(high_exposure)))
+print(paste("Low exposure group n:", length(low_exposure)))
+print(paste("High exposure mean:", mean(high_exposure, na.rm = TRUE)))
+print(paste("Low exposure mean:", mean(low_exposure, na.rm = TRUE)))
+
+# Run 
+# ?equiv.t.test
+test_equiv <- equiv.t.test(high_exposure, low_exposure, eps_tol = "strict", alpha = 0.05)
+summary(test_equiv)
+
+
+# Print results
+print("TOST results:")
+print(test_tost)
