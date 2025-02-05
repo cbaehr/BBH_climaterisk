@@ -18,6 +18,10 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 
 df_old <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+
+names(df)
+names(df_old)
+
 compare <- function(varname) {
   m1 <- round(mean(df[which(df$year<2020) , varname], na.rm=T), 5)
   m2 <- round(mean(df_old[which(df_old$year<2020) , varname], na.rm=T), 5)

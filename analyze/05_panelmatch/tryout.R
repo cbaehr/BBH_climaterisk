@@ -5,6 +5,7 @@
 library(PanelMatch)
 library(tidyverse)
 library(data.table)
+library(stringr)
 
 # Source custom PanelMatch function
 source("code/PanelMatch_function.r")
@@ -275,9 +276,9 @@ outcomes <- c(
   "log_CLI_amount"
 )
 
-# covariates <- c(
-# "ebit_cat", "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
-# )
+covariates <- c(
+#"ebit_cat", "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
+)
 
 # # number of missingness in the covariates
 # missing <- df_pm |>
@@ -331,7 +332,7 @@ gc()
 
 # Keep as data.frame but remove unnecessary columns
 data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes #, covariates
-                                )])
+)])
 rm(df_pm)
 gc()
 
@@ -342,113 +343,162 @@ gc()
 data <- data |>
   mutate(across(where(is.numeric), as.integer))
 
-## Modified loop structure ------------------------------------------------
 
-# Run the function for all combinations of treatments and outcomes
-for (treatment in treatments) {
-  # Clear memory at start of each iteration
-  gc()
-  
-  # # Visualize Treatment Distribution
-  # treatment_hist <- DisplayTreatment(
-  #   unit.id = unit_id,
-  #   time.id = time_id,
-  #   legend.position = "bottom",
-  #   xlab = "Wave",
-  #   ylab = "ID",
-  #   title = "",
-  #   treatment = treatment,
-  #   data = data,
-  #   hide.y.tick.label = TRUE,
-  #   dense.plot = TRUE
-  # )
-  # 
-  # # Save and clear plot from memory
-  # ggsave(
-  #   filename = paste0(treatment, "_hist.pdf"),
-  #   plot = treatment_hist,
-  #   path = figure_path,
-  #   height = 8, width = 8
-  # )
-  # rm(treatment_hist)
-  # gc()
-  
-  for (outcome in outcomes) {
-    message(paste("Running analysis for treatment:", treatment, " and outcome:", outcome))
-    
-    # Save results incrementally after each iteration
-    tryCatch({
-      results <- run_panelmatch(
-        data, 
-        treatment,
-        outcome, 
-        # covariates, 
-        lag = lag, 
-        lead = lead, 
-        figure_path = figure_path, 
-        dataframes_path = dataframes_path
-      )
-      
-      # Immediately write results to disk using write.csv (base R) instead of fwrite
-      write.csv(results$results_df, 
-                file = paste0(dataframes_path, "panelmatch_results_", treatment, "_", outcome, ".csv"),
-                row.names = FALSE)
-      write.csv(results$covariate_balance_df, 
-                file = paste0(dataframes_path, "panelmatch_covbal_", treatment, "_", outcome, ".csv"),
-                row.names = FALSE)
-      
-      # Clear results from memory
-      rm(results)
-      gc()
-      
-    }, error = function(e) {
-      message(paste("Error in iteration:", treatment, outcome))
-      message(e)
-    })
+# Theme
+theme_vincent <- function (fontsize = 15, facet_alt = F) {
+  th <- ggplot2::theme_bw() + ggplot2::theme(panel.grid.major = element_blank(), 
+                                             panel.grid.minor = element_blank(), text = element_text(size = fontsize))
+  if (facet_alt) {
+    th <- th + theme(strip.background = element_blank()) + 
+      theme(strip. = element_text(colour = "black"))
   }
+  th
+}
+    
+# Create matched set for ATT & placebo
+message(paste("Create matched set for ATT & placebo"))
+    
+# Create formula only if covariates exist
+covs_formula <- if (!is.null(covariates) && length(covariates) > 0) {
+  as.formula(paste("~", paste(covariates, collapse = " + ")))
+} else {
+  NULL
 }
 
-# After all iterations, combine the individual files
-results_files <- list.files(dataframes_path, pattern = "panelmatch_results_.*\\.csv$", full.names = TRUE)
-covbal_files <- list.files(dataframes_path, pattern = "panelmatch_covbal_.*\\.csv$", full.names = TRUE)
+refinement.method <- "CBPS.weight"
 
-# Read and combine files using base R
-results_df <- do.call(rbind, lapply(results_files, read.csv))
-covariate_balance_df <- do.call(rbind, lapply(covbal_files, read.csv))
+match <- PanelMatch(
+  lag = lag,
+  time.id = time_id,
+  unit.id = unit_id,
+  covs.formula = covs_formula,  # Use the safely created formula
+  treatment = treatments,
+  refinement.method = refinement.method,
+  data = data,
+  match.missing = TRUE,
+  qoi = "att",
+  outcome.var = outcomes,
+  lead = lead,
+  forbid.treatment.reversal = FALSE,
+  placebo.test = TRUE
+)
 
-# Write final combined results
-write.csv(results_df, file = paste0(dataframes_path, "panelmatch_results.csv"), row.names = FALSE)
-write.csv(covariate_balance_df, file = paste0(dataframes_path, "panelmatch_covariate_balance_df.csv"), row.names = FALSE)
 
+# Estimate ATT
+message(paste("Estimate ATT"))
 
+est <-
+  PanelEstimate(sets = match,
+                data = data,
+                se.method = se_method)
 
-# # inspect -----------------------------------------------------------------
-# match_formula <-
-#   as.formula(paste("~", paste(covariates, collapse = " + ")))
+# Extract relevant portions of the summary data frames for each lead
+summary_est <- summary(est)$summary
 
-# match <- PanelMatch(
-#   lag = lag,
-#   time.id = time_id,
-#   unit.id = unit_id,
-#   covs.formula = match_formula,
-#   treatment = "financial_units_1yr_h_units_abv_med1",
-#   refinement.method = "mahalanobis",
-#   data = data,
-#   match.missing = TRUE,
-#   qoi = "att",
-#   outcome.var = "fin_speech_share",
-#   lead = lead,
-#   forbid.treatment.reversal = FALSE,
-#   placebo.test = TRUE
+lead_rows <-
+  lead + 1  # Assuming leads start from 0 and the summary is indexed starting from 1
+tmp_results <- data.frame(
+  treatment = rep(treatment, length(lead)),
+  outcome = rep(outcome, length(lead)),
+  t = rep(lead, each = 1),
+  # Now dynamic
+  estimate = summary_est[lead_rows, 1],
+  conf.low = summary_est[lead_rows, 3],
+  conf.high = summary_est[lead_rows, 4],
+  # calculate 90% confidence intervals
+  conf.low90 = summary_est[lead_rows, 1] - summary_est[lead_rows, 2] * qnorm(0.95),
+  conf.high90 = summary_est[lead_rows, 1] + summary_est[lead_rows, 2] * qnorm(0.95),
+  stringsAsFactors = FALSE
+)
+
+# Estimate placebo ATT
+message(paste("Estimate placebo ATT"))
+
+placebo_df <- placebo_test(
+  pm.obj = match, data = data, 
+  se.method = se_method,
+  number.iterations = placebo_iterations, 
+  plot = FALSE)
+
+# # Bootstrap standard errors (function comes from https://github.com/insongkim/PanelMatch/blob/se_comparison/R/placebo_test.R)
+# colnames(placebo_df$bootstrapped.estimates) <- names(placebo_df$estimates)
+# ses <- apply(placebo_df$bootstrapped.estimates,  2,  sd, na.rm = TRUE)
+# placebo_df <- list(
+#   estimates = placebo_df$estimates,
+#   bootstrapped.estimates = placebo_df$bootstrapped.estimates,
+#   standard.errors = ses
 # )
 
-# match
+# Create data.frame for binding
+placebo_df <- data.frame(
+  t = c(-1, as.numeric(str_remove(names(placebo_df$estimates), "t"))),
+  estimate = c(0, placebo_df$estimates),
+  se = c(0, placebo_df$standard.errors),
+  conf.low = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.975)),
+  conf.high = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.975)),
+  conf.low90 = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.95)),
+  conf.high90 = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.95)),
+  stringsAsFactors = FALSE
+) |>
+  select(-se)
+rownames(placebo_df) <- NULL
 
-# balance_scatter(
-#   matched_set_list = list(match$att),
-#   data = data,
-#   covariates = c(covariates, outcome)
-# )
+# Bind with tmp_results
+tmp_results <- rbind(tmp_results, placebo_df |> mutate(treatment = treatment, outcome = outcome))
 
+# Add these results to the overall dataframe
+results_df <- rbind(results_df, tmp_results)
 
-### END
+# Plot results
+message(paste("Plot results"))
+
+plot_data <- data.frame(
+  t = lead,
+  estimate = summary_est[lead_rows, 1],
+  conf.low = summary_est[lead_rows, 3],
+  conf.high = summary_est[lead_rows, 4],
+  conf.low90 = summary_est[lead_rows, 1] - summary_est[lead_rows, 2] * qnorm(0.95),
+  conf.high90 = summary_est[lead_rows, 1] + summary_est[lead_rows, 2] * qnorm(0.95),
+  stringsAsFactors = FALSE
+) 
+
+# Bind with placebo
+plot_data <- rbind(plot_data, placebo_df)
+
+# Plotting...
+plot <- plot_data |>
+  ggplot(aes(x = t, y = estimate)) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "red",
+    linewidth = .25,
+    alpha = 0.75
+  ) +
+  geom_vline(
+    xintercept = -0.5,
+    linetype = "dashed",
+    color = "red",
+    linewidth = .25,
+    alpha = 0.75
+  ) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                width = 0,
+                linewidth = .5) +
+  geom_errorbar(aes(ymin = conf.low90, ymax = conf.high90),
+                width = 0,
+                linewidth = 1.25) +
+  labs(y = "ATT", x = "Relative Time") +
+  geom_point(aes(x = t, y = estimate), size = 2, shape = 21, fill = "white") +
+  # scale_x_continuous(breaks = lead) +
+  theme_vincent()
+
+# Save
+ggsave(
+  filename = paste0(treatment, "_", outcome, "_att.pdf"),
+  plot = plot,
+  path = figure_path,
+  width = 5,
+  height = 5.5
+)
+
