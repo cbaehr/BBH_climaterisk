@@ -37,11 +37,12 @@ lobby_report$report_quarter_code <- ifelse(lobby_report$filing_period_code=="H1"
 lobby_report$n_quarters <- str_count(as.character(lobby_report$report_quarter_code), "")
 
 lobby_issue_map <- fread("data/01_raw/lobbyview_20250103/issues_codebook/government_entity_mapping.csv")
+lobby_issue_map <- lobby_issue_map[!duplicated(lobby_issue_map) , ]
 
 process_entity <- function(ids) {
   a <- gsub("\\{|\\}", "", ids)
-  b <- strsplit(a, ",")[[1]]
-  c <- lobby_issue_map$government_entity_name[as.numeric(b)]
+  b <- as.numeric(strsplit(a, ",")[[1]])
+  c <- lobby_issue_map$government_entity_name[match(b, lobby_issue_map$government_entity_id)]
   d <- paste(c, collapse=";")
   return(d)
 }
