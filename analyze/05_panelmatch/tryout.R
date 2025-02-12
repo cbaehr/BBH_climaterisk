@@ -7,6 +7,8 @@ library(tidyverse)
 library(data.table)
 library(stringr)
 
+setwd("/scratch/gpfs/vh4264/bbh1")
+
 # Source custom PanelMatch function
 source("code/PanelMatch_function.r")
 
@@ -367,21 +369,38 @@ covs_formula <- if (!is.null(covariates) && length(covariates) > 0) {
 
 refinement.method <- "CBPS.weight"
 
-match <- PanelMatch(
-  lag = lag,
-  time.id = time_id,
-  unit.id = unit_id,
-  covs.formula = covs_formula,  # Use the safely created formula
-  treatment = treatments,
-  refinement.method = refinement.method,
-  data = data,
-  match.missing = TRUE,
-  qoi = "att",
-  outcome.var = outcomes,
-  lead = lead,
-  forbid.treatment.reversal = FALSE,
-  placebo.test = TRUE
-)
+if (!is.null(covariates) && length(covariates) > 0) {
+  match <- PanelMatch(
+    lag = lag,
+    time.id = time_id,
+    unit.id = unit_id,
+    covs.formula = as.formula(paste("~", paste(covariates, collapse = " + "))),
+    treatment = treatments,
+    refinement.method = refinement.method,
+    data = data,
+    match.missing = TRUE,
+    qoi = "att",
+    outcome.var = outcomes,
+    lead = lead,
+    forbid.treatment.reversal = FALSE,
+    placebo.test = TRUE
+  )
+} else {
+  match <- PanelMatch(
+    lag = 2,
+    time.id = "t",
+    unit.id = "id",
+    treatment = "treat_op_median",
+    refinement.method = "CBPS.weight",
+    data = data,
+    match.missing = TRUE,
+    qoi = "att",
+    outcome.var = "log_CLI_amount",
+    lead = c(0:3),
+    forbid.treatment.reversal = FALSE,
+    placebo.test = TRUE
+  )
+}
 
 
 # Estimate ATT
@@ -501,4 +520,3 @@ ggsave(
   width = 5,
   height = 5.5
 )
-

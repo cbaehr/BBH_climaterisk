@@ -88,6 +88,26 @@ write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata_NEW.dta")
 
 
+# Inspect missingness
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+
+names(df)
+
+df$CLI <- as.numeric(df$CLI_quarter)
+
+df$log_CLI_amount <- log(df$CLI_amount_quarter + 1)
+
+vars <- c("CLI", "log_CLI_amount", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", "total_lobby_quarter", "us_dummy")
+
+df |>
+  filter(!is.na(op_expo_ew)) |>
+  haschaR::check_missings_plot(vars, "yearqtr")
+
+ggsave("results/figures/descriptives/missingness_quarterly_NEW.pdf", width = 10, height = 10)
+
+
+
 ### End Quarterly
 
 
@@ -160,10 +180,10 @@ table(df$year)
 
 
 # write rds
-write_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal.rds")
+write_rds(df, file="data/03_final/lobbying_df_annual_REVISE_normal_NEW.rds")
 
 # write csv
-fwrite(df, file="data/03_final/lobbying_df_annual_REVISE_normal.csv", row.names = FALSE)
+fwrite(df, file="data/03_final/lobbying_df_annual_REVISE_normal_NEW.csv", row.names = FALSE)
 
 df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue_text",
                                   "report_uuid", "report_quarter_code", "registrant_uuid", "registrant_name",
@@ -172,5 +192,6 @@ df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue
                                   "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
                                   "bvdsector", "primary_naics", "amount_num")]
 write_dta(df_dta, path="data/03_final/lobbying_df_annual_REVISE_normal_stata.dta")
+
 
 ### End

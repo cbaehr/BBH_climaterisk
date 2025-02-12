@@ -42,6 +42,11 @@ run_panelmatch <- function(data,
                            se_method = "conditional",
                            cb_plots = FALSE
 ) {
+  # Force refinement.method to "none" if covariates is NULL
+  if (is.null(covariates)) {
+    refinement.method <- "none"
+  }
+  
   tryCatch({
     # Create scatterplot if requested
     if (cb_plots == TRUE && !is.null(covariates)) {  # Only do covariate balance plots if covariates exist
@@ -146,6 +151,9 @@ run_panelmatch <- function(data,
     # Create matched set for ATT & placebo
     message(paste("Create matched set for ATT & placebo"))
     
+    # Check if outcome is in covariates
+    outcome_in_covariates <- !is.null(covariates) && outcome %in% covariates
+    
     if (!is.null(covariates) && length(covariates) > 0) {
       match <- PanelMatch(
         lag = lag,
@@ -160,7 +168,7 @@ run_panelmatch <- function(data,
         outcome.var = outcome,
         lead = lead,
         forbid.treatment.reversal = forbid_treatment_reversal,
-        placebo.test = TRUE
+        placebo.test = !outcome_in_covariates  # Set to FALSE if outcome is in covariates
       )
     } else {
       match <- PanelMatch(
@@ -207,40 +215,33 @@ run_panelmatch <- function(data,
       stringsAsFactors = FALSE
     )
     
-    # Estimate placebo ATT
-    message(paste("Estimate placebo ATT"))
-    
-    placebo_df <- placebo_test(
-      pm.obj = match, data = data, 
-      se.method = se_method,
-      number.iterations = placebo_iterations, 
-      plot = FALSE)
-    
-    # # Bootstrap standard errors (function comes from https://github.com/insongkim/PanelMatch/blob/se_comparison/R/placebo_test.R)
-    # colnames(placebo_df$bootstrapped.estimates) <- names(placebo_df$estimates)
-    # ses <- apply(placebo_df$bootstrapped.estimates,  2,  sd, na.rm = TRUE)
-    # placebo_df <- list(
-    #   estimates = placebo_df$estimates,
-    #   bootstrapped.estimates = placebo_df$bootstrapped.estimates,
-    #   standard.errors = ses
-    # )
-    
-    # Create data.frame for binding
-    placebo_df <- data.frame(
-      t = c(-1, as.numeric(str_remove(names(placebo_df$estimates), "t"))),
-      estimate = c(0, placebo_df$estimates),
-      se = c(0, placebo_df$standard.errors),
-      conf.low = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.975)),
-      conf.high = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.975)),
-      conf.low90 = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.95)),
-      conf.high90 = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.95)),
-      stringsAsFactors = FALSE
-    ) |>
-      select(-se)
-    rownames(placebo_df) <- NULL
-    
-    # Bind with tmp_results
-    tmp_results <- rbind(tmp_results, placebo_df |> mutate(treatment = treatment, outcome = outcome))
+    # Estimate placebo ATT only if outcome is not in covariates
+    if (!outcome_in_covariates) {
+      message(paste("Estimate placebo ATT"))
+      
+      placebo_df <- placebo_test(
+        pm.obj = match, data = data, 
+        se.method = se_method,
+        number.iterations = placebo_iterations, 
+        plot = FALSE)
+      
+      # Create data.frame for binding
+      placebo_df <- data.frame(
+        t = c(-1, as.numeric(str_remove(names(placebo_df$estimates), "t"))),
+        estimate = c(0, placebo_df$estimates),
+        se = c(0, placebo_df$standard.errors),
+        conf.low = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.975)),
+        conf.high = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.975)),
+        conf.low90 = c(0, placebo_df$estimates - placebo_df$standard.errors * qnorm(0.95)),
+        conf.high90 = c(0, placebo_df$estimates + placebo_df$standard.errors * qnorm(0.95)),
+        stringsAsFactors = FALSE
+      ) |>
+        select(-se)
+      rownames(placebo_df) <- NULL
+      
+      # Bind with tmp_results
+      tmp_results <- rbind(tmp_results, placebo_df |> mutate(treatment = treatment, outcome = outcome))
+    }
     
     # Add these results to the overall dataframe
     results_df <- rbind(results_df, tmp_results)
@@ -258,8 +259,10 @@ run_panelmatch <- function(data,
       stringsAsFactors = FALSE
     ) 
     
-    # Bind with placebo
-    plot_data <- rbind(plot_data, placebo_df)
+    # Bind with placebo only if outcome is not in covariates
+    if (!outcome_in_covariates) {
+      plot_data <- rbind(plot_data, placebo_df)
+    }
     
     # Plotting...
     plot <- plot_data |>
