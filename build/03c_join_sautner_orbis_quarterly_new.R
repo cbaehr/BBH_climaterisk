@@ -55,12 +55,14 @@ rm(list = setdiff(ls(), "exposureq_wide")) # exposureq_wide all we need to keep 
 #####
 
 ## read in orbis firm covariate data
-orbis <- read.csv("02_processed/orbis_11_06_2023.csv", stringsAsFactors = F)
-orbis$total_assets_usd_2019[which(orbis$conm=="GRUPO COMERCIAL CHEDRAUI")] <- NA
+#orbis <- read.csv("02_processed/orbis_11_06_2023.csv", stringsAsFactors = F)
+#orbis$total_assets_usd_2019[which(orbis$conm=="GRUPO COMERCIAL CHEDRAUI")] <- NA
+orbis <- read.csv("02_processed/orbis_02_12_2025.csv", stringsAsFactors = F)
 
 ## drop orbis data outside [2001, 2023] because this is outside the bounds of exposure data
 ### Note that this is updated now because we have exposure data through 2023Q4
-dropnames <- !(grepl("1999|2000", names(orbis)) & !grepl("naics", names(orbis)))
+#dropnames <- !(grepl("1999|2000", names(orbis)) & !grepl("naics", names(orbis)))
+dropnames <- !(grepl(paste(1995:1999, collapse="|"), names(orbis)) & !grepl("naics", names(orbis)))
 orbis <- orbis[ , dropnames]
 
 orbis <- orbis[!is.na(orbis$isin), ] # since merging with sautner on isin, no need for NA isin rows
@@ -128,7 +130,7 @@ exposure_orbis_wide$gvkey[is.na(exposure_orbis_wide$gvkey)] <- (-1)
 
 exposure_orbis_wide |>
   tibble() |>
-  select(gvkey, bvdid) |>
+  dplyr::select(gvkey, bvdid) |>
   head()
 
 glimpse(lobby_client)
@@ -153,7 +155,7 @@ glimpse(d)
 # is client name non missing at any point?
 d |>
   tibble() |>
-  select(client_name) |>
+  dplyr::select(client_name) |>
   filter(!is.na(client_name)) |>
   head(10)
 # yes, it is non missing at any point
@@ -171,7 +173,7 @@ d <- d[!( (duplicated(d$gvkey)|duplicated(d$gvkey, fromLast=T)) & d$gvkey!=(-1) 
 glimpse(duplicates)
 
 duplicates |>
-  select(bvdid, isin, gvkey, lob_id) |>
+  dplyr::select(bvdid, isin, gvkey, lob_id) |>
   arrange(gvkey) |>
   head(10)
 
@@ -212,7 +214,7 @@ summary(duplicates$keep_override)
 names(duplicates)
 
 duplicates |>
-  select(bvdid, isin, gvkey, lob_id, client_name) |>
+  dplyr::select(bvdid, isin, gvkey, lob_id, client_name) |>
   arrange(gvkey) |>
   head(10)
 # duplicates_out <- duplicates[, c("bvdid", "isin", "cc_expo_ew_2016_1",
