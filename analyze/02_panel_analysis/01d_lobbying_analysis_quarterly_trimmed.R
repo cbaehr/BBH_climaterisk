@@ -223,7 +223,7 @@ models <- list(
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
 
-## Bills-based measure of climate lobbying
+## Bills-based measure of climate lobbying -----------------------------------
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
 df <- process_df(df)
@@ -241,7 +241,7 @@ df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimate
 df <- process_df(df)
 m3 <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
-## Effect of climate exposure on lobbying occurrence
+## Effect of climate exposure on lobbying occurrence -----------------------------------
 models <- list(
   "(1)" = m1,
   "(2)" = m2,
@@ -271,8 +271,7 @@ df <- process_df(df)
 m3 <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
 
-## Effect of climate exposure on lobbying occurrence
-## Effect of climate exposure on lobbying occurrence
+## Effect of climate exposure on lobbying occurrence -----------------------------------
 models <- list(
   "(1)" = m1,
   "(2)" = m2,
@@ -282,3 +281,51 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVIS
 
 
 
+## Keywords-based measure of climate lobbying -----------------------------------
+# load data
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+
+names(df)
+
+# Rename fixed effects variables
+df <- df |>
+  mutate(
+    Firm = isin,
+    Year = year,
+    Industry = industry,
+    `Industry x Year` = industry_year
+  )
+
+df$CLI_kw <- as.numeric(df$CLI_kw)
+df$CLI_mitigation <- as.numeric(df$CLI_mitigation)
+df$CLI_adaptation <- as.numeric(df$CLI_adaptation)
+
+df$log_CLI_amount_kw <- log(df$CLI_amount_kw + 1)
+df$log_CLI_amount_mitigation <- log(df$CLI_amount_mitigation + 1)
+df$log_CLI_amount_adaptation <- log(df$CLI_amount_adaptation + 1)
+
+glimpse(df)
+
+# Occurrence
+m1 <- feols(CLI_kw ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+m2 <- feols(CLI_mitigation ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+m3 <- feols(CLI_adaptation ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+
+# Amount
+m4 <- feols(log_CLI_amount_kw ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+m5 <- feols(log_CLI_amount_mitigation ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+m6 <- feols(log_CLI_amount_adaptation ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+
+
+## Effect of climate exposure on lobbying occurrence -----------------------------------
+models <- list(
+  "(1)" = m1,
+  "(2)" = m2,
+  "(3)" = m3,
+  "(4)" = m4,
+  "(5)" = m5,
+  "(6)" = m6
+)
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altkeywords.RData")
+
+### END
