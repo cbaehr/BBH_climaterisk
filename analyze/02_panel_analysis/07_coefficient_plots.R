@@ -139,7 +139,7 @@ ggplot(mods_df, aes(y = estimate, x = term, color=agency)) +
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("EPA" = "blue", "DOE" = "red", "CONG" = "gray"),
+  scale_color_manual(values = c("EPA" = "black", "DOE" = "gray60", "CONG" = "lightgray"),
                      labels = c("EPA"="EPA", "DOE"="DOE", "CONG"="Congress"),
                      breaks = c("EPA", "DOE", "CONG")) +
   labs(y = "Coefficient", x="Exposure") +
