@@ -256,7 +256,7 @@ if (!exists("covariate_balance_df")) {
 
 # Define treatments, outcomes, and covariates
 treatments <- c(
-  "treat_op_median" # ,
+  "treat_op_median"#,
   # "treat_rg_median",
   # "treat_ph_median",
   # "treat_op_increase",
@@ -271,13 +271,14 @@ treatments <- c(
 )
 
 outcomes <- c(
-  # "CLI",
-  "log_CLI_amount"
+  "CLI"#,
+  #"log_CLI_amount"
 )
 
-# covariates <- c(
-# "ebit_cat", "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
-# )
+covariates <- c(
+  "CLI", "ebit_cat", 
+  "ebit_at_cat", "us_dummy", "total_lobby_quarter_cat", "industry"
+)
 
 # # number of missingness in the covariates
 # missing <- df_pm |>
@@ -318,7 +319,7 @@ dataframes_path <- "figures/panelmatch/reduced/dataframes/"
 # Define key identifiers
 unit_id <- "id"
 time_id <- "t"
-lag <- 2
+lag <- 3
 lead <- c(0:3)
 
 ## Optimize memory usage before running loops ------------------------------
@@ -330,8 +331,10 @@ rm(list=setdiff(ls(), c("df_pm", "treatments", "outcomes", "covariates", "figure
 gc()
 
 # Keep as data.frame but remove unnecessary columns
-data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes #, covariates
-                                )])
+data <- as.data.frame(df_pm[, c(unit_id, time_id, treatments, outcomes, 
+                               # Only include covariates that aren't in outcomes
+                               setdiff(covariates, outcomes))])
+
 rm(df_pm)
 gc()
 
@@ -382,20 +385,21 @@ for (treatment in treatments) {
         data, 
         treatment,
         outcome, 
-        # covariates, 
+        covariates = covariates, 
         lag = lag, 
         lead = lead, 
         figure_path = figure_path, 
-        dataframes_path = dataframes_path
+        dataframes_path = dataframes_path,
+        refinement.method = "none"
       )
       
       # Immediately write results to disk using write.csv (base R) instead of fwrite
       write.csv(results$results_df, 
                 file = paste0(dataframes_path, "panelmatch_results_", treatment, "_", outcome, ".csv"),
                 row.names = FALSE)
-      write.csv(results$covariate_balance_df, 
-                file = paste0(dataframes_path, "panelmatch_covbal_", treatment, "_", outcome, ".csv"),
-                row.names = FALSE)
+      # write.csv(results$covariate_balance_df, 
+      #           file = paste0(dataframes_path, "panelmatch_covbal_", treatment, "_", outcome, ".csv"),
+      #           row.names = FALSE)
       
       # Clear results from memory
       rm(results)
@@ -410,15 +414,15 @@ for (treatment in treatments) {
 
 # After all iterations, combine the individual files
 results_files <- list.files(dataframes_path, pattern = "panelmatch_results_.*\\.csv$", full.names = TRUE)
-covbal_files <- list.files(dataframes_path, pattern = "panelmatch_covbal_.*\\.csv$", full.names = TRUE)
+# covbal_files <- list.files(dataframes_path, pattern = "panelmatch_covbal_.*\\.csv$", full.names = TRUE)
 
 # Read and combine files using base R
 results_df <- do.call(rbind, lapply(results_files, read.csv))
-covariate_balance_df <- do.call(rbind, lapply(covbal_files, read.csv))
+# covariate_balance_df <- do.call(rbind, lapply(covbal_files, read.csv))
 
 # Write final combined results
 write.csv(results_df, file = paste0(dataframes_path, "panelmatch_results.csv"), row.names = FALSE)
-write.csv(covariate_balance_df, file = paste0(dataframes_path, "panelmatch_covariate_balance_df.csv"), row.names = FALSE)
+# write.csv(covariate_balance_df, file = paste0(dataframes_path, "panelmatch_covariate_balance_df.csv"), row.names = FALSE)
 
 
 

@@ -94,6 +94,18 @@ process_df <- function(data) {
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 df <- process_df(df)
 
+glimpse(df)
+
+# inspect
+df %>%
+  filter(isin == "BMG0450A1053" & year == 2002 & qtr == 1) %>%
+  select(isin, year, qtr, CLI_TAX_amount_quarter)
+
+df %>%
+  filter(isin == "CA0089161081" & year == 2015 & qtr == 2) %>%
+  select(isin, year, qtr, CLI_ENV_amount_quarter)
+
+summary(df$CLI_TAX_amount_quarter)
 
 ## Effect of climate exposure on lobbying occurrence
 models <- list(
