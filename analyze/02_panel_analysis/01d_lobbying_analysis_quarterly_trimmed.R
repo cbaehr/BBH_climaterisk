@@ -51,7 +51,10 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
         "us_dummy" = "US HQ",
         "total_lobby_quarter" = "Total Lobbying (\\$)",
         "CLI_l1" = "Lagged DV",
-        "log_CLI_amount_l1" = "Lagged DV"
+        "log_CLI_amount_l1" = "Lagged DV",
+        "n_employees" = "Employees",
+        "cso_exists" = "CSO Inplace",
+        "cdp_report" = "CDP Reporter"
 )
 
 process_df <- function(data) {
@@ -236,6 +239,38 @@ models <- list(
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
+## OLS - Augmented Controls Model --------------------------------------------
+
+df$subs_iso3c <- unlist(lapply(df$subs_iso3c, FUN = function(x) paste(gsub("n.a.", "", unique(unlist(strsplit(x, "\n")))), collapse="|")))
+sum(df$subs_iso3c=="n.a.")
+sum(df$subs_iso3c=="")
+
+df$subs_iso3c <- gsub("NA", "", df$subs_iso3c)
+
+df$subs_iso3c[which(nchar(df$subs_iso3c)==3)] <- gsub("\\|", "", df$subs_iso3c[which(nchar(df$subs_iso3c)==3)])
+df$subs_iso3c[which(df$subs_iso3c=="")] <- NA
+
+df$country_iso_code[which(df$Firm=="NL00150002Q7")] <- "DE"
+
+df$multinational <- 0
+df$multinational[which(df$subs_iso3c != df$country_iso_code)] <- 1
+
+## If the subsidiary column isnt EXACTLY equal to the man country column, this
+## implies there is a subsidiary in another country.
+
+newdat <- read.csv("data/01_raw/boards_rep_v2/analysis_data_no_proprietary.csv", stringsAsFactors = F)
+newdat <- newdat[ , c("gvkey", "year", "cso_exists", "cdp_report")]
+df <- merge(df, newdat, by=c("gvkey", "year"), all.x=T)
+
+df$cso_exists[which(is.na(df$cso_exists) & df$year %in% c(2000:2019))] <- 0
+df$cdp_report[which(is.na(df$cdp_report) & df$year %in% c(2000:2019))] <- 0
+
+models <- list(
+  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + n_employees + cso_exists + cdp_report | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + n_employees + cso_exists + cdp_report | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_augmented.RData")
 
 ## Logit Occurrence Model ------------------------------------------------------
 
@@ -265,7 +300,6 @@ df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimate
 df <- process_df(df)
 m3 <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
-## Effect of climate exposure on lobbying occurrence -----------------------------------
 models <- list(
   "(1)" = m1,
   "(2)" = m2,
@@ -274,9 +308,7 @@ models <- list(
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altclimatebills.RData")
 
 
-## OLS - Amount -----------------------------------------------------
-
-## Bills-based measure of climate lobbying
+## Bills-based measure of climate lobbying -------------------------------------
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
 df <- process_df(df)

@@ -704,6 +704,39 @@ o_q_iy_kywd_adpt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_N,
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[3]))
 
+## Occ: Main Models with Augmented Controls ------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_augmented.RData")
+
+o_q_iy_aug <- models[[1]]
+
+o_q_iy_aug_ready <- c(o_q_iy_aug$coefficients["op_expo_ew"], o_q_iy_aug$se["op_expo_ew"],
+                      o_q_iy_aug$coefficients["rg_expo_ew"], o_q_iy_aug$se["rg_expo_ew"],
+                      o_q_iy_aug$coefficients["ph_expo_ew"], o_q_iy_aug$se["ph_expo_ew"])
+
+o_q_iy_aug_N <- o_q_iy_aug$nobs
+
+o_q_iy_aug_R <- round(r2(o_q_iy_aug, type = "ar2"), 3) #adjusted R2
+
+o_q_iy_aug_Wald <- c(round(compute_wald(o_q_iy_aug, "op_expo_ew", "rg_expo_ew"), 3), 
+                           round(compute_wald(o_q_iy_aug, "op_expo_ew", "ph_expo_ew"), 3), 
+                           round(compute_wald(o_q_iy_aug, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+
+o_q_iy_aug_out <- c(`Num. Obs.` = o_q_iy_aug_N,
+                          `Adjusted R-Squared` =  o_q_iy_aug_R,
+                          `Year FE` = ' ',
+                          `Industry x Year FE` = '\\checkmark',
+                          `Firm FE` = ' ',
+                          `Firm Controls` = 'Augmented',
+                          `Lagged DV` = ' ',
+                          `Climate Measure` = 'Exposure',
+                          `Estimation` = 'OLS',
+                          `Panel` = 'Firm-Qtr.',
+                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_Wald[1]),
+                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_Wald[2]),
+                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_Wald[3]))
+
 ## Amount --------------------------------------------------
 
 
@@ -1273,6 +1306,40 @@ o_q_iy_kywd_adpt_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_amt_N,
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[3]))
 
+## Amt: Main Models with Augmented Controls ------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_augmented.RData")
+
+o_q_iy_aug_amt <- models[[2]]
+
+o_q_iy_aug_amt_ready <- c(o_q_iy_aug_amt$coefficients["op_expo_ew"], o_q_iy_aug_amt$se["op_expo_ew"],
+                          o_q_iy_aug_amt$coefficients["rg_expo_ew"], o_q_iy_aug_amt$se["rg_expo_ew"],
+                          o_q_iy_aug_amt$coefficients["ph_expo_ew"], o_q_iy_aug_amt$se["ph_expo_ew"])
+
+o_q_iy_aug_amt_N <- o_q_iy_aug_amt$nobs
+
+o_q_iy_aug_amt_R <- round(r2(o_q_iy_aug_amt, type = "ar2"), 3) #adjusted R2
+
+o_q_iy_aug_amt_Wald <- c(round(compute_wald(o_q_iy_aug_amt, "op_expo_ew", "rg_expo_ew"), 3), 
+                     round(compute_wald(o_q_iy_aug_amt, "op_expo_ew", "ph_expo_ew"), 3), 
+                     round(compute_wald(o_q_iy_aug_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+
+
+o_q_iy_aug_amt_out <- c(`Num. Obs.` = o_q_iy_aug_amt_N,
+                    `Adjusted R-Squared` =  o_q_iy_aug_amt_R,
+                    `Year FE` = ' ',
+                    `Industry x Year FE` = '\\checkmark',
+                    `Firm FE` = ' ',
+                    `Firm Controls` = 'Augmented',
+                    `Lagged DV` = ' ',
+                    `Climate Measure` = 'Exposure',
+                    `Estimation` = 'OLS',
+                    `Panel` = 'Firm-Qtr.',
+                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_amt_Wald[1]),
+                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[2]),
+                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[3]))
+
+
 ## Combine and export --------------------------------------------------
 
 o_q_y_ready_stars <- stars(o_q_y_ready)
@@ -1292,6 +1359,7 @@ o_q_iy_bills_ready_stars <- stars(o_q_iy_bills_ready)
 o_q_iy_kywd_ready_stars <- stars(o_q_iy_kywd_ready)
 o_q_iy_kywd_miti_ready_stars <- stars(o_q_iy_kywd_miti_ready)
 o_q_iy_kywd_adpt_ready_stars <- stars(o_q_iy_kywd_adpt_ready)
+o_q_iy_aug_ready_stars <- stars(o_q_iy_aug_ready)
 
 o_q_y_amt_ready_stars <- stars(o_q_y_amt_ready)
 o_q_iy_amt_ready_stars <- stars(o_q_iy_amt_ready)
@@ -1309,6 +1377,7 @@ o_q_iy_amt_bills_ready_stars <- stars(o_q_iy_amt_bills_ready)
 o_q_iy_kywd_amt_ready_stars <- stars(o_q_iy_kywd_amt_ready)
 o_q_iy_kywd_miti_amt_ready_stars <- stars(o_q_iy_kywd_miti_amt_ready)
 o_q_iy_kywd_adpt_amt_ready_stars <- stars(o_q_iy_kywd_adpt_amt_ready)
+o_q_iy_aug_amt_ready_stars <- stars(o_q_iy_aug_amt_ready)
 
 m1 <- list(tidy=o_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iyf_ready_stars); class(m2) <- "modelsummary_list"
@@ -1328,6 +1397,7 @@ m29 <- list(tidy=o_q_iy_bills_ready_stars); class(m29) <- "modelsummary_list"
 m31 <- list(tidy=o_q_iy_kywd_ready_stars); class(m31) <- "modelsummary_list"
 m32 <- list(tidy=o_q_iy_kywd_miti_ready_stars); class(m32) <- "modelsummary_list"
 m33 <- list(tidy=o_q_iy_kywd_adpt_ready_stars); class(m33) <- "modelsummary_list"
+m37 <- list(tidy=o_q_iy_aug_ready_stars); class(m37) <- "modelsummary_list"
 
 m7 <- list(tidy=o_q_iy_amt_ready_stars); class(m7) <- "modelsummary_list"
 m8 <- list(tidy=o_q_iyf_amt_ready_stars); class(m8) <- "modelsummary_list"
@@ -1347,10 +1417,11 @@ m30 <- list(tidy=o_q_iy_amt_bills_ready_stars); class(m30) <- "modelsummary_list
 m34 <- list(tidy=o_q_iy_kywd_amt_ready_stars); class(m34) <- "modelsummary_list"
 m35 <- list(tidy=o_q_iy_kywd_miti_amt_ready_stars); class(m35) <- "modelsummary_list"
 m36 <- list(tidy=o_q_iy_kywd_adpt_amt_ready_stars); class(m36) <- "modelsummary_list"
+m38 <- list(tidy=o_q_iy_aug_amt_ready_stars); class(m38) <- "modelsummary_list"
 
-mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, 
+mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, 
                  "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, "OLS 15.6"=m24, "OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33,
-                 "OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
+                 "OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 8.5"=m38, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
                  "OLS 12"=m12, "OLS 16"=m16, "OLS 17"=m17, "OLS 18"=m18, "OLS 18.3"=m25, "OLS 18.6"=m26, "OLS 18.7"=m30,
                  "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36)
 # mod_list <- list("Occurrence" = list("OLS 1"=m1, "OLS 2"=m2, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6),
@@ -1361,6 +1432,7 @@ auxiliary <- data.frame(o_q_y_out,
                         l_q_iy_out,
                         o_a_iy_out,
                         o_q_iyf_out,
+                        o_q_iy_aug_out,
                         o_q_iy_intr_out,
                         o_q_iy_ldv_out,
                         o_q_sent_iy_out,
@@ -1379,6 +1451,7 @@ auxiliary <- data.frame(o_q_y_out,
                         t_q_iy_amt_out,
                         o_a_iy_amt_out,
                         o_q_iyf_amt_out,
+                        o_q_iy_aug_amt_out,
                         o_q_iy_amt_intr_out,
                         o_q_iy_amt_ldv_out,
                         o_q_sent_iy_amt_out,
@@ -1424,10 +1497,10 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
+names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
                      "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur. (Bills)", "Occur. (Kywd.)", 
                      "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)",
-                     "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
+                     "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
                      "Amt. (EPA)", "Amt. (DOE)", "Amount", "Amount", "Amt. (Bills)", "Amt. (Kywd.)", 
                      "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)")
 
