@@ -2,9 +2,9 @@ rm(list=ls())
 setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/")
 pacman::p_load(readxl)
 
-orbis1 <- read_xlsx("/Users/christianbaehr/Downloads/orbis_02122025/Export 12_02_2025 17_36.xlsx", sheet = 2)
-orbis2 <- read_xlsx("/Users/christianbaehr/Downloads/orbis_02122025/Export 12_02_2025 17_45.xlsx", sheet = 2)
-orbis3 <- read_xlsx("/Users/christianbaehr/Downloads/orbis_02122025/Export 12_02_2025 18_04.xlsx", sheet = 2)
+orbis1 <- read_xlsx("orbis_02132025/Export 13_02_2025 23_03.xlsx", sheet = 2)
+orbis2 <- read_xlsx("orbis_02132025/Export 13_02_2025 23_11.xlsx", sheet = 2)
+orbis3 <- read_xlsx("orbis_02132025/Export 13_02_2025 23_16.xlsx", sheet = 2)
 
 #orbis1 <- readxl::read_xlsx("orbis/bbh_orbis_11_06_2023_1_6000.xlsx", sheet = 2)
 #orbis2 <- readxl::read_xlsx("orbis/bbh_orbis_11_06_2023_6001_12000.xlsx", sheet = 2)
@@ -26,7 +26,8 @@ newnames <- c("row", "conm", "inactive", "quoted", "branch", "owndata", "woco",
               paste0("n_employees_", 2024:1995),
               paste0("operating_rev_usd_", 2024:1995),
               "pllastavail",
-              paste0("P_L_b4tax_usd_", 2024:1995))
+              paste0("P_L_b4tax_usd_", 2024:1995),
+              "subs_iso3c", "hq_shareholderfunds_m_usd", "no_subsid", "no_subsid_ultimate")
 names(orbis) <- newnames
 
 # names(orbis) <- c("row", "conm", "inactive", "quoted", "branch", "owndata", "woco",

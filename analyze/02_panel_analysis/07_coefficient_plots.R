@@ -17,9 +17,11 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 m1 <- models[[5]]
+m3 <- models[[3]]
 
 load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 m2 <- models[[5]]
+m4 <- models[[3]]
 
 # Tidy the model output
 m1_df <- broom::tidy(m1, conf.int = T)
@@ -28,6 +30,15 @@ m1_df <- m1_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m1_df$term <- factor(m1_df$term, levels = rev(m1_df$term))
 m1_df$model <- "Occurrence"
+m1_df$fes <- "Industry-by-Year FE"
+
+m3_df <- broom::tidy(m3, conf.int = T)
+m3_df <- m3_df %>%
+  filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
+  mutate(term = c("Opportunity", "Regulatory", "Physical"))
+m3_df$term <- factor(m3_df$term, levels = rev(m3_df$term))
+m3_df$model <- "Occurrence"
+m3_df$fes <- "Year FE"
 
 m2_df <- broom::tidy(m2, conf.int = T)
 m2_df <- m2_df %>%
@@ -35,8 +46,18 @@ m2_df <- m2_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m2_df$term <- factor(m2_df$term, levels = rev(m2_df$term))
 m2_df$model <- "Amount"
+m2_df$fes <- "Industry-by-Year FE"
 
-mods_df <- rbind(m1_df, m2_df)
+m4_df <- broom::tidy(m4, conf.int = T)
+m4_df <- m4_df %>%
+  filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
+  mutate(term = c("Opportunity", "Regulatory", "Physical"))
+m4_df$term <- factor(m4_df$term, levels = rev(m4_df$term))
+m4_df$model <- "Amount"
+m4_df$fes <- "Year FE"
+
+
+mods_df <- rbind(m3_df, m1_df, m4_df, m2_df)
 mods_df$model <- factor(mods_df$model, levels = c("Occurrence", "Amount"))
 
 mods_df <- mods_df %>%
@@ -48,22 +69,31 @@ mods_df <- mods_df %>%
          conf.low90 = estimate - 1.645 * std.error,
          conf.high90 = estimate + 1.645 * std.error)
 
+
 # Create the coefficient plot
-ggplot(mods_df, aes(x = estimate, y = term, color=color)) +
+ggplot(mods_df, aes(y = estimate, x = term, color=fes)) +
   facet_wrap(~model, scales="free_x") +
-  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
-  geom_point(shape = 21, fill = "white", size = 2) +
-  scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-  labs(x = "Coefficient") +
+  geom_errorbar(aes(ymin = conf.low95, ymax = conf.high95), 
+                position = position_dodge(width = 0.4), width = 0, linewidth = .5) +
+  geom_errorbar(aes(ymin = conf.low90, ymax = conf.high90), 
+                position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
+  geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
+  scale_color_manual(values = c("Year FE" = "gray70", "Industry-by-Year FE" = "black"),
+                     #labels = c("EPA"="EPA", "DOE"="DOE", "CONG"="Congress"),
+                     breaks = c("Year FE", "Industry-by-Year FE")) +
+  labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     text = element_text(size = 15),
+    legend.position = "bottom",
+    legend.title = element_blank(),
     axis.title.y = element_blank()
-    )
+  ) + 
+  coord_flip()
+
 ggsave("results/figures/regressions/coefplot_byexposure_qrt_REVISE.pdf", width = 7, height = 3.5)
 
 
