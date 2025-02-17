@@ -64,6 +64,8 @@ process_df <- function(data) {
       `Industry x Year` = industry_year
     )
   
+  df <- df[!is.na(df$industry) , ]
+  
   df$CLI <- as.numeric(df$CLI_quarter)
   
   df$log_CLI_amount <- log(df$CLI_amount_quarter + 1)

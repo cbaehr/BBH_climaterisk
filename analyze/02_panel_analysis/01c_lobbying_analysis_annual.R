@@ -1261,6 +1261,8 @@ df <- df |>
     `Industry x Year` = industry_year
   )
 
+df <- df[!is.na(df$industry) , ]
+
 # Change classes for analysis ---------------------------------------------
 
 

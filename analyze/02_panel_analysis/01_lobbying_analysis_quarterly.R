@@ -45,6 +45,8 @@ df <- df |>
     `Industry x Year` = industry_year
   )
 
+df <- df[!is.na(df$industry) , ]
+
 # Specify covariate names
 cm <- c("op_expo_ew" = "Opportunity Exposure",
         "rg_expo_ew" = "Regulatory Exposure",
