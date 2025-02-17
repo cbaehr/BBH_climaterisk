@@ -237,7 +237,17 @@ models <- list(
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
 
+## Logit Occurrence Model ------------------------------------------------------
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feglm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, family = "binomial", df, vcov = ~ Year + Firm)
+)
+save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION_NEW.RData")
+
+
 ## Bills-based measure of climate lobbying -----------------------------------
+
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
 df <- process_df(df)
@@ -341,5 +351,111 @@ models <- list(
   "(6)" = m6
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altkeywords.RData")
+
+## Annual Models
+
+# load data
+#df <- read_rds("data/03_final/lobbying_df_annual_REVISE_normal.rds")
+#df <- read_rds("data/03_final/lobbying_df_annual_")
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+
+df <- df %>%
+  group_by(isin, year, industry, industry_year) %>%
+  summarize(CLI_annual = mean(CLI_annual, na.rm=T),
+            CLI_amount_annual = mean(CLI_amount_annual, na.rm=T),
+            cc_expo_ew = mean(cc_expo_ew, na.rm=T),
+            op_expo_ew = mean(op_expo_ew, na.rm=T), 
+            rg_expo_ew = mean(rg_expo_ew, na.rm=T), 
+            ph_expo_ew = mean(ph_expo_ew, na.rm=T),
+            ebit = mean(ebit, na.rm=T),
+            ebit_at = mean(ebit_at, na.rm=T),
+            us_dummy = mean(us_dummy, na.rm=T),
+            total_lobby_annual = mean(total_lobby_annual, na.rm=T))
+
+# Rename fixed effects variables
+df <- df |>
+  rename(
+    Firm = isin,
+    Year = year,
+    Industry = industry,
+    `Industry x Year` = industry_year
+  )
+
+df <- df %>% 
+  mutate( CLI = as.numeric( CLI_annual ),
+          log_CLI_amount = log(CLI_amount_annual + 1))
+
+df <- df %>%
+  group_by(Firm) %>%
+  mutate(CLI_l1 = lag(CLI, n=1, order_by=Year),
+         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=Year))
+
+## Main Annual Models -----------------------------------------------------
+
+models <- list(
+  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_annual_bycomponent_MODELS_REVISION_NEW.RData")
+
+
+
+## Comparing Annual Sautner Model to 10-K based exposure -----------------------
+
+## Compare with 10-Ks -------------------------------------------------------------
+
+
+tenk_main <- haven::read_dta("data/01_raw/SEC_climate_risk/Excerpt full info.dta")
+
+tenk_aux <- read.csv("data/01_raw/SEC_climate_risk/Ceres_Climate_Risk_Data_BJS - Ceres_Climate_Risk_Data_BJS.csv", 
+                     stringsAsFactors = F)
+
+tenk_main <- merge(tenk_main, tenk_aux, by="filename")
+tenk_main$year <- tenk_main$filingyear
+tenk_main$ticker <- tolower(tenk_main$ticker)
+
+tenk_cy <- tenk_main %>%
+  group_by(ticker, year) %>%
+  summarize(tenk_exposure = sum(as.numeric(relevance_score.x), na.rm=T))
+
+ticker <- readxl::read_xlsx("data/01_raw/orbis/bbh_orbis_tickersymbols.xlsx", sheet="Results")
+
+df_ticker <- merge(df, ticker, by.x="Firm", by.y="ISIN number") #224,446 of 227,847 obs. have a matching ticker
+
+df_ticker$`Ticker symbol` <- tolower(df_ticker$`Ticker symbol`)
+sum(tenk_cy$ticker %in% df_ticker$`Ticker symbol`) #41,727 of 46,190 10-K data obs. have matching 
+
+df_ticker <- merge(df_ticker, tenk_cy, by.x=c("Ticker symbol", "Year"), by.y=c("ticker", "year")) 
+#14,852 of 15,396 potential obs. in 10-K data have match in our panel
+
+cortest <- cor(df_ticker[ , c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "tenk_exposure")],
+               use="pairwise.complete.obs")
+colnames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
+rownames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
+
+pdf("results/figures/descriptives/corrplot_expo_tenk.pdf", width=5, height=5)
+corrplot::corrplot(cortest)
+dev.off()
+
+df_ticker <- df_ticker %>%
+  mutate(cc_expo_ew = scale(cc_expo_ew),
+         tenk_exposure = scale(tenk_exposure))
+
+df_ticker$CLI[is.na(df_ticker$CLI)] <- 0
+df_ticker$log_CLI_amount[is.na(df_ticker$log_CLI_amount)] <- 0
+df_ticker$total_lobby_annual[is.na(df_ticker$total_lobby_annual)] <- 0
+
+sautner_mod <- feols(CLI ~ cc_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df_ticker, vcov = ~ Year + Firm)
+tenk_mod <- feols(CLI ~ tenk_exposure + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df_ticker, vcov = ~ Year + Firm)
+
+sautner_mod_amt <- feols(log_CLI_amount ~ cc_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df_ticker, vcov = ~ Year + Firm)
+tenk_mod_amt <- feols(log_CLI_amount ~ tenk_exposure + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df_ticker, vcov = ~ Year + Firm)
+
+out = list(sautner_mod, tenk_mod, sautner_mod_amt, tenk_mod_amt)
+
+save(out, file="data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
+
 
 ### END
