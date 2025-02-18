@@ -6,7 +6,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot)
+pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot, janitor)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -384,7 +384,7 @@ models <- list(
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altkeywords.RData")
 
-## Annual Models
+## Annual Models ---------------------------------------------------------------------
 
 # load data
 #df <- read_rds("data/03_final/lobbying_df_annual_REVISE_normal.rds")
@@ -488,6 +488,143 @@ tenk_mod_amt <- feols(log_CLI_amount ~ tenk_exposure + ebit + ebit_at + us_dummy
 out = list(sautner_mod, tenk_mod, sautner_mod_amt, tenk_mod_amt)
 
 save(out, file="data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
+
+## Annual coalition-based pro/anti-climate lobbying analysis -------------------------------------
+
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- df[!is.na(df$industry) , ]
+df <- df %>%
+  group_by(gvkey, year, industry, industry_year) %>%
+  summarize(CLI_annual = mean(CLI_annual, na.rm=T),
+            CLI_amount_annual = mean(CLI_amount_annual, na.rm=T),
+            cc_expo_ew = mean(cc_expo_ew, na.rm=T),
+            op_expo_ew = mean(op_expo_ew, na.rm=T), 
+            rg_expo_ew = mean(rg_expo_ew, na.rm=T), 
+            ph_expo_ew = mean(ph_expo_ew, na.rm=T),
+            ebit = mean(ebit, na.rm=T),
+            ebit_at = mean(ebit_at, na.rm=T),
+            us_dummy = mean(us_dummy, na.rm=T),
+            total_lobby_annual = mean(total_lobby_annual, na.rm=T))
+
+# Rename fixed effects variables
+df <- df |>
+  rename(
+    #Firm = isin,
+    Year = year,
+    Industry = industry,
+    `Industry x Year` = industry_year
+  )
+
+df <- df %>% 
+  mutate( CLI = as.numeric( CLI_annual ),
+          log_CLI_amount = log(CLI_amount_annual + 1))
+
+df <- df %>%
+  group_by(gvkey) %>%
+  mutate(CLI_l1 = lag(CLI, n=1, order_by=Year),
+         log_CLI_amount_l1 = lag(log_CLI_amount, n=1, order_by=Year))
+
+coal <- read.csv("data/01_raw/coalitions/Lerner and Osgood 2022 replication/analysis_data_no_proprietary.csv", stringsAsFactors = F)
+
+
+# Edit coalition data ---------------------------------------------------
+
+coal <- coal[ , c("gvkey", "year", "numsupcoal", "numoppcoal")]
+
+coal |> tabyl(numsupcoal)
+coal |> tabyl(numoppcoal)
+coal |> tabyl(numsupcoal, numoppcoal) # not much overlap
+
+# Create dummy
+coal <- coal |>
+  mutate(
+    sup_climate_action = ifelse(numsupcoal > 0, 1, 0),
+    opp_climate_action = ifelse(numoppcoal > 0, 1, 0),
+    gvkey = as.character(gvkey)
+  )
+
+# How many not part at any point?
+# support
+coal |>
+  group_by(gvkey) %>%
+  summarise(support_count = sum(sup_climate_action),
+            opposition_count = sum(opp_climate_action)) %>%
+  filter(support_count == 0 & opposition_count == 0) |>
+  nrow()
+
+coal |> tabyl(sup_climate_action, opp_climate_action) # not much overlap: 274 firm-years / 45 firms
+
+# Merge with df
+
+df$year <- as.numeric(df$Year)
+coal$gvkey <- as.integer(coal$gvkey)
+df2 <- df |>
+  left_join(coal, by = c("gvkey", "year"))
+
+df2 |> tabyl(sup_climate_action)
+df2 |> tabyl(opp_climate_action)
+
+# Code directionality -----------------------------------------------------
+
+
+## Long df --------------------------------------------------------------
+
+df3 <- df2 |>
+  #mutate(CLI = ifelse(grepl("ENV|CAW|ENG|FUE", issue_code), 1, 0)) |>
+  mutate(pro_CLI = ifelse(CLI == 1 & sup_climate_action == 1 & opp_climate_action == 0, 1, 0), 
+         contra_CLI = ifelse(CLI == 1 & opp_climate_action == 1 & sup_climate_action == 0, 1, 0),
+         pro_log_CLI_amount = log_CLI_amount * sup_climate_action,
+         opp_log_CLI_amount = log_CLI_amount * opp_climate_action) |>
+  mutate(
+    direction_CLI = case_when(
+      pro_CLI == 1 ~ "Pro", 
+      contra_CLI == 1 ~ "Contra",
+      CLI == 1 & sup_climate_action == 1 & opp_climate_action == 1 ~ "Both", 
+      CLI == 1 & sup_climate_action != 1 & opp_climate_action != 1 ~ "None")
+  )
+
+insp <- df3[ , c("gvkey", "year", "CLI", "pro_CLI", "direction_CLI", 
+                 "sup_climate_action", "contra_CLI", "opp_climate_action")]
+
+df3 |> tabyl(pro_CLI)
+df3 |> tabyl(contra_CLI)
+
+desc <- df3 |>
+  filter(CLI == 1)
+desc <- desc[ , c("gvkey", "year", "direction_CLI")]
+
+##
+
+# Rename fixed effects variables
+df <- df3 |>
+  rename(Firm = gvkey)
+
+# Change classes for analysis ---------------------------------------------
+
+sum(is.na(df$pro_CLI))
+sum(is.na(df$contra_CLI))
+sum(is.na(df$sup_climate_action))
+sum(is.na(df$opp_climate_action))
+
+## make pro/anti climate lobbying NA if no association membership data for that firm
+df$pro_CLI[is.na(df$sup_climate_action)] <- NA
+df$contra_CLI[is.na(df$sup_climate_action)] <- NA
+
+df$pro_log_CLI_amount[is.na(df$pro_log_CLI_amount)] <- NA
+df$opp_log_CLI_amount[is.na(df$opp_log_CLI_amount)] <- NA
+
+## Overall climate lobbying, overall exposure for annual by specific attention component
+models <- list(
+  "(1)" = feols(pro_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(2)" = feols(contra_CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(3)" = feols(sup_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(4)" = feols(opp_climate_action ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(4)" = feols(pro_log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(4)" = feols(opp_log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_annual | `Industry x Year`, df, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_yr_coalition_MODELS_REVISION_NEW.RData")
 
 
 ### END
