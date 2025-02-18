@@ -1793,7 +1793,74 @@ modelsummary(mod_list2
 )
 
 
+## Wald Tests Across Models ----------------------------------------------------
 
+# Assuming model1 and model2 are the models to compare
+library(lmtest)
+
+load("data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION_NEW.RData")
+
+epa <- models[["EPA"]]
+doe <- models[["DOE"]]
+
+# num <- epa$coefficients["op_expo_ew"] - doe$coefficients["op_expo_ew"]
+# denom <- sqrt(epa$se["op_expo_ew"]^2 + doe$se["op_expo_ew"]^2)
+
+# Extract coefficients and standard errors
+beta1 <- epa$coefficients["op_expo_ew"]
+beta2 <- doe$coefficients["op_expo_ew"]
+se1 <- sqrt(vcov(epa)["op_expo_ew", "op_expo_ew"])
+se2 <- sqrt(vcov(doe)["op_expo_ew", "op_expo_ew"])
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
+
+beta1 <- epa$coefficients["ph_expo_ew"]
+beta2 <- doe$coefficients["ph_expo_ew"]
+se1 <- sqrt(vcov(epa)["ph_expo_ew", "ph_expo_ew"])
+se2 <- sqrt(vcov(doe)["ph_expo_ew", "ph_expo_ew"])
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
+
+
+
+load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
+
+epa <- models[["EPA"]]
+doe <- models[["DOE"]]
+
+# Extract coefficients and standard errors
+beta1 <- epa$coefficients["op_expo_ew"]
+beta2 <- doe$coefficients["op_expo_ew"]
+se1 <- sqrt(vcov(epa)["op_expo_ew", "op_expo_ew"])
+se2 <- sqrt(vcov(doe)["op_expo_ew", "op_expo_ew"])
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
+
+# Extract coefficients and standard errors
+beta1 <- epa$coefficients["ph_expo_ew"]
+beta2 <- doe$coefficients["ph_expo_ew"]
+se1 <- sqrt(vcov(epa)["ph_expo_ew", "ph_expo_ew"])
+se2 <- sqrt(vcov(doe)["ph_expo_ew", "ph_expo_ew"])
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
+
+compute_wald <- function(fixest_mod, var1, var2) {
+  a <- fixest_mod$coefficients[var1] #var1 coef
+  b <- fixest_mod$coefficients[var2] #var2 coef
+  a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
+  b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
+  ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
+  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  return(wald)
+}
 
 
 

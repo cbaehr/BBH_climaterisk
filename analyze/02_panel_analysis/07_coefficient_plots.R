@@ -116,13 +116,13 @@ m2_df <- m2_df %>%
 m2_df$agency <- "DOE"
 m2_df$model <- "Occurrence"
 
-m3 <- models$CONG
-m3_df <- broom::tidy(m3, conf.int = T)
-m3_df <- m3_df %>%
-  filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
-  mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m3_df$agency <- "CONG"
-m3_df$model <- "Occurrence"
+# m3 <- models$CONG
+# m3_df <- broom::tidy(m3, conf.int = T)
+# m3_df <- m3_df %>%
+#   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
+#   mutate(term = c("Opportunity", "Regulatory", "Physical"))
+# m3_df$agency <- "CONG"
+# m3_df$model <- "Occurrence"
 
 load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 m4 <- models$EPA
@@ -141,15 +141,16 @@ m5_df <- m5_df %>%
 m5_df$agency <- "DOE"
 m5_df$model <- "Amount"
 
-m6 <- models$CONG
-m6_df <- broom::tidy(m6, conf.int = T)
-m6_df <- m6_df %>%
-  filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
-  mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m6_df$agency <- "CONG"
-m6_df$model <- "Amount"
+# m6 <- models$CONG
+# m6_df <- broom::tidy(m6, conf.int = T)
+# m6_df <- m6_df %>%
+#   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
+#   mutate(term = c("Opportunity", "Regulatory", "Physical"))
+# m6_df$agency <- "CONG"
+# m6_df$model <- "Amount"
 
-mods_df <- rbind(m1_df, m2_df, m3_df, m4_df, m5_df, m6_df)
+#mods_df <- rbind(m1_df, m2_df, m3_df, m4_df, m5_df, m6_df)
+mods_df <- rbind(m1_df, m2_df, m4_df, m5_df)
 mods_df$term <- factor(mods_df$term, levels = c("Physical", "Regulatory", "Opportunity"))
 mods_df$model <- factor(mods_df$model, levels = c("Occurrence", "Amount"))
 
@@ -169,9 +170,9 @@ ggplot(mods_df, aes(y = estimate, x = term, color=agency)) +
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("EPA" = "black", "DOE" = "gray60", "CONG" = "lightgray"),
-                     labels = c("EPA"="EPA", "DOE"="DOE", "CONG"="Congress"),
-                     breaks = c("EPA", "DOE", "CONG")) +
+  scale_color_manual(values = c("EPA" = "black", "DOE" = "gray70"),
+                     labels = c("EPA"="EPA", "DOE"="DOE"),
+                     breaks = c("EPA", "DOE")) +
   labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(
