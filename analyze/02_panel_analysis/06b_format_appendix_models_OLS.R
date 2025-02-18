@@ -1654,9 +1654,143 @@ modelsummary(mod_list
              ,output="results/tables/appendix_table_test_ols_NEW.tex"
 )
 
+## Occurrence Models -----------------------------------------------------------------------------
 
+mod_list1 <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, 
+                 "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, "OLS 15.6"=m24, "OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33,
+                 "OLS 15.96"=m39, "OLS 15.97"=m40)
 
+auxiliary1 <- data.frame(o_q_y_out,
+                        o_q_iy_out,
+                        l_q_iy_out,
+                        o_a_iy_out,
+                        o_q_iyf_out,
+                        o_q_iy_aug_out,
+                        o_q_iy_intr_out,
+                        o_q_iy_ldv_out,
+                        o_q_sent_iy_out,
+                        o_q_risk_iy_out,
+                        o_q_iy_cong_out,
+                        o_q_iy_epa_out,
+                        o_q_iy_doe_out,
+                        o_a_iy_ovrl_out,
+                        o_a_iy_tenk_out,
+                        o_q_iy_bills_out,
+                        o_q_iy_kywd_out,
+                        o_q_iy_kywd_miti_out,
+                        o_q_iy_kywd_adpt_out,
+                        o_y_iy_coal_pro_out,
+                        o_y_iy_coal_anti_out)
+model_names1 <- names(mod_list1)
+auxiliary1 <- rbind(auxiliary1, "Model"=model_names1)
 
+auxiliary1_out <- data.frame(t(auxiliary1)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Firm.Controls" ~ "Firm Controls",
+      Test == "Estimation" ~ "Estimation",
+      Test == "Climate.Measure" ~ "Climate Measure",
+      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
+      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
+      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Panel" ~ "Panel",
+      Test == "Lagged.DV" ~ "Lagged DV",
+      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
+      TRUE ~ " "
+    )
+  )
+
+names(mod_list1) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
+                      "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur. (Bills)", "Occur. (Kywd.)", 
+                      "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)", "Occur. (Pro-Coal.)", "Occur. (Anti-Coal.)")
+
+modelsummary(mod_list1
+             ,add_rows=auxiliary1_out
+             ,output="results/tables/appendix_table_test_ols_NEW_occurrence.tex"
+)
+
+## Amount Models -----------------------------------------------------------------------------
+
+mod_list2 <- list("OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 8.5"=m38, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
+                 "OLS 12"=m12, "OLS 16"=m16, "OLS 17"=m17, "OLS 18"=m18, "OLS 18.3"=m25, "OLS 18.6"=m26, "OLS 18.7"=m30,
+                 "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42)
+# mod_list <- list("Occurrence" = list("OLS 1"=m1, "OLS 2"=m2, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6),
+#                  "Amount" = list("OLS 7"=m7, "OLS 8"=m8, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, "OLS 12"=m12))
+
+auxiliary2 <- data.frame(o_q_y_amt_out,
+                        o_q_iy_amt_out,
+                        t_q_iy_amt_out,
+                        o_a_iy_amt_out,
+                        o_q_iyf_amt_out,
+                        o_q_iy_aug_amt_out,
+                        o_q_iy_amt_intr_out,
+                        o_q_iy_amt_ldv_out,
+                        o_q_sent_iy_amt_out,
+                        o_q_risk_iy_amt_out,
+                        o_q_iy_amt_cong_out,
+                        o_q_iy_amt_epa_out,
+                        o_q_iy_amt_doe_out,
+                        o_a_iy_ovrl_amt_out,
+                        o_a_iy_tenk_amt_out,
+                        o_q_iy_amt_bills_out,
+                        o_q_iy_kywd_amt_out,
+                        o_q_iy_kywd_miti_amt_out,
+                        o_q_iy_kywd_adpt_amt_out,
+                        o_y_iy_coal_pro_amt_out,
+                        o_y_iy_coal_anti_amt_out)
+model_names2 <- names(mod_list2)
+auxiliary2 <- rbind(auxiliary2, "Model"=model_names2)
+
+auxiliary2_out <- data.frame(t(auxiliary2)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Firm.Controls" ~ "Firm Controls",
+      Test == "Estimation" ~ "Estimation",
+      Test == "Climate.Measure" ~ "Climate Measure",
+      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
+      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
+      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Panel" ~ "Panel",
+      Test == "Lagged.DV" ~ "Lagged DV",
+      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
+      TRUE ~ " "
+    )
+  )
+
+names(mod_list2) <- c("Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
+                     "Amt. (EPA)", "Amt. (DOE)", "Amount", "Amount", "Amt. (Bills)", "Amt. (Kywd.)", 
+                     "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)")
+
+modelsummary(mod_list2
+             ,add_rows=auxiliary2_out
+             ,output="results/tables/appendix_table_test_ols_NEW_amount.tex"
+)
 
 
 
