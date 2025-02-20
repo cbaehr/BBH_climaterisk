@@ -816,7 +816,7 @@ o_q_iy_impt_ready <- c(o_q_iy_impt$op_expo_ew_coef, o_q_iy_impt$op_expo_ew_se,
 
 o_q_iy_impt_N <- o_q_iy_impt$n
 
-o_q_iy_impt_R <- o_q_iy_impt$r
+o_q_iy_impt_R <- round(o_q_iy_impt$r, 3)
 
 o_q_iy_impt_Wald <- round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3) #Wald stats
 
@@ -1159,31 +1159,31 @@ o_q_iy_amt_doe_out <- c(`Num. Obs.` = o_q_iy_amt_doe_N,
 
 ## Tobit Amount Main Models
 
-tobit <- read.csv("results/model_Data/tobit_results_quarterly_DATA_REVISION.csv", stringsAsFactors=F)
-
-t_q_iy_amt_ready <- process_stata(tobit, 2, "exposure")
-
-t_q_iy_amt_N <- as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=N")]))
-
-t_q_iy_amt_R <- round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=r2a")])), 3)
-
-t_q_iy_amt_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald1")])), 3),
-                 round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald2")])), 3),
-                 round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald3")])), 3))
-
-t_q_iy_amt_out <- c(`Num. Obs.` = t_q_iy_amt_N,
-                `Adjusted R-Squared` =  t_q_iy_amt_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'Tobit',
-                `Panel` = 'Firm-Qtr.',
-                `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_amt_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_amt_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_amt_Wald[3]))
+# tobit <- read.csv("results/model_Data/tobit_results_quarterly_DATA_REVISION.csv", stringsAsFactors=F)
+# 
+# t_q_iy_amt_ready <- process_stata(tobit, 2, "exposure")
+# 
+# t_q_iy_amt_N <- as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=N")]))
+# 
+# t_q_iy_amt_R <- round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=r2a")])), 3)
+# 
+# t_q_iy_amt_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald1")])), 3),
+#                  round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald2")])), 3),
+#                  round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald3")])), 3))
+# 
+# t_q_iy_amt_out <- c(`Num. Obs.` = t_q_iy_amt_N,
+#                 `Adjusted R-Squared` =  t_q_iy_amt_R,
+#                 `Year FE` = ' ',
+#                 `Industry x Year FE` = '\\checkmark',
+#                 `Firm FE` = ' ',
+#                 `Firm Controls` = '\\checkmark',
+#                 `Lagged DV` = ' ',
+#                 `Climate Measure` = 'Exposure',
+#                 `Estimation` = 'Tobit',
+#                 `Panel` = 'Firm-Qtr.',
+#                 `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_amt_Wald[1]),
+#                 `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_amt_Wald[2]),
+#                 `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_amt_Wald[3]))
 
 ## Amount: Annual Model with Overall Expo ------------------------------------------------
 
@@ -1611,6 +1611,8 @@ o_y_iy_coal_anti_amt_ready_stars <- stars(o_y_iy_coal_anti_amt_ready)
 o_q_iy_impt_amt_ready_stars <- stars(o_q_iy_impt_amt_ready)
 o_q_iy_tobit_amt_ready_stars <- stars(o_q_iy_tobit_amt_ready)
 
+## Full Table ----------------------------------------------------------------------------
+
 m1 <- list(tidy=o_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iyf_ready_stars); class(m2) <- "modelsummary_list"
 m3 <- list(tidy=o_q_iy_intr_ready_stars); class(m3) <- "modelsummary_list"
@@ -1755,6 +1757,118 @@ modelsummary(mod_list
              ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test_ols_NEW.tex"
 )
+
+
+## Occurrence models -- no alt. dv ---------------------------------------------
+
+mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 3"=m3, 
+                 "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, 
+                 "OLS 15.6"=m24, "OLS 15.98"=m43)
+
+auxiliary <- data.frame(o_q_y_out,
+                        o_q_iy_out,
+                        l_q_iy_out,
+                        o_a_iy_out,
+                        o_q_iyf_out,
+                        o_q_iy_aug_out,
+                        o_q_iy_intr_out,
+                        o_q_iy_ldv_out,
+                        o_q_sent_iy_out,
+                        o_q_risk_iy_out,
+                        o_q_iy_cong_out,
+                        o_q_iy_epa_out,
+                        o_q_iy_doe_out,
+                        o_a_iy_ovrl_out,
+                        o_a_iy_tenk_out,
+                        o_q_iy_impt_out)
+model_names <- names(mod_list)
+auxiliary <- rbind(auxiliary, "Model"=model_names)
+
+auxiliary_out <- data.frame(t(auxiliary)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Firm.Controls" ~ "Firm Controls",
+      Test == "Estimation" ~ "Estimation",
+      Test == "Climate.Measure" ~ "Climate Measure",
+      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
+      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
+      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Panel" ~ "Panel",
+      Test == "Lagged.DV" ~ "Lagged DV",
+      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.ar2" ~ "Adj. R-Squared",
+      TRUE ~ " "
+    )
+  )
+
+names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
+                     "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur.")
+
+modelsummary(mod_list
+             ,add_rows=auxiliary_out
+             ,output="results/tables/appendix_table_test_ols_NEW_occur_noaltdv.tex"
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Occurrence Models -----------------------------------------------------------------------------
 
