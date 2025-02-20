@@ -6,7 +6,9 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot, janitor)
+pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot, janitor, 
+               mice, censReg)
+#miceadds
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -112,6 +114,8 @@ df %>%
 
 summary(df$CLI_TAX_amount_quarter)
 
+df$`Industry x Quarter` <- paste(df$industry, df$yearqtr)
+
 ## Effect of climate exposure on lobbying occurrence
 models <- list(
   "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew, data=df, vcov = ~ Year + Firm),
@@ -123,7 +127,12 @@ models <- list(
   "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
   "(8)" = feols(CLI ~ op_pos_ew + rg_pos_ew + ph_pos_ew + op_neg_ew + rg_neg_ew + ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(9)" = feols(CLI ~ op_sent_ew + rg_sent_ew + ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
-  "(10)" = feols(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm)
+  "(10)" = feols(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(11)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Quarter`, data=df, vcov = ~ Year + Firm),
+  "(12)" = feols(CLI_CAW_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(13)" = feols(CLI_ENG_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(14)" = feols(CLI_ENV_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(15)" = feols(CLI_FUE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
@@ -153,7 +162,20 @@ models <- list(
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RData")
 
+models <- list(
+  "(1)" = feglm(CLI_CAW_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(2)" = feglm(CLI_ENG_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(3)" = feglm(CLI_ENV_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(4)" = feglm(CLI_FUE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
+)
+
 ## OLS - Amount -----------------------------------------------------
+
+df$log_CLI_amount_CAW <- log(df$CLI_CAW_amount_quarter + 1)
+df$log_CLI_amount_ENG <- log(df$CLI_ENG_amount_quarter + 1)
+df$log_CLI_amount_ENV <- log(df$CLI_ENV_amount_quarter + 1)
+df$log_CLI_amount_FUE <- log(df$CLI_FUE_amount_quarter + 1)
+
 models <- list(
   "(1)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew, data=df, vcov = ~ Year + Firm),
   "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df, vcov = ~ Year + Firm),
@@ -164,7 +186,12 @@ models <- list(
   "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
   "(8)" = feols(log_CLI_amount ~ op_pos_ew + rg_pos_ew + ph_pos_ew + op_neg_ew + rg_neg_ew + ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(9)" = feols(log_CLI_amount ~ op_sent_ew + rg_sent_ew + ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
-  "(10)" = feols(log_CLI_amount ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm)
+  "(10)" = feols(log_CLI_amount ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(11)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Quarter`, data=df, vcov = ~ Year + Firm),
+  "(12)" = feols(log_CLI_amount_CAW ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(13)" = feols(log_CLI_amount_ENG ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(14)" = feols(log_CLI_amount_ENV ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(15)" = feols(log_CLI_amount_FUE ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 
@@ -625,6 +652,161 @@ models <- list(
 )
 
 save(models, file="data/03_final/climate_ols_yr_coalition_MODELS_REVISION_NEW.RData")
+
+## Multiple Imputation Model ----------------------------------------------------
+
+m <- 20
+
+## Using Rubin's Rule for Pooling multiple imputation estimates
+beta_mi <- function(coefnm) {
+  betas <- lapply(model_list, FUN=function(x) x$coefficients[coefnm])
+  Q_bar <- mean( unlist(betas) )
+  return( Q_bar )
+}
+
+se_mi <- function(coefnm) {
+  ses <- lapply(model_list, FUN=function(x) x$se[coefnm])
+  ses <- unlist(ses)
+  W <- mean(ses^2)
+  q_hat <- beta_mi(coefnm)
+  betas <- unlist( lapply(model_list, FUN=function(x) x$coefficients[coefnm]) )
+  B <- (1/(m-1)) * sum((betas-q_hat)^2)
+  
+  T_var <- W + (1 + (1/m)) * B
+  return( sqrt(T_var) )
+}
+
+
+compute_wald <- function(fixest_mod, var1, var2) {
+  a <- fixest_mod$coefficients[var1] #var1 coef
+  b <- fixest_mod$coefficients[var2] #var2 coef
+  a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
+  b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
+  ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
+  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  return(wald)
+}
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- process_df(df)
+df$year <- df$Year
+df$firm <- df$Firm
+
+df <- df[!is.na(df$op_expo_ew) , ]
+
+nms <- c("CLI", "log_CLI_amount", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at", 
+         "us_dummy", "total_lobby_quarter", "yearqtr", "firm", "industry_year", "year")
+df.pre_imp <- data.frame(df)
+df.pre_imp <- df.pre_imp[, nms]
+df.pre_imp$industry_year <- as.numeric(as.factor(df.pre_imp$industry_year))
+df.pre_imp$firm <- as.numeric(as.factor(df.pre_imp$firm))
+
+imputed_data <- mice(df.pre_imp, m = m, method = 'pmm', seed = 123)
+
+model_list <- list()
+for (i in 1:m) {  # Loop over the 5 imputed datasets
+  imputed_df <- complete(imputed_data, action = i)  # Extract dataset
+  # Run the fixed effects model
+  model_list[[i]] <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | industry_year, data=imputed_df, vcov = ~ year + firm)
+}
+
+n_occ <- model_list[[1]]$nobs
+r_occ <- mean(unlist(lapply(model_list, FUN = function(x) r2(x, type = "ar2"))))
+wald1_occ <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "op_expo_ew", "rg_expo_ew"))))
+wald2_occ <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "op_expo_ew", "ph_expo_ew"))))
+wald3_occ <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "rg_expo_ew", "ph_expo_ew"))))
+
+occ <- c(beta_mi("op_expo_ew"), se_mi("op_expo_ew"), beta_mi("rg_expo_ew"), 
+         se_mi("rg_expo_ew"), beta_mi("ph_expo_ew"), se_mi("ph_expo_ew"), n_occ, r_occ, wald1_occ, wald2_occ, wald3_occ)
+
+
+model_list <- list()
+for (i in 1:m) {  # Loop over the 5 imputed datasets
+  imputed_df <- complete(imputed_data, action = i)  # Extract dataset
+  # Run the fixed effects model
+  model_list[[i]] <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | industry_year, data=imputed_df, vcov = ~ year + firm)
+}
+
+n_amt <- model_list[[1]]$nobs
+r_amt <- mean(unlist(lapply(model_list, FUN = function(x) r2(x, type = "ar2"))))
+wald1_amt <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "op_expo_ew", "rg_expo_ew"))))
+wald2_amt <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "op_expo_ew", "ph_expo_ew"))))
+wald3_amt <- mean(unlist(lapply(model_list, FUN = function(x) compute_wald(x, "rg_expo_ew", "ph_expo_ew"))))
+
+amt <- c(beta_mi("op_expo_ew"), se_mi("op_expo_ew"), beta_mi("rg_expo_ew"), 
+         se_mi("rg_expo_ew"), beta_mi("ph_expo_ew"), se_mi("ph_expo_ew"), n_amt, r_amt, wald1_amt, wald2_amt, wald3_amt)
+
+models <- data.frame(rbind(occ, amt))
+
+names(models) <- c("op_expo_ew_coef", "op_expo_ew_se", "rg_expo_ew_coef", "rg_expo_ew_se", 
+                   "ph_expo_ew_coef", "ph_expo_ew_se", "n", "r", "wald1", "wald2", "wald3")
+
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RData")
+
+## Tobit Model -----------------------------------------------------------------
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- process_df(df)
+
+df <- df[ , c("log_CLI_amount", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit",
+              "ebit_at", "us_dummy", "total_lobby_quarter", "industry_year", "Firm", "Year")]
+
+df <- df[complete.cases(df) , ]
+
+df_cs <- df %>%
+  group_by(industry_year) %>%
+  summarize(log_CLI_amount_mu = mean(log_CLI_amount, na.rm=T))
+
+df <- merge(df, df_cs)
+
+df$log_CLI_amount_mu <- df$log_CLI_amount - df$log_CLI_amount_mu
+
+m1 <- censReg(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter, data=df,
+              left=0)
+
+cl_vcov <- sandwich::vcovCL(m1, cluster = ~Firm+Year, type = "HC0")
+cl_se <- sqrt(diag(cl_vcov))
+
+# Robust Standard Errors Summary
+results <- lmtest::coeftest(m1, vcov. = cl_vcov)
+
+op_beta <- results["op_expo_ew","Estimate"]
+op_se <- results["op_expo_ew","Std. Error"]
+
+rg_beta <- results["rg_expo_ew","Estimate"]
+rg_se <- results["rg_expo_ew","Std. Error"]
+
+ph_beta <- results["ph_expo_ew","Estimate"]
+ph_se <- results["ph_expo_ew","Std. Error"]
+
+n <- m1$nObs["Total"]
+
+adjpseudoR2 <- function(obj) 1 - as.vector( (logLik(obj) - length(obj$estimate)) / logLik(update(obj, . ~ 1)) )
+r2 <- adjpseudoR2(m1)
+
+compute_wald <- function(censReg_mod, vcov, var1, var2) {
+  a <- censReg_mod$estimate[var1] #var1 coef
+  b <- censReg_mod$estimate[var2] #var2 coef
+  a_var <- vcov[var1, var1] #var1 variance
+  b_var <- vcov[var2, var2] #var2 variance
+  ab_cov <- vcov[var1, var2] #var1-2 covariance
+  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  return(wald)
+}
+
+w1 <- compute_wald(m1, cl_vcov, "op_expo_ew", "rg_expo_ew")
+w2 <- compute_wald(m1, cl_vcov, "op_expo_ew", "ph_expo_ew")
+w3 <- compute_wald(m1, cl_vcov, "rg_expo_ew", "ph_expo_ew")
+
+tobit <- c(op_beta, op_se, rg_beta, rg_se, ph_beta, ph_se, 
+           n, r2, w1, w2, w3)
+
+tobit <- data.frame(t(tobit))
+
+names(tobit) <- c("op_expo_ew_coef", "op_expo_ew_se", "rg_expo_ew_coef", "rg_expo_ew_se", 
+                   "ph_expo_ew_coef", "ph_expo_ew_se", "n", "r", "wald1", "wald2", "wald3")
+
+save(tobit, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_tobit.RData")
 
 
 ### END

@@ -1,6 +1,7 @@
 
 rm(list = ls())
 options("modelsummary_format_numeric_latex" = "plain")
+#devtools::install_version("modelsummary", version = "1.2", repos = "http://cran.us.r-project.org")
 pacman::p_load(tidyverse, modelsummary, fixest)
 
 # set working directory
@@ -803,6 +804,37 @@ o_y_iy_coal_anti_out <- c(`Num. Obs.` = o_y_iy_coal_anti_N,
                          `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[2]),
                          `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[3]))
 
+## Occ: Imputation Model ------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RData")
+
+o_q_iy_impt <- models[1,,drop=F]
+
+o_q_iy_impt_ready <- c(o_q_iy_impt$op_expo_ew_coef, o_q_iy_impt$op_expo_ew_se,
+                       o_q_iy_impt$rg_expo_ew_coef, o_q_iy_impt$rg_expo_ew_se,
+                       o_q_iy_impt$ph_expo_ew_coef, o_q_iy_impt$ph_expo_ew_se)
+
+o_q_iy_impt_N <- o_q_iy_impt$n
+
+o_q_iy_impt_R <- o_q_iy_impt$r
+
+o_q_iy_impt_Wald <- round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3) #Wald stats
+
+
+o_q_iy_impt_out <- c(`Num. Obs.` = o_q_iy_impt_N,
+                          `Adjusted R-Squared` =  o_q_iy_impt_R,
+                          `Year FE` = ' ',
+                          `Industry x Year FE` = '\\checkmark',
+                          `Firm FE` = ' ',
+                          `Firm Controls` = '\\checkmark',
+                          `Lagged DV` = ' ',
+                          `Climate Measure` = 'Exposure',
+                          `Estimation` = 'OLS',
+                          `Panel` = 'Imputed F-Q',
+                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_Wald[1]),
+                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_Wald[2]),
+                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_Wald[3]))
+
 ## Amount --------------------------------------------------
 
 
@@ -1471,6 +1503,67 @@ o_y_iy_coal_anti_amt_out <- c(`Num. Obs.` = o_y_iy_coal_anti_amt_N,
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[3]))
 
+## Amt: Imputation Model ------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RData")
+
+o_q_iy_impt_amt <- models[2,,drop=F]
+
+o_q_iy_impt_amt_ready <- c(o_q_iy_impt_amt$op_expo_ew_coef, o_q_iy_impt_amt$op_expo_ew_se,
+                       o_q_iy_impt_amt$rg_expo_ew_coef, o_q_iy_impt_amt$rg_expo_ew_se,
+                       o_q_iy_impt_amt$ph_expo_ew_coef, o_q_iy_impt_amt$ph_expo_ew_se)
+
+o_q_iy_impt_amt_N <- o_q_iy_impt_amt$n
+
+o_q_iy_impt_amt_R <- o_q_iy_impt_amt$r
+
+o_q_iy_impt_amt_Wald <- round(c(o_q_iy_impt_amt$wald1, o_q_iy_impt_amt$wald2, o_q_iy_impt_amt$wald3), 3) #Wald stats
+
+
+o_q_iy_impt_amt_out <- c(`Num. Obs.` = o_q_iy_impt_amt_N,
+                     `Adjusted R-Squared` =  o_q_iy_impt_amt_R,
+                     `Year FE` = ' ',
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'OLS',
+                     `Panel` = 'Imputed F-Q',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_amt_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[3]))
+
+## Amt: Tobit Model --------------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_tobit.RData")
+
+o_q_iy_tobit_amt <- tobit[1,,drop=F]
+
+o_q_iy_tobit_amt_ready <- c(o_q_iy_tobit_amt$op_expo_ew_coef, o_q_iy_tobit_amt$op_expo_ew_se,
+                            o_q_iy_tobit_amt$rg_expo_ew_coef, o_q_iy_tobit_amt$rg_expo_ew_se,
+                           o_q_iy_tobit_amt$ph_expo_ew_coef, o_q_iy_tobit_amt$ph_expo_ew_se)
+
+o_q_iy_tobit_amt_N <- o_q_iy_tobit_amt$n
+
+o_q_iy_tobit_amt_R <- o_q_iy_tobit_amt$r
+
+o_q_iy_tobit_amt_Wald <- round(c(o_q_iy_tobit_amt$wald1, o_q_iy_tobit_amt$wald2, o_q_iy_tobit_amt$wald3), 3) #Wald stats
+
+
+o_q_iy_tobit_amt_out <- c(`Num. Obs.` = o_q_iy_tobit_amt_N,
+                     `Adjusted R-Squared` =  o_q_iy_tobit_amt_R,
+                     `Year FE` = ' ',
+                     `Industry x Year FE` = '\\checkmark',
+                     `Firm FE` = ' ',
+                     `Firm Controls` = '\\checkmark',
+                     `Lagged DV` = ' ',
+                     `Climate Measure` = 'Exposure',
+                     `Estimation` = 'OLS',
+                     `Panel` = 'Imputed F-Q',
+                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_tobit_amt_Wald[1]),
+                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_tobit_amt_Wald[2]),
+                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_tobit_amt_Wald[3]))
 
 ## Combine and export --------------------------------------------------
 
@@ -1494,6 +1587,7 @@ o_q_iy_kywd_adpt_ready_stars <- stars(o_q_iy_kywd_adpt_ready)
 o_q_iy_aug_ready_stars <- stars(o_q_iy_aug_ready)
 o_y_iy_coal_pro_ready_stars <- stars(o_y_iy_coal_pro_ready)
 o_y_iy_coal_anti_ready_stars <- stars(o_y_iy_coal_anti_ready)
+o_q_iy_impt_ready_stars <- stars(o_q_iy_impt_ready)
 
 o_q_y_amt_ready_stars <- stars(o_q_y_amt_ready)
 o_q_iy_amt_ready_stars <- stars(o_q_iy_amt_ready)
@@ -1505,7 +1599,7 @@ o_q_risk_iy_amt_ready_stars <- stars(o_q_risk_iy_amt_ready)
 o_q_iy_amt_cong_ready_stars <- stars(o_q_iy_amt_cong_ready)
 o_q_iy_amt_epa_ready_stars <- stars(o_q_iy_amt_epa_ready)
 o_q_iy_amt_doe_ready_stars <- stars(o_q_iy_amt_doe_ready)
-t_q_iy_amt_ready_stars <- stars(t_q_iy_amt_ready)
+#t_q_iy_amt_ready_stars <- stars(t_q_iy_amt_ready)
 o_a_iy_amt_ready_stars <- stars(o_a_iy_amt_ready)
 o_q_iy_amt_bills_ready_stars <- stars(o_q_iy_amt_bills_ready)
 o_q_iy_kywd_amt_ready_stars <- stars(o_q_iy_kywd_amt_ready)
@@ -1514,6 +1608,8 @@ o_q_iy_kywd_adpt_amt_ready_stars <- stars(o_q_iy_kywd_adpt_amt_ready)
 o_q_iy_aug_amt_ready_stars <- stars(o_q_iy_aug_amt_ready)
 o_y_iy_coal_pro_amt_ready_stars <- stars(o_y_iy_coal_pro_amt_ready)
 o_y_iy_coal_anti_amt_ready_stars <- stars(o_y_iy_coal_anti_amt_ready)
+o_q_iy_impt_amt_ready_stars <- stars(o_q_iy_impt_amt_ready)
+o_q_iy_tobit_amt_ready_stars <- stars(o_q_iy_tobit_amt_ready)
 
 m1 <- list(tidy=o_q_iy_ready_stars); class(m1) <- "modelsummary_list"
 m2 <- list(tidy=o_q_iyf_ready_stars); class(m2) <- "modelsummary_list"
@@ -1536,6 +1632,7 @@ m33 <- list(tidy=o_q_iy_kywd_adpt_ready_stars); class(m33) <- "modelsummary_list
 m37 <- list(tidy=o_q_iy_aug_ready_stars); class(m37) <- "modelsummary_list"
 m39 <- list(tidy=o_y_iy_coal_pro_ready_stars); class(m39) <- "modelsummary_list"
 m40 <- list(tidy=o_y_iy_coal_anti_ready_stars); class(m40) <- "modelsummary_list"
+m43 <- list(tidy=o_q_iy_impt_ready_stars); class(m43) <- "modelsummary_list"
 
 m7 <- list(tidy=o_q_iy_amt_ready_stars); class(m7) <- "modelsummary_list"
 m8 <- list(tidy=o_q_iyf_amt_ready_stars); class(m8) <- "modelsummary_list"
@@ -1547,7 +1644,8 @@ m16 <- list(tidy=o_q_iy_amt_cong_ready_stars); class(m16) <- "modelsummary_list"
 m17 <- list(tidy=o_q_iy_amt_epa_ready_stars); class(m17) <- "modelsummary_list"
 m18 <- list(tidy=o_q_iy_amt_doe_ready_stars); class(m18) <- "modelsummary_list"
 m20 <- list(tidy=o_q_y_amt_ready_stars); class(m20) <- "modelsummary_list"
-m22 <- list(tidy=t_q_iy_amt_ready_stars); class(m22) <- "modelsummary_list"
+#m22 <- list(tidy=t_q_iy_amt_ready_stars); class(m22) <- "modelsummary_list"
+m22 <- list(tidy=o_q_iy_tobit_amt_ready_stars); class(m22) <- "modelsummary_list"
 m25 <- list(tidy=o_a_iy_ovrl_amt_ready_stars); class(m25) <- "modelsummary_list"
 m26 <- list(tidy=o_a_iy_tenk_amt_ready_stars); class(m26) <- "modelsummary_list"
 m28 <- list(tidy=o_a_iy_amt_ready_stars); class(m28) <- "modelsummary_list"
@@ -1558,13 +1656,15 @@ m36 <- list(tidy=o_q_iy_kywd_adpt_amt_ready_stars); class(m36) <- "modelsummary_
 m38 <- list(tidy=o_q_iy_aug_amt_ready_stars); class(m38) <- "modelsummary_list"
 m41 <- list(tidy=o_y_iy_coal_pro_amt_ready_stars); class(m41) <- "modelsummary_list"
 m42 <- list(tidy=o_y_iy_coal_anti_amt_ready_stars); class(m42) <- "modelsummary_list"
+m44 <- list(tidy=o_q_iy_impt_amt_ready_stars); class(m44) <- "modelsummary_list"
+
 
 mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, 
                  "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, "OLS 15.6"=m24, "OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33,
-                 "OLS 15.96"=m39, "OLS 15.97"=m40,
+                 "OLS 15.96"=m39, "OLS 15.97"=m40, "OLS 15.98"=m43,
                  "OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 8.5"=m38, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
                  "OLS 12"=m12, "OLS 16"=m16, "OLS 17"=m17, "OLS 18"=m18, "OLS 18.3"=m25, "OLS 18.6"=m26, "OLS 18.7"=m30,
-                 "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42)
+                 "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42, "OLS 18.98"=m44)
 # mod_list <- list("Occurrence" = list("OLS 1"=m1, "OLS 2"=m2, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6),
 #                  "Amount" = list("OLS 7"=m7, "OLS 8"=m8, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, "OLS 12"=m12))
 
@@ -1589,9 +1689,10 @@ auxiliary <- data.frame(o_q_y_out,
                         o_q_iy_kywd_adpt_out,
                         o_y_iy_coal_pro_out,
                         o_y_iy_coal_anti_out,
+                        o_q_iy_impt_out,
                         o_q_y_amt_out,
                         o_q_iy_amt_out,
-                        t_q_iy_amt_out,
+                        o_q_iy_tobit_amt_out,
                         o_a_iy_amt_out,
                         o_q_iyf_amt_out,
                         o_q_iy_aug_amt_out,
@@ -1609,7 +1710,8 @@ auxiliary <- data.frame(o_q_y_out,
                         o_q_iy_kywd_miti_amt_out,
                         o_q_iy_kywd_adpt_amt_out,
                         o_y_iy_coal_pro_amt_out,
-                        o_y_iy_coal_anti_amt_out)
+                        o_y_iy_coal_anti_amt_out,
+                        o_q_iy_impt_amt_out)
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -1644,10 +1746,10 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
 
 names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
                      "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur. (Bills)", "Occur. (Kywd.)", 
-                     "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)", "Occur. (Pro-Coal.)", "Occur. (Anti-Coal.)",
+                     "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)", "Occur. (Pro-Coal.)", "Occur. (Anti-Coal.)", "Occur.",
                      "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
                      "Amt. (EPA)", "Amt. (DOE)", "Amount", "Amount", "Amt. (Bills)", "Amt. (Kywd.)", 
-                     "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)")
+                     "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)", "Amt")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
@@ -1720,6 +1822,7 @@ names(mod_list1) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur."
 modelsummary(mod_list1
              ,add_rows=auxiliary1_out
              ,output="results/tables/appendix_table_test_ols_NEW_occurrence.tex"
+             ,escape=F
 )
 
 ## Amount Models -----------------------------------------------------------------------------
@@ -1791,6 +1894,64 @@ modelsummary(mod_list2
              ,add_rows=auxiliary2_out
              ,output="results/tables/appendix_table_test_ols_NEW_amount.tex"
 )
+
+## Alternative Dependent Variables Table
+
+mod_list <- list("OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33, "OLS 15.96"=m39, "OLS 15.97"=m40,
+                 "OLS 18.7"=m30, "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42)
+
+auxiliary <- data.frame(o_q_iy_bills_out,
+                        o_q_iy_kywd_out,
+                        o_q_iy_kywd_miti_out,
+                        o_q_iy_kywd_adpt_out,
+                        o_y_iy_coal_pro_out,
+                        o_y_iy_coal_anti_out,
+                        o_q_iy_amt_bills_out,
+                        o_q_iy_kywd_amt_out,
+                        o_q_iy_kywd_miti_amt_out,
+                        o_q_iy_kywd_adpt_amt_out,
+                        o_y_iy_coal_pro_amt_out,
+                        o_y_iy_coal_anti_amt_out)
+model_names <- names(mod_list)
+auxiliary <- rbind(auxiliary, "Model"=model_names)
+
+auxiliary_out <- data.frame(t(auxiliary)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  # Test: Industry x Year FE
+  mutate(
+    Test = case_when(
+      Test == "Industry.FE" ~ "Industry FE",
+      Test == "Firm.FE" ~ "Firm FE",
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Firm.Controls" ~ "Firm Controls",
+      Test == "Estimation" ~ "Estimation",
+      Test == "Climate.Measure" ~ "Climate Measure",
+      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
+      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
+      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Panel" ~ "Panel",
+      Test == "Lagged.DV" ~ "Lagged DV",
+      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
+      TRUE ~ " "
+    )
+  )
+
+names(mod_list) <- c("Occ (Bills)", "Occ (Kywd.)", "Occ (Kywd.-Miti.)", "Occ (Kywd.-Adpt.)", "Occ (Pro-Coal.)", "Occ (Anti-Coal.)",
+                      "Amt. (Bills)", "Amt. (Kywd.)", "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)")
+
+modelsummary(mod_list
+             ,add_rows=auxiliary_out
+             ,output="results/tables/appendix_table_test_ols_NEW_AltDV.tex"
+)
+
 
 
 ## Wald Tests Across Models ----------------------------------------------------
