@@ -10,6 +10,7 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
 
 stars <- function(x, ldv=F) {
+  x <- x * 100
   op <- x[1] / x[2]
   rg <- x[3] / x[4]
   ph <- x[5] / x[6]
@@ -60,7 +61,7 @@ compute_wald <- function(fixest_mod, var1, var2) {
   b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
   ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
   wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
-  return(wald)
+  return(abs(wald))
 }
 
 process_stata <- function(output, colnum, type) {
@@ -158,7 +159,7 @@ o_q_y_out <- c(`Num. Obs.` = o_q_y_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr.',
+                `Panel` = 'Firm-Qtr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_y_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_y_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_y_Wald[3]))
@@ -188,7 +189,7 @@ o_q_iy_out <- c(`Num. Obs.` = o_q_iy_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr.',
+                `Panel` = 'Firm-Qtr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_Wald[3]))
@@ -218,7 +219,7 @@ o_q_iyf_out <- c(`Num. Obs.` = o_q_iyf_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr.',
+                `Panel` = 'Firm-Qtr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iyf_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iyf_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iyf_Wald[3]))
@@ -248,7 +249,7 @@ o_q_sent_iy_out <- c(`Num. Obs.` = o_q_sent_iy_N,
                  `Lagged DV` = ' ',
                  `Climate Measure` = 'Sentiment',
                  `Estimation` = 'OLS',
-                 `Panel` = 'Firm-Qtr.',
+                 `Panel` = 'Firm-Qtr',
                  `Wald Stat (Opp - Reg = 0)` = as.character(o_q_sent_iy_Wald[1]),
                  `Wald Stat (Opp - Phy = 0)` = as.character(o_q_sent_iy_Wald[2]),
                  `Wald Stat (Reg - Phy = 0)` = as.character(o_q_sent_iy_Wald[3]))
@@ -278,7 +279,7 @@ o_q_risk_iy_out <- c(`Num. Obs.` = o_q_risk_iy_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Risk',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_Wald[3]))
@@ -314,7 +315,7 @@ o_q_iy_intr_out <- c(`Num. Obs.` = o_q_iy_intr_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_intr_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_intr_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_intr_Wald[3]))
@@ -348,7 +349,7 @@ o_q_iy_ldv_out <- c(`Num. Obs.` = o_q_iy_ldv_N,
                      `Lagged DV` = '\\checkmark',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_ldv_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_ldv_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_ldv_Wald[3]))
@@ -382,7 +383,7 @@ o_q_iy_cong_out <- c(`Num. Obs.` = o_q_iy_cong_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_cong_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_cong_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_cong_Wald[3]))
@@ -414,7 +415,7 @@ o_q_iy_epa_out <- c(`Num. Obs.` = o_q_iy_epa_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_epa_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_epa_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_epa_Wald[3]))
@@ -446,7 +447,7 @@ o_q_iy_doe_out <- c(`Num. Obs.` = o_q_iy_doe_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_doe_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_doe_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_doe_Wald[3]))
@@ -481,7 +482,7 @@ l_q_iy_out <- c(`Num. Obs.` = l_q_iy_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'Logit',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_Wald[3]))
@@ -512,7 +513,7 @@ o_a_iy_ovrl_out <- c(`Num. Obs.` = o_a_iy_ovrl_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Ovrl. Expo.',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Year',
+                     `Panel` = 'Firm-Yr',
                      `Wald Stat (Opp - Reg = 0)` = ' ',
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -539,7 +540,7 @@ o_a_iy_tenk_out <- c(`Num. Obs.` = o_a_iy_tenk_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = '10-K Expo.',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Year',
+                     `Panel` = 'Firm-Yr',
                      `Wald Stat (Opp - Reg = 0)` = ' ',
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -572,7 +573,7 @@ o_a_iy_out <- c(`Num. Obs.` = o_a_iy_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Year',
+                    `Panel` = 'Firm-Yr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_a_iy_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_a_iy_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_a_iy_Wald[3]))
@@ -605,7 +606,7 @@ o_q_iy_bills_out <- c(`Num. Obs.` = o_q_iy_bills_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr.',
+                `Panel` = 'Firm-Qtr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_bills_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_bills_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_bills_Wald[3]))
@@ -638,7 +639,7 @@ o_q_iy_kywd_out <- c(`Num. Obs.` = o_q_iy_kywd_N,
                       `Lagged DV` = ' ',
                       `Climate Measure` = 'Exposure',
                       `Estimation` = 'OLS',
-                      `Panel` = 'Firm-Qtr.',
+                      `Panel` = 'Firm-Qtr',
                       `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_Wald[1]),
                       `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_Wald[2]),
                       `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_Wald[3]))
@@ -669,7 +670,7 @@ o_q_iy_kywd_miti_out <- c(`Num. Obs.` = o_q_iy_kywd_miti_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_miti_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_miti_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_miti_Wald[3]))
@@ -700,7 +701,7 @@ o_q_iy_kywd_adpt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr.',
+                          `Panel` = 'Firm-Qtr',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_adpt_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[3]))
@@ -733,7 +734,7 @@ o_q_iy_aug_out <- c(`Num. Obs.` = o_q_iy_aug_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr.',
+                          `Panel` = 'Firm-Qtr',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_Wald[3]))
@@ -768,7 +769,7 @@ o_y_iy_coal_pro_out <- c(`Num. Obs.` = o_y_iy_coal_pro_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Year',
+                    `Panel` = 'Firm-Yr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_pro_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_pro_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_pro_Wald[3]))
@@ -799,7 +800,7 @@ o_y_iy_coal_anti_out <- c(`Num. Obs.` = o_y_iy_coal_anti_N,
                          `Lagged DV` = ' ',
                          `Climate Measure` = 'Exposure',
                          `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Year',
+                         `Panel` = 'Firm-Yr',
                          `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_anti_Wald[1]),
                          `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[2]),
                          `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[3]))
@@ -818,7 +819,7 @@ o_q_iy_impt_N <- o_q_iy_impt$n
 
 o_q_iy_impt_R <- round(o_q_iy_impt$r, 3)
 
-o_q_iy_impt_Wald <- round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3) #Wald stats
+o_q_iy_impt_Wald <- abs(round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3)) #Wald stats
 
 
 o_q_iy_impt_out <- c(`Num. Obs.` = o_q_iy_impt_N,
@@ -830,7 +831,7 @@ o_q_iy_impt_out <- c(`Num. Obs.` = o_q_iy_impt_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Imputed F-Q',
+                          `Panel` = 'Imputed FQ',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_Wald[3]))
@@ -864,7 +865,7 @@ o_q_y_amt_out <- c(`Num. Obs.` = o_q_y_amt_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_y_amt_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_y_amt_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_y_amt_Wald[3]))
@@ -895,7 +896,7 @@ o_q_iy_amt_out <- c(`Num. Obs.` = o_q_iy_amt_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr.',
+                `Panel` = 'Firm-Qtr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_Wald[3]))
@@ -925,7 +926,7 @@ o_q_iyf_amt_out <- c(`Num. Obs.` = o_q_iyf_amt_N,
                  `Lagged DV` = ' ',
                  `Climate Measure` = 'Exposure',
                  `Estimation` = 'OLS',
-                 `Panel` = 'Firm-Qtr.',
+                 `Panel` = 'Firm-Qtr',
                  `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iyf_amt_Wald[1]),
                  `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iyf_amt_Wald[2]),
                  `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iyf_amt_Wald[3]))
@@ -955,7 +956,7 @@ o_q_sent_iy_amt_out <- c(`Num. Obs.` = o_q_sent_iy_amt_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Sentiment',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_sent_iy_amt_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[3]))
@@ -985,7 +986,7 @@ o_q_risk_iy_amt_out <- c(`Num. Obs.` = o_q_risk_iy_amt_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Risk',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_amt_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[3]))
@@ -1021,7 +1022,7 @@ o_q_iy_amt_intr_out <- c(`Num. Obs.` = o_q_iy_amt_intr_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_intr_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[3]))
@@ -1055,7 +1056,7 @@ o_q_iy_amt_ldv_out <- c(`Num. Obs.` = o_q_iy_amt_ldv_N,
                     `Lagged DV` = '\\checkmark',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_ldv_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[3]))
@@ -1088,7 +1089,7 @@ o_q_iy_amt_cong_out <- c(`Num. Obs.` = o_q_iy_amt_cong_N,
                         `Lagged DV` = ' ',
                         `Climate Measure` = 'Exposure',
                         `Estimation` = 'OLS',
-                        `Panel` = 'Firm-Qtr.',
+                        `Panel` = 'Firm-Qtr',
                         `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_cong_Wald[1]),
                         `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_cong_Wald[2]),
                         `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_cong_Wald[3]))
@@ -1119,7 +1120,7 @@ o_q_iy_amt_epa_out <- c(`Num. Obs.` = o_q_iy_amt_epa_N,
                          `Lagged DV` = ' ',
                          `Climate Measure` = 'Exposure',
                          `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Qtr.',
+                         `Panel` = 'Firm-Qtr',
                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_epa_Wald[1]),
                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_epa_Wald[2]),
                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_epa_Wald[3]))
@@ -1150,7 +1151,7 @@ o_q_iy_amt_doe_out <- c(`Num. Obs.` = o_q_iy_amt_doe_N,
                         `Lagged DV` = ' ',
                         `Climate Measure` = 'Exposure',
                         `Estimation` = 'OLS',
-                        `Panel` = 'Firm-Qtr.',
+                        `Panel` = 'Firm-Qtr',
                         `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_doe_Wald[1]),
                         `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_doe_Wald[2]),
                         `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_doe_Wald[3]))
@@ -1180,7 +1181,7 @@ o_q_iy_amt_doe_out <- c(`Num. Obs.` = o_q_iy_amt_doe_N,
 #                 `Lagged DV` = ' ',
 #                 `Climate Measure` = 'Exposure',
 #                 `Estimation` = 'Tobit',
-#                 `Panel` = 'Firm-Qtr.',
+#                 `Panel` = 'Firm-Qtr',
 #                 `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_amt_Wald[1]),
 #                 `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_amt_Wald[2]),
 #                 `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_amt_Wald[3]))
@@ -1209,7 +1210,7 @@ o_a_iy_ovrl_amt_out <- c(`Num. Obs.` = o_a_iy_ovrl_amt_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = '10-K Expo.',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Year',
+                     `Panel` = 'Firm-Yr',
                      `Wald Stat (Opp - Reg = 0)` = ' ',
                      `Wald Stat (Opp - Phy = 0)` = ' ',
                      `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -1236,7 +1237,7 @@ o_a_iy_tenk_amt_out <- c(`Num. Obs.` = o_a_iy_tenk_amt_N,
                          `Lagged DV` = ' ',
                          `Climate Measure` = '10-K Expo.',
                          `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Year',
+                         `Panel` = 'Firm-Yr',
                          `Wald Stat (Opp - Reg = 0)` = ' ',
                          `Wald Stat (Opp - Phy = 0)` = ' ',
                          `Wald Stat (Reg - Phy = 0)` = ' ')
@@ -1270,7 +1271,7 @@ o_a_iy_amt_out <- c(`Num. Obs.` = o_a_iy_amt_N,
                 `Lagged DV` = ' ',
                 `Climate Measure` = 'Exposure',
                 `Estimation` = 'OLS',
-                `Panel` = 'Firm-Year',
+                `Panel` = 'Firm-Yr',
                 `Wald Stat (Opp - Reg = 0)` = as.character(o_a_iy_amt_Wald[1]),
                 `Wald Stat (Opp - Phy = 0)` = as.character(o_a_iy_amt_Wald[2]),
                 `Wald Stat (Reg - Phy = 0)` = as.character(o_a_iy_amt_Wald[3]))
@@ -1304,7 +1305,7 @@ o_q_iy_amt_bills_out <- c(`Num. Obs.` = o_q_iy_amt_bills_N,
                       `Lagged DV` = ' ',
                       `Climate Measure` = 'Exposure',
                       `Estimation` = 'OLS',
-                      `Panel` = 'Firm-Qtr.',
+                      `Panel` = 'Firm-Qtr',
                       `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_bills_Wald[1]),
                       `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_bills_Wald[2]),
                       `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_bills_Wald[3]))
@@ -1337,7 +1338,7 @@ o_q_iy_kywd_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_amt_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr.',
+                     `Panel` = 'Firm-Qtr',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_amt_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_amt_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_amt_Wald[3]))
@@ -1368,7 +1369,7 @@ o_q_iy_kywd_miti_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_miti_amt_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr.',
+                          `Panel` = 'Firm-Qtr',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[3]))
@@ -1399,7 +1400,7 @@ o_q_iy_kywd_adpt_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_amt_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr.',
+                          `Panel` = 'Firm-Qtr',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[3]))
@@ -1432,7 +1433,7 @@ o_q_iy_aug_amt_out <- c(`Num. Obs.` = o_q_iy_aug_amt_N,
                     `Lagged DV` = ' ',
                     `Climate Measure` = 'Exposure',
                     `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr.',
+                    `Panel` = 'Firm-Qtr',
                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_amt_Wald[1]),
                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[2]),
                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[3]))
@@ -1467,7 +1468,7 @@ o_y_iy_coal_pro_amt_out <- c(`Num. Obs.` = o_y_iy_coal_pro_amt_N,
                          `Lagged DV` = ' ',
                          `Climate Measure` = 'Exposure',
                          `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Year',
+                         `Panel` = 'Firm-Yr',
                          `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[1]),
                          `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[2]),
                          `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[3]))
@@ -1498,7 +1499,7 @@ o_y_iy_coal_anti_amt_out <- c(`Num. Obs.` = o_y_iy_coal_anti_amt_N,
                           `Lagged DV` = ' ',
                           `Climate Measure` = 'Exposure',
                           `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Year',
+                          `Panel` = 'Firm-Yr',
                           `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[1]),
                           `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[2]),
                           `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[3]))
@@ -1517,7 +1518,7 @@ o_q_iy_impt_amt_N <- o_q_iy_impt_amt$n
 
 o_q_iy_impt_amt_R <- round(o_q_iy_impt_amt$r, 3)
 
-o_q_iy_impt_amt_Wald <- round(c(o_q_iy_impt_amt$wald1, o_q_iy_impt_amt$wald2, o_q_iy_impt_amt$wald3), 3) #Wald stats
+o_q_iy_impt_amt_Wald <- abs(round(c(o_q_iy_impt_amt$wald1, o_q_iy_impt_amt$wald2, o_q_iy_impt_amt$wald3), 3)) #Wald stats
 
 
 o_q_iy_impt_amt_out <- c(`Num. Obs.` = o_q_iy_impt_amt_N,
@@ -1529,7 +1530,7 @@ o_q_iy_impt_amt_out <- c(`Num. Obs.` = o_q_iy_impt_amt_N,
                      `Lagged DV` = ' ',
                      `Climate Measure` = 'Exposure',
                      `Estimation` = 'OLS',
-                     `Panel` = 'Imputed F-Q',
+                     `Panel` = 'Imputed FQ',
                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_amt_Wald[1]),
                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[2]),
                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[3]))
@@ -1548,7 +1549,7 @@ o_q_iy_tobit_amt_N <- o_q_iy_tobit_amt$n
 
 o_q_iy_tobit_amt_R <- round(o_q_iy_tobit_amt$r, 3)
 
-o_q_iy_tobit_amt_Wald <- round(c(o_q_iy_tobit_amt$wald1, o_q_iy_tobit_amt$wald2, o_q_iy_tobit_amt$wald3), 3) #Wald stats
+o_q_iy_tobit_amt_Wald <- abs(round(c(o_q_iy_tobit_amt$wald1, o_q_iy_tobit_amt$wald2, o_q_iy_tobit_amt$wald3), 3)) #Wald stats
 
 
 o_q_iy_tobit_amt_out <- c(`Num. Obs.` = o_q_iy_tobit_amt_N,
@@ -1814,8 +1815,8 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
-                     "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur.")
+names(mod_list) <- c("Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occ (Cong)", 
+                     "Occ (EPA)", "Occ (DOE)", "Occur", "Occur", "Occur")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
@@ -1877,8 +1878,8 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
-                     "Amt. (EPA)", "Amt. (DOE)", "Amount", "Amount", "Amt")
+names(mod_list) <- c("Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt (Cong)", 
+                     "Amt (EPA)", "Amt (DOE)", "Amount", "Amount", "Amount")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
@@ -1937,15 +1938,17 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
     )
   )
 
-names(mod_list) <- c("Occur. (Bills)", "Occur. (Kywd.)", 
-                     "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)", "Occur. (Pro-Coal.)", "Occur. (Anti-Coal.)",
-                     "Amt. (Bills)", "Amt. (Kywd.)", 
-                     "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)")
+names(mod_list) <- c("Occ (Bills)", "Occ (Kywd)", 
+                     "Occ (Kywd-Miti)", "Occ (Kywd-Adpt)", "Occ (Pro-Coal)", "Occ (Anti-Coal)",
+                     "Amt (Bills)", "Amt (Kywd)", 
+                     "Amt (Kywd-Miti)", "Amt (Kywd-Adpt)", "Amt (Pro-Coal)", "Amt (Anti-Coal)")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test_ols_NEW_altdv.tex"
 )
+
+
 
 
 
