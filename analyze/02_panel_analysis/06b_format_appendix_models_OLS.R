@@ -50,7 +50,9 @@ stars <- function(x, ldv=F) {
       out_df <- rbind(out_df, out_df_append)
       rownames(out_df)[4] <- "lagged_dv"
     }
-  } 
+  }
+  out_df <- list(tidy=out_df)
+  class(out_df) <- "modelsummary_list"
   return(out_df)
 }
 
@@ -64,11 +66,10 @@ compute_wald <- function(fixest_mod, var1, var2) {
   return(abs(wald))
 }
 
-
-
 process_model <- function(model, 
                           Year_FE = ' ', 
                           IndbyYear_FE = '\\checkmark', 
+                          IndbyQtr_FE = ' ',
                           Firm_FE = ' ', 
                           Firm_Controls = '\\checkmark',
                           Lagged_DV = ' ', 
@@ -91,6 +92,7 @@ process_model <- function(model,
                    `Adjusted R-Squared` =  unname(R),
                    `Year FE` = Year_FE,
                    `Industry x Year FE` = IndbyYear_FE,
+                   `Industry x Qtr FE` = IndbyQtr_FE,
                    `Firm FE` = Firm_FE,
                    `Firm Controls` = Firm_Controls,
                    `Lagged DV` = Lagged_DV,
@@ -183,117 +185,45 @@ process_stata <- function(output, colnum, type) {
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 o_q_y <- models[[3]] #Column 3 - firm-quarter panel, only year FE
 
-o_q_y_out <- process_model(o_q_y)
-
-
-
-
-o_q_y_ready <- c(o_q_y$coefficients["op_expo_ew"], o_q_y$se["op_expo_ew"],
-                  o_q_y$coefficients["rg_expo_ew"], o_q_y$se["rg_expo_ew"],
-                  o_q_y$coefficients["ph_expo_ew"], o_q_y$se["ph_expo_ew"])
-
-o_q_y_N <- o_q_y$nobs
-
-o_q_y_R <- round(r2(o_q_y, type = "ar2"), 3) #adjusted R2
-
-o_q_y_Wald <- c(round(compute_wald(o_q_y, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_q_y, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_q_y, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_y_out <- c(`Num. Obs.` = o_q_y_N,
-                `Adjusted R-Squared` =  o_q_y_R,
-                `Year FE` = '\\checkmark',
-                `Industry x Year FE` = ' ',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_y_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_y_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_y_Wald[3]))
+o_q_y_out <- process_model(o_q_y,
+                           Year_FE = '\\checkmark',
+                           IndbyYear_FE = ' ')
 
 ## Occ: Industry-by-Year FE ---------------------------------------------------
 
 o_q_iy <- models[[5]] #Column 5 - main result for firm-quarter panel, industry-by-year FE
 
-o_q_iy_ready <- c(o_q_iy$coefficients["op_expo_ew"], o_q_iy$se["op_expo_ew"],
-                  o_q_iy$coefficients["rg_expo_ew"], o_q_iy$se["rg_expo_ew"],
-                  o_q_iy$coefficients["ph_expo_ew"], o_q_iy$se["ph_expo_ew"])
-
-o_q_iy_N <- o_q_iy$nobs
-
-o_q_iy_R <- round(r2(o_q_iy, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_Wald <- c(round(compute_wald(o_q_iy, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_iy_out <- c(`Num. Obs.` = o_q_iy_N,
-                `Adjusted R-Squared` =  o_q_iy_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_Wald[3]))
+o_q_iy_out <- process_model(o_q_iy)
 
 ## Occ: Firm FE ---------------------------------------------------
 
 o_q_iyf <- models[[7]] #Column 7 - add Firm FE
 
-o_q_iyf_ready <- c(o_q_iyf$coefficients["op_expo_ew"], o_q_iyf$se["op_expo_ew"],
-                  o_q_iyf$coefficients["rg_expo_ew"], o_q_iyf$se["rg_expo_ew"],
-                  o_q_iyf$coefficients["ph_expo_ew"], o_q_iyf$se["ph_expo_ew"])
-
-o_q_iyf_N <- o_q_iyf$nobs
-
-o_q_iyf_R <- round(r2(o_q_iyf, type = "ar2"), 3) #adjusted R2
-
-o_q_iyf_Wald <- c(round(compute_wald(o_q_iyf, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_q_iyf, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_q_iyf, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_iyf_out <- c(`Num. Obs.` = o_q_iyf_N,
-                `Adjusted R-Squared` =  o_q_iyf_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = '\\checkmark',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iyf_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iyf_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iyf_Wald[3]))
+o_q_iyf_out <- process_model(o_q_iyf,
+                             IndbyYear_FE = ' ',
+                             Firm_FE = '\\checkmark')
 
 ## Occ: Sentiment ---------------------------------------------------
 
 o_q_sent_iy <- models[[9]] #Column 9 - industry-by-year FE with sentiment coefs
 
-o_q_sent_iy_ready <- c(o_q_sent_iy$coefficients["op_sent_ew"], o_q_sent_iy$se["op_sent_ew"],
-                  o_q_sent_iy$coefficients["rg_sent_ew"], o_q_sent_iy$se["rg_sent_ew"],
-                  o_q_sent_iy$coefficients["ph_sent_ew"], o_q_sent_iy$se["ph_sent_ew"])
+o_q_sent_iy_estimates <- c(o_q_sent_iy$coefficients["op_sent_ew"], o_q_sent_iy$se["op_sent_ew"],
+                           o_q_sent_iy$coefficients["rg_sent_ew"], o_q_sent_iy$se["rg_sent_ew"],
+                           o_q_sent_iy$coefficients["ph_sent_ew"], o_q_sent_iy$se["ph_sent_ew"])
 
 o_q_sent_iy_N <- o_q_sent_iy$nobs
 
-o_q_sent_iy_R <- round(r2(o_q_sent_iy, type = "ar2"), 3) #adjusted R2
+o_q_sent_iy_R <- unname(round(r2(o_q_sent_iy, type = "ar2"), 3)) #adjusted R2
 
 o_q_sent_iy_Wald <- c(round(compute_wald(o_q_sent_iy, "op_sent_ew", "rg_sent_ew"), 3), 
-                  round(compute_wald(o_q_sent_iy, "op_sent_ew", "ph_sent_ew"), 3), 
-                  round(compute_wald(o_q_sent_iy, "rg_sent_ew", "ph_sent_ew"), 3)) #Wald stats
+                      round(compute_wald(o_q_sent_iy, "op_sent_ew", "ph_sent_ew"), 3), 
+                      round(compute_wald(o_q_sent_iy, "rg_sent_ew", "ph_sent_ew"), 3)) #Wald stats
 
-o_q_sent_iy_out <- c(`Num. Obs.` = o_q_sent_iy_N,
+o_q_sent_iy_diagnostics <- c(`Num. Obs.` = o_q_sent_iy_N,
                  `Adjusted R-Squared` =  o_q_sent_iy_R,
                  `Year FE` = ' ',
                  `Industry x Year FE` = '\\checkmark',
+                 `Industry x Qtr FE` = ' ',
                  `Firm FE` = ' ',
                  `Firm Controls` = '\\checkmark',
                  `Lagged DV` = ' ',
@@ -304,35 +234,42 @@ o_q_sent_iy_out <- c(`Num. Obs.` = o_q_sent_iy_N,
                  `Wald Stat (Opp - Phy = 0)` = as.character(o_q_sent_iy_Wald[2]),
                  `Wald Stat (Reg - Phy = 0)` = as.character(o_q_sent_iy_Wald[3]))
 
+o_q_iy_sent_out <- list("Estimates" = o_q_sent_iy_estimates,
+                        "Diagnostics" = o_q_sent_iy_diagnostics)
+
 ## Occ: Risk ---------------------------------------------------
 
 o_q_risk_iy <- models[[10]] #Column 10 - industry-by-year FE with risk coefs
 
-o_q_risk_iy_ready <- c(o_q_risk_iy$coefficients["op_risk_ew"], o_q_risk_iy$se["op_risk_ew"],
-                       o_q_risk_iy$coefficients["rg_risk_ew"], o_q_risk_iy$se["rg_risk_ew"],
-                       o_q_risk_iy$coefficients["ph_risk_ew"], o_q_risk_iy$se["ph_risk_ew"])
+o_q_risk_iy_estimates <- c(o_q_risk_iy$coefficients["op_risk_ew"], o_q_risk_iy$se["op_risk_ew"],
+                           o_q_risk_iy$coefficients["rg_risk_ew"], o_q_risk_iy$se["rg_risk_ew"],
+                           o_q_risk_iy$coefficients["ph_risk_ew"], o_q_risk_iy$se["ph_risk_ew"])
 
 o_q_risk_iy_N <- o_q_risk_iy$nobs
 
-o_q_risk_iy_R <- round(r2(o_q_risk_iy, type = "ar2"), 3) #adjusted R2
+o_q_risk_iy_R <- unname(round(r2(o_q_risk_iy, type = "ar2"), 3)) #adjusted R2
 
 o_q_risk_iy_Wald <- c(round(compute_wald(o_q_risk_iy, "op_risk_ew", "rg_risk_ew"), 3), 
                       round(compute_wald(o_q_risk_iy, "op_risk_ew", "ph_risk_ew"), 3), 
                       round(compute_wald(o_q_risk_iy, "rg_risk_ew", "ph_risk_ew"), 3)) #Wald stats
 
-o_q_risk_iy_out <- c(`Num. Obs.` = o_q_risk_iy_N,
-                     `Adjusted R-Squared` =  o_q_risk_iy_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Risk',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_Wald[3]))
+o_q_risk_iy_diagnostics <- c(`Num. Obs.` = o_q_risk_iy_N,
+                             `Adjusted R-Squared` =  o_q_risk_iy_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Risk',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Firm-Qtr',
+                             `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_Wald[1]),
+                             `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_Wald[2]),
+                             `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_Wald[3]))
+
+o_q_iy_risk_out <- list("Estimates" = o_q_risk_iy_estimates,
+                        "Diagnostics" = o_q_risk_iy_diagnostics)
 
 ## Occ: Interact ---------------------------------------------------
 
@@ -340,35 +277,39 @@ load("data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_REVISION_NEW.
 
 o_q_iy_intr <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_intr_ready <- c(o_q_iy_intr$coefficients["op_expo_ew"], o_q_iy_intr$se["op_expo_ew"],
-                       o_q_iy_intr$coefficients["rg_expo_ew"], o_q_iy_intr$se["rg_expo_ew"],
-                       o_q_iy_intr$coefficients["ph_expo_ew"], o_q_iy_intr$se["ph_expo_ew"],
-                       o_q_iy_intr$coefficients["op_expo_ew:rg_expo_ew"], o_q_iy_intr$se["op_expo_ew:rg_expo_ew"],
-                       o_q_iy_intr$coefficients["op_expo_ew:ph_expo_ew"], o_q_iy_intr$se["op_expo_ew:ph_expo_ew"],
-                       o_q_iy_intr$coefficients["rg_expo_ew:ph_expo_ew"], o_q_iy_intr$se["rg_expo_ew:ph_expo_ew"])
+o_q_iy_intr_estimates <- c(o_q_iy_intr$coefficients["op_expo_ew"], o_q_iy_intr$se["op_expo_ew"],
+                           o_q_iy_intr$coefficients["rg_expo_ew"], o_q_iy_intr$se["rg_expo_ew"],
+                           o_q_iy_intr$coefficients["ph_expo_ew"], o_q_iy_intr$se["ph_expo_ew"],
+                           o_q_iy_intr$coefficients["op_expo_ew:rg_expo_ew"], o_q_iy_intr$se["op_expo_ew:rg_expo_ew"],
+                           o_q_iy_intr$coefficients["op_expo_ew:ph_expo_ew"], o_q_iy_intr$se["op_expo_ew:ph_expo_ew"],
+                           o_q_iy_intr$coefficients["rg_expo_ew:ph_expo_ew"], o_q_iy_intr$se["rg_expo_ew:ph_expo_ew"])
 
 o_q_iy_intr_N <- o_q_iy_intr$nobs
 
-o_q_iy_intr_R <- round(r2(o_q_iy_intr, type = "ar2"), 3) #adjusted R2
+o_q_iy_intr_R <- unname(round(r2(o_q_iy_intr, type = "ar2"), 3)) #adjusted R2
 
 o_q_iy_intr_Wald <- c(round(compute_wald(o_q_iy_intr, "op_expo_ew", "rg_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_intr, "op_expo_ew", "ph_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_intr, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
 
-o_q_iy_intr_out <- c(`Num. Obs.` = o_q_iy_intr_N,
-                     `Adjusted R-Squared` =  o_q_iy_intr_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_intr_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_intr_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_intr_Wald[3]))
+o_q_iy_intr_diagnostics <- c(`Num. Obs.` = o_q_iy_intr_N,
+                             `Adjusted R-Squared` =  o_q_iy_intr_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Exposure',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Firm-Qtr',
+                             `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_intr_Wald[1]),
+                             `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_intr_Wald[2]),
+                             `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_intr_Wald[3]))
+
+o_q_iy_intr_out <- list("Estimates" = o_q_iy_intr_estimates,
+                        "Diagnostics" = o_q_iy_intr_diagnostics)
 
 ## Occ: Lagged DV ---------------------------------------------------
 
@@ -376,33 +317,37 @@ load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RDa
 
 o_q_iy_ldv <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_ldv_ready <- c(o_q_iy_ldv$coefficients["op_expo_ew"], o_q_iy_ldv$se["op_expo_ew"],
-                       o_q_iy_ldv$coefficients["rg_expo_ew"], o_q_iy_ldv$se["rg_expo_ew"],
-                       o_q_iy_ldv$coefficients["ph_expo_ew"], o_q_iy_ldv$se["ph_expo_ew"],
-                       o_q_iy_ldv$coefficients["CLI_l1"], o_q_iy_ldv$se["CLI_l1"])
+o_q_iy_ldv_estimates <- c(o_q_iy_ldv$coefficients["op_expo_ew"], o_q_iy_ldv$se["op_expo_ew"],
+                          o_q_iy_ldv$coefficients["rg_expo_ew"], o_q_iy_ldv$se["rg_expo_ew"],
+                          o_q_iy_ldv$coefficients["ph_expo_ew"], o_q_iy_ldv$se["ph_expo_ew"],
+                          o_q_iy_ldv$coefficients["CLI_l1"], o_q_iy_ldv$se["CLI_l1"])
 
 o_q_iy_ldv_N <- o_q_iy_ldv$nobs
 
-o_q_iy_ldv_R <- round(r2(o_q_iy_ldv, type = "ar2"), 3) #adjusted R2
+o_q_iy_ldv_R <- unname(round(r2(o_q_iy_ldv, type = "ar2"), 3)) #adjusted R2
 
 o_q_iy_ldv_Wald <- c(round(compute_wald(o_q_iy_ldv, "op_expo_ew", "rg_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_ldv, "op_expo_ew", "ph_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_ldv, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
+                     round(compute_wald(o_q_iy_ldv, "op_expo_ew", "ph_expo_ew"), 3),
+                     round(compute_wald(o_q_iy_ldv, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
 
-o_q_iy_ldv_out <- c(`Num. Obs.` = o_q_iy_ldv_N,
-                     `Adjusted R-Squared` =  o_q_iy_ldv_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = '\\checkmark',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_ldv_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_ldv_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_ldv_Wald[3]))
+o_q_iy_ldv_diagnostics <- c(`Num. Obs.` = o_q_iy_ldv_N,
+                            `Adjusted R-Squared` =  o_q_iy_ldv_R,
+                            `Year FE` = ' ',
+                            `Industry x Year FE` = '\\checkmark',
+                            `Industry x Qtr FE` = ' ',
+                            `Firm FE` = ' ',
+                            `Firm Controls` = '\\checkmark',
+                            `Lagged DV` = '\\checkmark',
+                            `Climate Measure` = 'Exposure',
+                            `Estimation` = 'OLS',
+                            `Panel` = 'Firm-Qtr',
+                            `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_ldv_Wald[1]),
+                            `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_ldv_Wald[2]),
+                            `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_ldv_Wald[3]))
+
+o_q_iy_ldv_out <- list("Estimates" = o_q_iy_ldv_estimates,
+                       "Diagnostics" = o_q_iy_ldv_diagnostics)
 
 ## Occ: Congress Target OLS ------------------------------------------------
 
@@ -410,98 +355,19 @@ load("data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION_NEW.RData
 
 o_q_iy_cong <- models[["CONG"]]
 
-
-o_q_iy_cong_ready <- c(o_q_iy_cong$coefficients["op_expo_ew"], o_q_iy_cong$se["op_expo_ew"],
-                       o_q_iy_cong$coefficients["rg_expo_ew"], o_q_iy_cong$se["rg_expo_ew"],
-                       o_q_iy_cong$coefficients["ph_expo_ew"], o_q_iy_cong$se["ph_expo_ew"])
-
-o_q_iy_cong_N <- o_q_iy_cong$nobs
-
-o_q_iy_cong_R <- round(r2(o_q_iy_cong, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_cong_Wald <- c(round(compute_wald(o_q_iy_cong, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_cong, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_cong, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_cong_out <- c(`Num. Obs.` = o_q_iy_cong_N,
-                    `Adjusted R-Squared` =  o_q_iy_cong_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_cong_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_cong_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_cong_Wald[3]))
+o_q_iy_cong_out <- process_model(o_q_iy_cong)
 
 ## Occ: EPA Target OLS ------------------------------------------------
 
 o_q_iy_epa <- models[["EPA"]]
 
-
-o_q_iy_epa_ready <- c(o_q_iy_epa$coefficients["op_expo_ew"], o_q_iy_epa$se["op_expo_ew"],
-                      o_q_iy_epa$coefficients["rg_expo_ew"], o_q_iy_epa$se["rg_expo_ew"],
-                      o_q_iy_epa$coefficients["ph_expo_ew"], o_q_iy_epa$se["ph_expo_ew"])
-
-o_q_iy_epa_N <- o_q_iy_epa$nobs
-
-o_q_iy_epa_R <- round(r2(o_q_iy_epa, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_epa_Wald <- c(round(compute_wald(o_q_iy_epa, "op_expo_ew", "rg_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_epa, "op_expo_ew", "ph_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_epa, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_epa_out <- c(`Num. Obs.` = o_q_iy_epa_N,
-                     `Adjusted R-Squared` =  o_q_iy_epa_R,
-                    `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_epa_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_epa_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_epa_Wald[3]))
+o_q_iy_epa_out <- process_model(o_q_iy_epa)
 
 ## Occ: DOE Target OLS ------------------------------------------------
 
 o_q_iy_doe <- models[["DOE"]]
 
-
-o_q_iy_doe_ready <- c(o_q_iy_doe$coefficients["op_expo_ew"], o_q_iy_doe$se["op_expo_ew"],
-                      o_q_iy_doe$coefficients["rg_expo_ew"], o_q_iy_doe$se["rg_expo_ew"],
-                      o_q_iy_doe$coefficients["ph_expo_ew"], o_q_iy_doe$se["ph_expo_ew"])
-
-o_q_iy_doe_N <- o_q_iy_doe$nobs
-
-o_q_iy_doe_R <- round(r2(o_q_iy_doe, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_doe_Wald <- c(round(compute_wald(o_q_iy_doe, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_doe, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_doe, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_doe_out <- c(`Num. Obs.` = o_q_iy_doe_N,
-                    `Adjusted R-Squared` =  o_q_iy_doe_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_doe_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_doe_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_doe_Wald[3]))
-
+o_q_iy_doe_out <- process_model(o_q_iy_doe)
 
 ## Occ: Main Analysis Logit ------------------------------------------------
 
@@ -509,34 +375,9 @@ load("data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 l_q_iy <- models[[1]]
 
+l_q_iy_out <- process_model(l_q_iy, Estimation = "Logit")
 
-l_q_iy_ready <- c(l_q_iy$coefficients["op_expo_ew"], l_q_iy$se["op_expo_ew"],
-                  l_q_iy$coefficients["rg_expo_ew"], l_q_iy$se["rg_expo_ew"],
-                  l_q_iy$coefficients["ph_expo_ew"], l_q_iy$se["ph_expo_ew"])
-
-l_q_iy_N <- l_q_iy$nobs
-
-l_q_iy_R <- round(r2(l_q_iy, type = "apr2"), 3) #adjusted R2
-
-l_q_iy_Wald <- c(round(compute_wald(l_q_iy, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(l_q_iy, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(l_q_iy, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-l_q_iy_out <- c(`Num. Obs.` = l_q_iy_N,
-                    `Adjusted R-Squared` =  l_q_iy_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'Logit',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(l_q_iy_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(l_q_iy_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(l_q_iy_Wald[3]))
-
+l_q_iy_out$Diagnostics["Adjusted R-Squared"] <- round(r2(l_q_iy, type = "apr2"), 3) #adjusted "Pseudo" R2
 
 ## Occ: Annual Model with Overall Expo ------------------------------------------------
 
@@ -544,56 +385,63 @@ load("data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
 
 o_a_iy_ovrl <- out[[1]]
 
-
-o_a_iy_ovrl_ready <- round(c(o_a_iy_ovrl$coefficients["cc_expo_ew"], o_a_iy_ovrl$se["cc_expo_ew"]), 3)
+o_a_iy_ovrl_estimates <- round(c(o_a_iy_ovrl$coefficients["cc_expo_ew"], o_a_iy_ovrl$se["cc_expo_ew"]), 3)
 t <- o_a_iy_ovrl$coefficients["cc_expo_ew"] / o_a_iy_ovrl$se["cc_expo_ew"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
-o_a_iy_ovrl_ready_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_ready[1], strs), std.error=o_a_iy_ovrl_ready[2])
+o_a_iy_ovrl_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_estimates[1], strs), std.error=o_a_iy_ovrl_estimates[2])
 
 o_a_iy_ovrl_N <- o_a_iy_ovrl$nobs
 
-o_a_iy_ovrl_R <- round(r2(o_a_iy_ovrl, type = "ar2"), 3) #adjusted R2
+o_a_iy_ovrl_R <- unname(round(r2(o_a_iy_ovrl, type = "ar2"), 3)) #adjusted R2
 
-o_a_iy_ovrl_out <- c(`Num. Obs.` = o_a_iy_ovrl_N,
-                     `Adjusted R-Squared` =  o_a_iy_ovrl_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Ovrl. Expo.',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Yr',
-                     `Wald Stat (Opp - Reg = 0)` = ' ',
-                     `Wald Stat (Opp - Phy = 0)` = ' ',
-                     `Wald Stat (Reg - Phy = 0)` = ' ')
+o_a_iy_ovrl_diagnostics <- c(`Num. Obs.` = o_a_iy_ovrl_N,
+                             `Adjusted R-Squared` =  o_a_iy_ovrl_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Ovrl. Expo.',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Firm-Yr',
+                             `Wald Stat (Opp - Reg = 0)` = ' ',
+                             `Wald Stat (Opp - Phy = 0)` = ' ',
+                             `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_a_iy_ovrl_out <- list("Estimates" = o_a_iy_ovrl_estimates,
+                        "Diagnostics" = o_a_iy_ovrl_diagnostics)
 
 ## Occ: Annual Model with 10-K Exposure Measure ------------------------------------------------
 
 o_a_iy_tenk <- out[[2]]
 
-o_a_iy_tenk_ready <- round(c(o_a_iy_tenk$coefficients["tenk_exposure"], o_a_iy_tenk$se["tenk_exposure"]), 3)
+o_a_iy_tenk_estimates <- round(c(o_a_iy_tenk$coefficients["tenk_exposure"], o_a_iy_tenk$se["tenk_exposure"]), 3)
 t <- o_a_iy_tenk$coefficients["tenk_exposure"] / o_a_iy_tenk$se["tenk_exposure"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
-o_a_iy_tenk_ready_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_ready[1], strs), std.error=o_a_iy_tenk_ready[2])
+o_a_iy_tenk_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_estimates[1], strs), std.error=o_a_iy_tenk_estimates[2])
 
 o_a_iy_tenk_N <- o_a_iy_tenk$nobs
 
 o_a_iy_tenk_R <- round(r2(o_a_iy_tenk, type = "ar2"), 3) #adjusted R2
 
-o_a_iy_tenk_out <- c(`Num. Obs.` = o_a_iy_tenk_N,
-                     `Adjusted R-Squared` =  o_a_iy_tenk_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = '10-K Expo.',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Yr',
-                     `Wald Stat (Opp - Reg = 0)` = ' ',
-                     `Wald Stat (Opp - Phy = 0)` = ' ',
-                     `Wald Stat (Reg - Phy = 0)` = ' ')
+o_a_iy_tenk_diagnostics <- c(`Num. Obs.` = o_a_iy_tenk_N,
+                             `Adjusted R-Squared` =  o_a_iy_tenk_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = '10-K Expo.',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Firm-Yr',
+                             `Wald Stat (Opp - Reg = 0)` = ' ',
+                             `Wald Stat (Opp - Phy = 0)` = ' ',
+                             `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_a_iy_tenk_out <- list("Estimates" = o_a_iy_tenk_estimates,
+                        "Diagnostics" = o_a_iy_tenk_diagnostics)
 
 ## Occ: Main Model with Annual Panel ------------------------------------------
 
@@ -601,32 +449,7 @@ load("data/03_final/climate_ols_annual_bycomponent_MODELS_REVISION_NEW.RData")
 
 o_a_iy <- models[[1]]
 
-o_a_iy_ready <- c(o_a_iy$coefficients["op_expo_ew"], o_a_iy$se["op_expo_ew"],
-                      o_a_iy$coefficients["rg_expo_ew"], o_a_iy$se["rg_expo_ew"],
-                      o_a_iy$coefficients["ph_expo_ew"], o_a_iy$se["ph_expo_ew"])
-
-o_a_iy_N <- o_a_iy$nobs
-
-o_a_iy_R <- round(r2(o_a_iy, type = "ar2"), 3) #adjusted R2
-
-o_a_iy_Wald <- c(round(compute_wald(o_a_iy, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_a_iy, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_a_iy, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_a_iy_out <- c(`Num. Obs.` = o_a_iy_N,
-                    `Adjusted R-Squared` =  o_a_iy_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Yr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_a_iy_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_a_iy_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_a_iy_Wald[3]))
+o_a_iy_out <- process_model(o_a_iy, Panel = 'Firm-Yr')
 
 ## Occ: Bills-Based Measure of Climate Lobbying ------------------------------------------
 
@@ -634,32 +457,8 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altclimatebi
 
 o_q_iy_bills <- models[[1]]
 
-o_q_iy_bills_ready <- c(o_q_iy_bills$coefficients["op_expo_ew"], o_q_iy_bills$se["op_expo_ew"],
-                        o_q_iy_bills$coefficients["rg_expo_ew"], o_q_iy_bills$se["rg_expo_ew"],
-                        o_q_iy_bills$coefficients["ph_expo_ew"], o_q_iy_bills$se["ph_expo_ew"])
+o_q_iy_bills_out <- process_model(o_q_iy_bills)
 
-o_q_iy_bills_N <- o_q_iy_bills$nobs
-
-o_q_iy_bills_R <- round(r2(o_q_iy_bills, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_bills_Wald <- c(round(compute_wald(o_q_iy_bills, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy_bills, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy_bills, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_bills_out <- c(`Num. Obs.` = o_q_iy_bills_N,
-                `Adjusted R-Squared` =  o_q_iy_bills_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_bills_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_bills_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_bills_Wald[3]))
 
 ## Occ: Keyword-Based Measure of Climate Lobbying ------------------------------------------
 
@@ -667,94 +466,21 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altkeywords.
 
 o_q_iy_kywd <- models[[1]]
 
-o_q_iy_kywd_ready <- c(o_q_iy_kywd$coefficients["op_expo_ew"], o_q_iy_kywd$se["op_expo_ew"],
-                       o_q_iy_kywd$coefficients["rg_expo_ew"], o_q_iy_kywd$se["rg_expo_ew"],
-                       o_q_iy_kywd$coefficients["ph_expo_ew"], o_q_iy_kywd$se["ph_expo_ew"])
+o_q_iy_kywd_out <- process_model(o_q_iy_kywd)
 
-o_q_iy_kywd_N <- o_q_iy_kywd$nobs
-
-o_q_iy_kywd_R <- round(r2(o_q_iy_kywd, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_Wald <- c(round(compute_wald(o_q_iy_kywd, "op_expo_ew", "rg_expo_ew"), 3), 
-                       round(compute_wald(o_q_iy_kywd, "op_expo_ew", "ph_expo_ew"), 3), 
-                       round(compute_wald(o_q_iy_kywd, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_out <- c(`Num. Obs.` = o_q_iy_kywd_N,
-                      `Adjusted R-Squared` =  o_q_iy_kywd_R,
-                      `Year FE` = ' ',
-                      `Industry x Year FE` = '\\checkmark',
-                      `Firm FE` = ' ',
-                      `Firm Controls` = '\\checkmark',
-                      `Lagged DV` = ' ',
-                      `Climate Measure` = 'Exposure',
-                      `Estimation` = 'OLS',
-                      `Panel` = 'Firm-Qtr',
-                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_Wald[1]),
-                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_Wald[2]),
-                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_Wald[3]))
 
 ## Occ: Keyword-Based Measure of Climate MITIGATION Lobbying ------------------------------------------
 
 o_q_iy_kywd_miti <- models[[2]]
 
-o_q_iy_kywd_miti_ready <- c(o_q_iy_kywd_miti$coefficients["op_expo_ew"], o_q_iy_kywd_miti$se["op_expo_ew"],
-                            o_q_iy_kywd_miti$coefficients["rg_expo_ew"], o_q_iy_kywd_miti$se["rg_expo_ew"],
-                            o_q_iy_kywd_miti$coefficients["ph_expo_ew"], o_q_iy_kywd_miti$se["ph_expo_ew"])
+o_q_iy_kywd_miti_out <- process_model(o_q_iy_kywd_miti)
 
-o_q_iy_kywd_miti_N <- o_q_iy_kywd_miti$nobs
-
-o_q_iy_kywd_miti_R <- round(r2(o_q_iy_kywd_miti, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_miti_Wald <- c(round(compute_wald(o_q_iy_kywd_miti, "op_expo_ew", "rg_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_kywd_miti, "op_expo_ew", "ph_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_kywd_miti, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_miti_out <- c(`Num. Obs.` = o_q_iy_kywd_miti_N,
-                     `Adjusted R-Squared` =  o_q_iy_kywd_miti_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_miti_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_miti_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_miti_Wald[3]))
 
 ## Occ: Keyword-Based Measure of Climate ADAPTATION Lobbying ------------------------------------------
 
-o_q_iy_kywd_adpt <- models[[2]]
+o_q_iy_kywd_adpt <- models[[3]]
 
-o_q_iy_kywd_adpt_ready <- c(o_q_iy_kywd_adpt$coefficients["op_expo_ew"], o_q_iy_kywd_adpt$se["op_expo_ew"],
-                            o_q_iy_kywd_adpt$coefficients["rg_expo_ew"], o_q_iy_kywd_adpt$se["rg_expo_ew"],
-                            o_q_iy_kywd_adpt$coefficients["ph_expo_ew"], o_q_iy_kywd_adpt$se["ph_expo_ew"])
-
-o_q_iy_kywd_adpt_N <- o_q_iy_kywd_adpt$nobs
-
-o_q_iy_kywd_adpt_R <- round(r2(o_q_iy_kywd_adpt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_adpt_Wald <- c(round(compute_wald(o_q_iy_kywd_adpt, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_adpt, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_adpt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_adpt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_N,
-                          `Adjusted R-Squared` =  o_q_iy_kywd_adpt_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_adpt_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_Wald[3]))
+o_q_iy_kywd_adpt_out <- process_model(o_q_iy_kywd_adpt)
 
 ## Occ: Main Models with Augmented Controls ------------------------------------------
 
@@ -762,32 +488,7 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_augmented.RD
 
 o_q_iy_aug <- models[[1]]
 
-o_q_iy_aug_ready <- c(o_q_iy_aug$coefficients["op_expo_ew"], o_q_iy_aug$se["op_expo_ew"],
-                      o_q_iy_aug$coefficients["rg_expo_ew"], o_q_iy_aug$se["rg_expo_ew"],
-                      o_q_iy_aug$coefficients["ph_expo_ew"], o_q_iy_aug$se["ph_expo_ew"])
-
-o_q_iy_aug_N <- o_q_iy_aug$nobs
-
-o_q_iy_aug_R <- round(r2(o_q_iy_aug, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_aug_Wald <- c(round(compute_wald(o_q_iy_aug, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_aug, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_aug, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_aug_out <- c(`Num. Obs.` = o_q_iy_aug_N,
-                          `Adjusted R-Squared` =  o_q_iy_aug_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = 'Augmented',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_Wald[3]))
+o_q_iy_aug_out <- process_model(o_q_iy_aug, Firm_Controls = "Augm.")
 
 ## Occ: Coalition Based Directionality Models ------------------------------------------
 
@@ -797,63 +498,14 @@ load("data/03_final/climate_ols_yr_coalition_MODELS_REVISION_NEW.RData")
 
 o_y_iy_coal_pro <- models[[1]]
 
-o_y_iy_coal_pro_ready <- c(o_y_iy_coal_pro$coefficients["op_expo_ew"], o_y_iy_coal_pro$se["op_expo_ew"],
-                           o_y_iy_coal_pro$coefficients["rg_expo_ew"], o_y_iy_coal_pro$se["rg_expo_ew"],
-                           o_y_iy_coal_pro$coefficients["ph_expo_ew"], o_y_iy_coal_pro$se["ph_expo_ew"])
-
-o_y_iy_coal_pro_N <- o_y_iy_coal_pro$nobs
-
-o_y_iy_coal_pro_R <- round(r2(o_y_iy_coal_pro, type = "ar2"), 3) #adjusted R2
-
-o_y_iy_coal_pro_Wald <- c(round(compute_wald(o_y_iy_coal_pro, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_y_iy_coal_pro, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_y_iy_coal_pro, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_y_iy_coal_pro_out <- c(`Num. Obs.` = o_y_iy_coal_pro_N,
-                    `Adjusted R-Squared` =  o_y_iy_coal_pro_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Yr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_pro_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_pro_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_pro_Wald[3]))
+o_y_iy_coal_pro_out <- process_model(o_y_iy_coal_pro, Panel = "Firm-Yr")
 
 ## Anti ---
 
 o_y_iy_coal_anti <- models[[2]]
 
-o_y_iy_coal_anti_ready <- c(o_y_iy_coal_anti$coefficients["op_expo_ew"], o_y_iy_coal_anti$se["op_expo_ew"],
-                            o_y_iy_coal_anti$coefficients["rg_expo_ew"], o_y_iy_coal_anti$se["rg_expo_ew"],
-                            o_y_iy_coal_anti$coefficients["ph_expo_ew"], o_y_iy_coal_anti$se["ph_expo_ew"])
+o_y_iy_coal_anti_out <- process_model(o_y_iy_coal_anti, Panel = "Firm-Yr")
 
-o_y_iy_coal_anti_N <- o_y_iy_coal_anti$nobs
-
-o_y_iy_coal_anti_R <- round(r2(o_y_iy_coal_anti, type = "ar2"), 3) #adjusted R2
-
-o_y_iy_coal_anti_Wald <- c(round(compute_wald(o_y_iy_coal_anti, "op_expo_ew", "rg_expo_ew"), 3), 
-                          round(compute_wald(o_y_iy_coal_anti, "op_expo_ew", "ph_expo_ew"), 3), 
-                          round(compute_wald(o_y_iy_coal_anti, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_y_iy_coal_anti_out <- c(`Num. Obs.` = o_y_iy_coal_anti_N,
-                         `Adjusted R-Squared` =  o_y_iy_coal_anti_R,
-                         `Year FE` = ' ',
-                         `Industry x Year FE` = '\\checkmark',
-                         `Firm FE` = ' ',
-                         `Firm Controls` = '\\checkmark',
-                         `Lagged DV` = ' ',
-                         `Climate Measure` = 'Exposure',
-                         `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Yr',
-                         `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_anti_Wald[1]),
-                         `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[2]),
-                         `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_Wald[3]))
 
 ## Occ: Imputation Model ------------------------------------------
 
@@ -861,30 +513,34 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RDat
 
 o_q_iy_impt <- models[1,,drop=F]
 
-o_q_iy_impt_ready <- c(o_q_iy_impt$op_expo_ew_coef, o_q_iy_impt$op_expo_ew_se,
-                       o_q_iy_impt$rg_expo_ew_coef, o_q_iy_impt$rg_expo_ew_se,
-                       o_q_iy_impt$ph_expo_ew_coef, o_q_iy_impt$ph_expo_ew_se)
+o_q_iy_impt_estimates <- c(o_q_iy_impt$op_expo_ew_coef, o_q_iy_impt$op_expo_ew_se,
+                           o_q_iy_impt$rg_expo_ew_coef, o_q_iy_impt$rg_expo_ew_se,
+                           o_q_iy_impt$ph_expo_ew_coef, o_q_iy_impt$ph_expo_ew_se)
 
 o_q_iy_impt_N <- o_q_iy_impt$n
 
 o_q_iy_impt_R <- round(o_q_iy_impt$r, 3)
 
-o_q_iy_impt_Wald <- abs(round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3)) #Wald stats
+o_q_iy_impt_Wald <- unname(abs(round(c(o_q_iy_impt$wald1, o_q_iy_impt$wald2, o_q_iy_impt$wald3), 3))) #Wald stats
 
 
-o_q_iy_impt_out <- c(`Num. Obs.` = o_q_iy_impt_N,
-                          `Adjusted R-Squared` =  o_q_iy_impt_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Imputed FQ',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_Wald[3]))
+o_q_iy_impt_diagnostics <- c(`Num. Obs.` = o_q_iy_impt_N,
+                             `Adjusted R-Squared` =  o_q_iy_impt_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Exposure',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Imputed FQ',
+                             `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_Wald[1]),
+                             `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_Wald[2]),
+                             `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_Wald[3]))
+
+o_q_iy_impt_out <- list("Estimates" = o_q_iy_impt_estimates,
+                        "Diagnostics" = o_q_iy_impt_diagnostics)
 
 ## Occ: Issue-Specific Models ------------------------------------------
 
@@ -892,99 +548,84 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 ## CAW
 o_q_iy_caw <- models[[12]]
-o_q_iy_caw_ready <- c(o_q_iy_caw$coefficients["op_expo_ew"], o_q_iy_caw$se["op_expo_ew"],
-                            o_q_iy_caw$coefficients["rg_expo_ew"], o_q_iy_caw$se["rg_expo_ew"],
-                            o_q_iy_caw$coefficients["ph_expo_ew"], o_q_iy_caw$se["ph_expo_ew"])
-o_q_iy_caw_N <- o_q_iy_caw$nobs
-o_q_iy_caw_R <- round(r2(o_q_iy_caw, type = "ar2"), 3) #adjusted R2
-o_q_iy_caw_Wald <- c(round(compute_wald(o_q_iy_caw, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_caw, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_caw, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_caw_out <- c(`Num. Obs.` = o_q_iy_caw_N,
-                          `Adjusted R-Squared` =  o_q_iy_caw_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_caw_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_caw_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_caw_Wald[3]))
+
+o_q_iy_caw_out <- process_model(o_q_iy_caw)
 
 ## ENG
 o_q_iy_eng <- models[[13]]
-o_q_iy_eng_ready <- c(o_q_iy_eng$coefficients["op_expo_ew"], o_q_iy_eng$se["op_expo_ew"],
-                      o_q_iy_eng$coefficients["rg_expo_ew"], o_q_iy_eng$se["rg_expo_ew"],
-                      o_q_iy_eng$coefficients["ph_expo_ew"], o_q_iy_eng$se["ph_expo_ew"])
-o_q_iy_eng_N <- o_q_iy_eng$nobs
-o_q_iy_eng_R <- round(r2(o_q_iy_eng, type = "ar2"), 3) #adjusted R2
-o_q_iy_eng_Wald <- c(round(compute_wald(o_q_iy_eng, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_eng, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_eng, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_eng_out <- c(`Num. Obs.` = o_q_iy_eng_N,
-                    `Adjusted R-Squared` =  o_q_iy_eng_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_eng_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_eng_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_eng_Wald[3]))
+
+o_q_iy_eng_out <- process_model(o_q_iy_eng)
+
 
 ## ENV
 o_q_iy_env <- models[[14]]
-o_q_iy_env_ready <- c(o_q_iy_env$coefficients["op_expo_ew"], o_q_iy_env$se["op_expo_ew"],
-                      o_q_iy_env$coefficients["rg_expo_ew"], o_q_iy_env$se["rg_expo_ew"],
-                      o_q_iy_env$coefficients["ph_expo_ew"], o_q_iy_env$se["ph_expo_ew"])
-o_q_iy_env_N <- o_q_iy_env$nobs
-o_q_iy_env_R <- round(r2(o_q_iy_env, type = "ar2"), 3) #adjusted R2
-o_q_iy_env_Wald <- c(round(compute_wald(o_q_iy_env, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_env, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_env, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_env_out <- c(`Num. Obs.` = o_q_iy_env_N,
-                    `Adjusted R-Squared` =  o_q_iy_env_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_env_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_env_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_env_Wald[3]))
+
+o_q_iy_env_out <- process_model(o_q_iy_env)
 
 ## FUE
 o_q_iy_fue <- models[[15]]
-o_q_iy_fue_ready <- c(o_q_iy_fue$coefficients["op_expo_ew"], o_q_iy_fue$se["op_expo_ew"],
-                      o_q_iy_fue$coefficients["rg_expo_ew"], o_q_iy_fue$se["rg_expo_ew"],
-                      o_q_iy_fue$coefficients["ph_expo_ew"], o_q_iy_fue$se["ph_expo_ew"])
-o_q_iy_fue_N <- o_q_iy_fue$nobs
-o_q_iy_fue_R <- round(r2(o_q_iy_fue, type = "ar2"), 3) #adjusted R2
-o_q_iy_fue_Wald <- c(round(compute_wald(o_q_iy_fue, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_fue, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_fue, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_fue_out <- c(`Num. Obs.` = o_q_iy_fue_N,
-                    `Adjusted R-Squared` =  o_q_iy_fue_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_fue_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_fue_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_fue_Wald[3]))
+o_q_iy_fue_out <- process_model(o_q_iy_fue)
+
+## Occ: Quarter FE ---------------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
+
+o_q_iq <- models[[11]]
+
+o_q_iq_out <- process_model(o_q_iq, IndbyQtr_FE = '\\checkmark')
+
+## Occ: Error Correction ---------------------------------------------------------
+
+load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
+
+o_q_iy_ec <- models$`(1`
+
+o_q_iy_ec_estimates <- round(c(o_q_iy_ec$coefficients["op_expo_ew_l1"], o_q_iy_ec$se["op_expo_ew_l1"],
+                               o_q_iy_ec$coefficients["op_expo_ew_chg"], o_q_iy_ec$se["op_expo_ew_chg"],
+                               o_q_iy_ec$coefficients["rg_expo_ew_l1"], o_q_iy_ec$se["rg_expo_ew_l1"],
+                               o_q_iy_ec$coefficients["rg_expo_ew_chg"], o_q_iy_ec$se["rg_expo_ew_chg"],
+                               o_q_iy_ec$coefficients["ph_expo_ew_l1"], o_q_iy_ec$se["ph_expo_ew_l1"],
+                               o_q_iy_ec$coefficients["ph_expo_ew_chg"], o_q_iy_ec$se["ph_expo_ew_chg"],
+                               o_q_iy_ec$coefficients["CLI_l1"], o_q_iy_ec$se["CLI_l1"]), 3)
+
+t <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"] / o_q_iy_ec$se["op_expo_ew_l1"],
+       o_q_iy_ec$coefficients["op_expo_ew_chg"] / o_q_iy_ec$se["op_expo_ew_chg"],
+       o_q_iy_ec$coefficients["rg_expo_ew_l1"] / o_q_iy_ec$se["rg_expo_ew_l1"],
+       o_q_iy_ec$coefficients["rg_expo_ew_chg"] / o_q_iy_ec$se["rg_expo_ew_chg"],
+       o_q_iy_ec$coefficients["ph_expo_ew_l1"] / o_q_iy_ec$se["ph_expo_ew_l1"],
+       o_q_iy_ec$coefficients["ph_expo_ew_chg"] / o_q_iy_ec$se["ph_expo_ew_chg"],
+       o_q_iy_ec$coefficients["CLI_l1"] / o_q_iy_ec$se["CLI_l1"])
+
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+
+o_q_iy_ec_stars <- data.frame(term=c("op_expo_ew_l1"="Opp_{t-1}", "rg_expo_ew_l1"="Reg_{t-1}", "ph_expo_ew_l1"="Phy_{t-1}",
+                                     "op_expo_ew_chg"="Opp \\Delta", "rg_expo_ew_chg"="Reg \\Delta", "ph_expo_ew_chg"="Phy \\Delta",
+                                     "CLI_l1" = "Lagged DV"), 
+                              estimate=paste0(o_q_iy_ec_estimates[seq(1, length(o_q_iy_ec_estimates), 2)], strs), 
+                              std.error=o_q_iy_ec_estimates[seq(2, length(o_q_iy_ec_estimates), 2)])
+
+o_q_iy_ec_N <- o_q_iy_ec$nobs
+
+o_q_iy_ec_R <- round(r2(o_q_iy_ec, type = "ar2"), 3) #adjusted R2
+
+
+o_q_iy_ec_diagnostics <- c(`Num. Obs.` = o_q_iy_ec_N,
+                           `Adjusted R-Squared` =  o_q_iy_ec_R,
+                           `Year FE` = ' ',
+                           `Industry x Year FE` = '\\checkmark',
+                           `Industry x Qtr FE` = ' ',
+                           `Firm FE` = ' ',
+                           `Firm Controls` = '\\checkmark',
+                           `Lagged DV` = '\\checkmark',
+                           `Climate Measure` = 'Exposure',
+                           `Estimation` = 'OLS',
+                           `Panel` = 'Firm-Qtr',
+                           `Wald Stat (Opp - Reg = 0)` = ' ',
+                           `Wald Stat (Opp - Phy = 0)` = ' ',
+                           `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_ec_out <- list("Estimates" = o_q_iy_ec_estimates,
+                      "Diagnostics" = o_q_iy_ec_diagnostics)
 
 
 ## Amount --------------------------------------------------
@@ -995,152 +636,88 @@ o_q_iy_fue_out <- c(`Num. Obs.` = o_q_iy_fue_N,
 load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 o_q_y_amt <- models[[3]] #Column 3 - firm-quarter panel, year FE
 
-o_q_y_amt_ready <- c(o_q_y_amt$coefficients["op_expo_ew"], o_q_y_amt$se["op_expo_ew"],
-                      o_q_y_amt$coefficients["rg_expo_ew"], o_q_y_amt$se["rg_expo_ew"],
-                      o_q_y_amt$coefficients["ph_expo_ew"], o_q_y_amt$se["ph_expo_ew"])
-
-o_q_y_amt_N <- o_q_y_amt$nobs
-
-o_q_y_amt_R <- round(r2(o_q_y_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_y_amt_Wald <- c(round(compute_wald(o_q_y_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_y_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_y_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_y_amt_out <- c(`Num. Obs.` = o_q_y_amt_N,
-                    `Adjusted R-Squared` =  o_q_y_amt_R,
-                    `Year FE` = '\\checkmark',
-                    `Industry x Year FE` = ' ',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_y_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_y_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_y_amt_Wald[3]))
-
+o_q_y_amt_out <- process_model(o_q_y_amt, Year_FE = '\\checkmark', IndbyYear_FE = ' ')
 
 ## Amt: Main OLS ---------------------------------------------------
 
 o_q_iy_amt <- models[[5]] #Column 5 - main result for firm-quarter panel, industry-by-year FE
 
-o_q_iy_amt_ready <- c(o_q_iy_amt$coefficients["op_expo_ew"], o_q_iy_amt$se["op_expo_ew"],
-                  o_q_iy_amt$coefficients["rg_expo_ew"], o_q_iy_amt$se["rg_expo_ew"],
-                  o_q_iy_amt$coefficients["ph_expo_ew"], o_q_iy_amt$se["ph_expo_ew"])
+o_q_iy_amt_out <- process_model(o_q_iy_amt)
 
-o_q_iy_amt_N <- o_q_iy_amt$nobs
-
-o_q_iy_amt_R <- round(r2(o_q_iy_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_amt_Wald <- c(round(compute_wald(o_q_iy_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_q_iy_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_iy_amt_out <- c(`Num. Obs.` = o_q_iy_amt_N,
-                `Adjusted R-Squared` =  o_q_iy_amt_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Qtr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_Wald[3]))
 
 ## Amt: Firm FE ---------------------------------------------------
 
 o_q_iyf_amt <- models[[7]] #Column 7 - add firm FE
 
-o_q_iyf_amt_ready <- c(o_q_iyf_amt$coefficients["op_expo_ew"], o_q_iyf_amt$se["op_expo_ew"],
-                  o_q_iyf_amt$coefficients["rg_expo_ew"], o_q_iyf_amt$se["rg_expo_ew"],
-                  o_q_iyf_amt$coefficients["ph_expo_ew"], o_q_iyf_amt$se["ph_expo_ew"])
-
-o_q_iyf_amt_N <- o_q_iyf_amt$nobs
-
-o_q_iyf_amt_R <- round(r2(o_q_iyf_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iyf_amt_Wald <- c(round(compute_wald(o_q_iyf_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                  round(compute_wald(o_q_iyf_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                  round(compute_wald(o_q_iyf_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-o_q_iyf_amt_out <- c(`Num. Obs.` = o_q_iyf_amt_N,
-                 `Adjusted R-Squared` =  o_q_iyf_amt_R,
-                 `Year FE` = ' ',
-                 `Industry x Year FE` = '\\checkmark',
-                 `Firm FE` = '\\checkmark',
-                 `Firm Controls` = '\\checkmark',
-                 `Lagged DV` = ' ',
-                 `Climate Measure` = 'Exposure',
-                 `Estimation` = 'OLS',
-                 `Panel` = 'Firm-Qtr',
-                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iyf_amt_Wald[1]),
-                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iyf_amt_Wald[2]),
-                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iyf_amt_Wald[3]))
+o_q_iyf_amt_out <- process_model(o_q_iyf_amt, Firm_FE = '\\checkmark')
 
 ## Amt: Sentiment ---------------------------------------------------
 
 o_q_sent_iy_amt <- models[[9]] #Column 9 - industry-by-year FE with sentiment coefs
 
-o_q_sent_iy_amt_ready <- c(o_q_sent_iy_amt$coefficients["op_sent_ew"], o_q_sent_iy_amt$se["op_sent_ew"],
-                           o_q_sent_iy_amt$coefficients["rg_sent_ew"], o_q_sent_iy_amt$se["rg_sent_ew"],
-                           o_q_sent_iy_amt$coefficients["ph_sent_ew"], o_q_sent_iy_amt$se["ph_sent_ew"])
+o_q_sent_iy_amt_estimates <- c(o_q_sent_iy_amt$coefficients["op_sent_ew"], o_q_sent_iy_amt$se["op_sent_ew"],
+                               o_q_sent_iy_amt$coefficients["rg_sent_ew"], o_q_sent_iy_amt$se["rg_sent_ew"],
+                               o_q_sent_iy_amt$coefficients["ph_sent_ew"], o_q_sent_iy_amt$se["ph_sent_ew"])
 
 o_q_sent_iy_amt_N <- o_q_sent_iy_amt$nobs
 
-o_q_sent_iy_amt_R <- round(r2(o_q_sent_iy_amt, type = "ar2"), 3) #adjusted R2
+o_q_sent_iy_amt_R <- unname(round(r2(o_q_sent_iy_amt, type = "ar2"), 3)) #adjusted R2
 
 o_q_sent_iy_amt_Wald <- c(round(compute_wald(o_q_sent_iy_amt, "op_sent_ew", "rg_sent_ew"), 3), 
                       round(compute_wald(o_q_sent_iy_amt, "op_sent_ew", "ph_sent_ew"), 3), 
                       round(compute_wald(o_q_sent_iy_amt, "rg_sent_ew", "ph_sent_ew"), 3)) #Wald stats
 
-o_q_sent_iy_amt_out <- c(`Num. Obs.` = o_q_sent_iy_amt_N,
-                     `Adjusted R-Squared` =  o_q_sent_iy_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Sentiment',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_sent_iy_amt_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[3]))
+o_q_sent_iy_amt_diagnostics <- c(`Num. Obs.` = o_q_sent_iy_amt_N,
+                                 `Adjusted R-Squared` =  o_q_sent_iy_amt_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = 'Sentiment',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Firm-Qtr',
+                                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_sent_iy_amt_Wald[1]),
+                                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[2]),
+                                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_sent_iy_amt_Wald[3]))
+
+o_q_iy_amt_sent_out <- list("Estimates" = o_q_sent_iy_amt_estimates,
+                            "Diagnostics" = o_q_sent_iy_amt_diagnostics)
 
 ## Amt: Risk ---------------------------------------------------
 
 o_q_risk_iy_amt <- models[[10]] #Column 10 - industry-by-year FE with risk coefs
 
-o_q_risk_iy_amt_ready <- c(o_q_risk_iy_amt$coefficients["op_risk_ew"], o_q_risk_iy_amt$se["op_risk_ew"],
-                           o_q_risk_iy_amt$coefficients["rg_risk_ew"], o_q_risk_iy_amt$se["rg_risk_ew"],
-                           o_q_risk_iy_amt$coefficients["ph_risk_ew"], o_q_risk_iy_amt$se["ph_risk_ew"])
+o_q_risk_iy_amt_estimates <- c(o_q_risk_iy_amt$coefficients["op_risk_ew"], o_q_risk_iy_amt$se["op_risk_ew"],
+                               o_q_risk_iy_amt$coefficients["rg_risk_ew"], o_q_risk_iy_amt$se["rg_risk_ew"],
+                               o_q_risk_iy_amt$coefficients["ph_risk_ew"], o_q_risk_iy_amt$se["ph_risk_ew"])
 
 o_q_risk_iy_amt_N <- o_q_risk_iy_amt$nobs
 
-o_q_risk_iy_amt_R <- round(r2(o_q_risk_iy_amt, type = "ar2"), 3) #adjusted R2
+o_q_risk_iy_amt_R <- unname(round(r2(o_q_risk_iy_amt, type = "ar2"), 3)) #adjusted R2
 
 o_q_risk_iy_amt_Wald <- c(round(compute_wald(o_q_risk_iy_amt, "op_risk_ew", "rg_risk_ew"), 3), 
                       round(compute_wald(o_q_risk_iy_amt, "op_risk_ew", "ph_risk_ew"), 3), 
                       round(compute_wald(o_q_risk_iy_amt, "rg_risk_ew", "ph_risk_ew"), 3)) #Wald stats
 
-o_q_risk_iy_amt_out <- c(`Num. Obs.` = o_q_risk_iy_amt_N,
-                     `Adjusted R-Squared` =  o_q_risk_iy_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Risk',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_amt_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[3]))
+o_q_risk_iy_amt_diagnostics <- c(`Num. Obs.` = o_q_risk_iy_amt_N,
+                                 `Adjusted R-Squared` =  o_q_risk_iy_amt_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = 'Risk',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Firm-Qtr',
+                                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_risk_iy_amt_Wald[1]),
+                                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[2]),
+                                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_risk_iy_amt_Wald[3]))
+
+o_q_iy_amt_risk_out <- list("Estimates" = o_q_risk_iy_amt_estimates,
+                            "Diagnostics" = o_q_risk_iy_amt_diagnostics)
 
 ## Amt: Interact ---------------------------------------------------
 
@@ -1148,35 +725,39 @@ load("data/03_final/climate_ols_qrt_bycomponent_interaction_amount_MODELS_REVISI
 
 o_q_iy_amt_intr <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_amt_intr_ready <- c(o_q_iy_amt_intr$coefficients["op_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew"],
-                           o_q_iy_amt_intr$coefficients["rg_expo_ew"], o_q_iy_amt_intr$se["rg_expo_ew"],
-                           o_q_iy_amt_intr$coefficients["ph_expo_ew"], o_q_iy_amt_intr$se["ph_expo_ew"],
-                           o_q_iy_amt_intr$coefficients["op_expo_ew:rg_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew:rg_expo_ew"],
-                           o_q_iy_amt_intr$coefficients["op_expo_ew:ph_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew:ph_expo_ew"],
-                           o_q_iy_amt_intr$coefficients["rg_expo_ew:ph_expo_ew"], o_q_iy_amt_intr$se["rg_expo_ew:ph_expo_ew"])
+o_q_iy_amt_intr_estimates <- c(o_q_iy_amt_intr$coefficients["op_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew"],
+                               o_q_iy_amt_intr$coefficients["rg_expo_ew"], o_q_iy_amt_intr$se["rg_expo_ew"],
+                               o_q_iy_amt_intr$coefficients["ph_expo_ew"], o_q_iy_amt_intr$se["ph_expo_ew"],
+                               o_q_iy_amt_intr$coefficients["op_expo_ew:rg_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew:rg_expo_ew"],
+                               o_q_iy_amt_intr$coefficients["op_expo_ew:ph_expo_ew"], o_q_iy_amt_intr$se["op_expo_ew:ph_expo_ew"],
+                               o_q_iy_amt_intr$coefficients["rg_expo_ew:ph_expo_ew"], o_q_iy_amt_intr$se["rg_expo_ew:ph_expo_ew"])
 
 o_q_iy_amt_intr_N <- o_q_iy_amt_intr$nobs
 
-o_q_iy_amt_intr_R <- round(r2(o_q_iy_amt_intr, type = "ar2"), 3) #adjusted R2
+o_q_iy_amt_intr_R <- unname(round(r2(o_q_iy_amt_intr, type = "ar2"), 3)) #adjusted R2
 
 o_q_iy_amt_intr_Wald <- c(round(compute_wald(o_q_iy_amt_intr, "op_expo_ew", "rg_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_amt_intr, "op_expo_ew", "ph_expo_ew"), 3), 
                       round(compute_wald(o_q_iy_amt_intr, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
 
-o_q_iy_amt_intr_out <- c(`Num. Obs.` = o_q_iy_amt_intr_N,
-                     `Adjusted R-Squared` =  o_q_iy_amt_intr_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_intr_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[3]))
+o_q_iy_amt_intr_diagnostics <- c(`Num. Obs.` = o_q_iy_amt_intr_N,
+                                 `Adjusted R-Squared` =  o_q_iy_amt_intr_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = 'Exposure',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Firm-Qtr',
+                                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_intr_Wald[1]),
+                                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[2]),
+                                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_intr_Wald[3]))
+
+o_q_iy_amt_intr_out <- list("Estimates" = o_q_iy_amt_intr_estimates,
+                            "Diagnostics" = o_q_iy_amt_intr_diagnostics)
 
 ## Amt: Lagged DV ---------------------------------------------------
 
@@ -1184,33 +765,37 @@ load("data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION_
 
 o_q_iy_amt_ldv <- models[[5]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_amt_ldv_ready <- c(o_q_iy_amt_ldv$coefficients["op_expo_ew"], o_q_iy_amt_ldv$se["op_expo_ew"],
-                          o_q_iy_amt_ldv$coefficients["rg_expo_ew"], o_q_iy_amt_ldv$se["rg_expo_ew"],
-                          o_q_iy_amt_ldv$coefficients["ph_expo_ew"], o_q_iy_amt_ldv$se["ph_expo_ew"],
-                          o_q_iy_amt_ldv$coefficients["log_CLI_amount_l1"], o_q_iy_amt_ldv$se["log_CLI_amount_l1"])
+o_q_iy_amt_ldv_estimates <- c(o_q_iy_amt_ldv$coefficients["op_expo_ew"], o_q_iy_amt_ldv$se["op_expo_ew"],
+                              o_q_iy_amt_ldv$coefficients["rg_expo_ew"], o_q_iy_amt_ldv$se["rg_expo_ew"],
+                              o_q_iy_amt_ldv$coefficients["ph_expo_ew"], o_q_iy_amt_ldv$se["ph_expo_ew"],
+                              o_q_iy_amt_ldv$coefficients["log_CLI_amount_l1"], o_q_iy_amt_ldv$se["log_CLI_amount_l1"])
 
 o_q_iy_amt_ldv_N <- o_q_iy_amt_ldv$nobs
 
-o_q_iy_amt_ldv_R <- round(r2(o_q_iy_amt_ldv, type = "ar2"), 3) #adjusted R2
+o_q_iy_amt_ldv_R <- unname(round(r2(o_q_iy_amt_ldv, type = "ar2"), 3)) #adjusted R2
 
 o_q_iy_amt_ldv_Wald <- c(round(compute_wald(o_q_iy_amt_ldv, "op_expo_ew", "rg_expo_ew"), 3), 
                      round(compute_wald(o_q_iy_amt_ldv, "op_expo_ew", "ph_expo_ew"), 3), 
                      round(compute_wald(o_q_iy_amt_ldv, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
 
 
-o_q_iy_amt_ldv_out <- c(`Num. Obs.` = o_q_iy_amt_ldv_N,
-                    `Adjusted R-Squared` =  o_q_iy_amt_ldv_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = '\\checkmark',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_ldv_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[3]))
+o_q_iy_amt_ldv_diagnostics <- c(`Num. Obs.` = o_q_iy_amt_ldv_N,
+                                `Adjusted R-Squared` =  o_q_iy_amt_ldv_R,
+                                `Year FE` = ' ',
+                                `Industry x Year FE` = '\\checkmark',
+                                `Industry x Qtr FE` = ' ',
+                                `Firm FE` = ' ',
+                                `Firm Controls` = '\\checkmark',
+                                `Lagged DV` = '\\checkmark',
+                                `Climate Measure` = 'Exposure',
+                                `Estimation` = 'OLS',
+                                `Panel` = 'Firm-Qtr',
+                                `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_ldv_Wald[1]),
+                                `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[2]),
+                                `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_ldv_Wald[3]))
+
+o_q_iy_amt_ldv_out <- list("Estimates" = o_q_iy_amt_ldv_estimates,
+                           "Diagnostics" = o_q_iy_amt_ldv_diagnostics)
 
 ## Amt: Congress Target ---------------------------------------------
 
@@ -1218,124 +803,21 @@ load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NE
 
 o_q_iy_amt_cong <- models[["CONG"]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_amt_cong_ready <- c(o_q_iy_amt_cong$coefficients["op_expo_ew"], o_q_iy_amt_cong$se["op_expo_ew"],
-                          o_q_iy_amt_cong$coefficients["rg_expo_ew"], o_q_iy_amt_cong$se["rg_expo_ew"],
-                          o_q_iy_amt_cong$coefficients["ph_expo_ew"], o_q_iy_amt_cong$se["ph_expo_ew"])
-
-o_q_iy_amt_cong_N <- o_q_iy_amt_cong$nobs
-
-o_q_iy_amt_cong_R <- round(r2(o_q_iy_amt_cong, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_amt_cong_Wald <- c(round(compute_wald(o_q_iy_amt_cong, "op_expo_ew", "rg_expo_ew"), 3), 
-                         round(compute_wald(o_q_iy_amt_cong, "op_expo_ew", "ph_expo_ew"), 3), 
-                         round(compute_wald(o_q_iy_amt_cong, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_amt_cong_out <- c(`Num. Obs.` = o_q_iy_amt_cong_N,
-                        `Adjusted R-Squared` =  o_q_iy_amt_cong_R,
-                        `Year FE` = ' ',
-                        `Industry x Year FE` = '\\checkmark',
-                        `Firm FE` = ' ',
-                        `Firm Controls` = '\\checkmark',
-                        `Lagged DV` = ' ',
-                        `Climate Measure` = 'Exposure',
-                        `Estimation` = 'OLS',
-                        `Panel` = 'Firm-Qtr',
-                        `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_cong_Wald[1]),
-                        `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_cong_Wald[2]),
-                        `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_cong_Wald[3]))
+o_q_iy_amt_cong_out <- process_model(o_q_iy_amt_cong)
 
 ## Amt: EPA Target ---------------------------------------------
 
 o_q_iy_amt_epa <- models[["EPA"]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_amt_epa_ready <- c(o_q_iy_amt_epa$coefficients["op_expo_ew"], o_q_iy_amt_epa$se["op_expo_ew"],
-                          o_q_iy_amt_epa$coefficients["rg_expo_ew"], o_q_iy_amt_epa$se["rg_expo_ew"],
-                          o_q_iy_amt_epa$coefficients["ph_expo_ew"], o_q_iy_amt_epa$se["ph_expo_ew"])
+o_q_iy_amt_epa_out <- process_model(o_q_iy_amt_epa)
 
-o_q_iy_amt_epa_N <- o_q_iy_amt_epa$nobs
-
-o_q_iy_amt_epa_R <- round(r2(o_q_iy_amt_epa, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_amt_epa_Wald <- c(round(compute_wald(o_q_iy_amt_epa, "op_expo_ew", "rg_expo_ew"), 3), 
-                          round(compute_wald(o_q_iy_amt_epa, "op_expo_ew", "ph_expo_ew"), 3), 
-                          round(compute_wald(o_q_iy_amt_epa, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_amt_epa_out <- c(`Num. Obs.` = o_q_iy_amt_epa_N,
-                         `Adjusted R-Squared` =  o_q_iy_amt_epa_R,
-                        `Year FE` = ' ',
-                         `Industry x Year FE` = '\\checkmark',
-                         `Firm FE` = ' ',
-                         `Firm Controls` = '\\checkmark',
-                         `Lagged DV` = ' ',
-                         `Climate Measure` = 'Exposure',
-                         `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Qtr',
-                         `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_epa_Wald[1]),
-                         `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_epa_Wald[2]),
-                         `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_epa_Wald[3]))
 
 ## Amt: DOE Target ---------------------------------------------
 
 o_q_iy_amt_doe <- models[["DOE"]] #Column 5 - industry-by-year FE with interactions
 
-o_q_iy_amt_doe_ready <- c(o_q_iy_amt_doe$coefficients["op_expo_ew"], o_q_iy_amt_doe$se["op_expo_ew"],
-                          o_q_iy_amt_doe$coefficients["rg_expo_ew"], o_q_iy_amt_doe$se["rg_expo_ew"],
-                          o_q_iy_amt_doe$coefficients["ph_expo_ew"], o_q_iy_amt_doe$se["ph_expo_ew"])
+o_q_iy_amt_doe_out <- process_model(o_q_iy_amt_doe)
 
-o_q_iy_amt_doe_N <- o_q_iy_amt_doe$nobs
-
-o_q_iy_amt_doe_R <- round(r2(o_q_iy_amt_doe, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_amt_doe_Wald <- c(round(compute_wald(o_q_iy_amt_doe, "op_expo_ew", "rg_expo_ew"), 3), 
-                         round(compute_wald(o_q_iy_amt_doe, "op_expo_ew", "ph_expo_ew"), 3), 
-                         round(compute_wald(o_q_iy_amt_doe, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_amt_doe_out <- c(`Num. Obs.` = o_q_iy_amt_doe_N,
-                        `Adjusted R-Squared` =  o_q_iy_amt_doe_R,
-                        `Year FE` = ' ',
-                        `Industry x Year FE` = '\\checkmark',
-                        `Firm FE` = ' ',
-                        `Firm Controls` = '\\checkmark',
-                        `Lagged DV` = ' ',
-                        `Climate Measure` = 'Exposure',
-                        `Estimation` = 'OLS',
-                        `Panel` = 'Firm-Qtr',
-                        `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_doe_Wald[1]),
-                        `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_doe_Wald[2]),
-                        `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_doe_Wald[3]))
-
-## Amt: Tobit Main Model ---------------------------------------------
-
-## Tobit Amount Main Models
-
-# tobit <- read.csv("results/model_Data/tobit_results_quarterly_DATA_REVISION.csv", stringsAsFactors=F)
-# 
-# t_q_iy_amt_ready <- process_stata(tobit, 2, "exposure")
-# 
-# t_q_iy_amt_N <- as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=N")]))
-# 
-# t_q_iy_amt_R <- round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=r2a")])), 3)
-# 
-# t_q_iy_amt_Wald <- c(round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald1")])), 3),
-#                  round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald2")])), 3),
-#                  round(as.numeric(gsub("=", "", tobit$X..1.[which(tobit$X.=="=wald3")])), 3))
-# 
-# t_q_iy_amt_out <- c(`Num. Obs.` = t_q_iy_amt_N,
-#                 `Adjusted R-Squared` =  t_q_iy_amt_R,
-#                 `Year FE` = ' ',
-#                 `Industry x Year FE` = '\\checkmark',
-#                 `Firm FE` = ' ',
-#                 `Firm Controls` = '\\checkmark',
-#                 `Lagged DV` = ' ',
-#                 `Climate Measure` = 'Exposure',
-#                 `Estimation` = 'Tobit',
-#                 `Panel` = 'Firm-Qtr',
-#                 `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_amt_Wald[1]),
-#                 `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_amt_Wald[2]),
-#                 `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_amt_Wald[3]))
 
 ## Amount: Annual Model with Overall Expo ------------------------------------------------
 
@@ -1343,56 +825,63 @@ load("data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
 
 o_a_iy_ovrl_amt <- out[[3]]
 
-o_a_iy_ovrl_amt_ready <- round(c(o_a_iy_ovrl_amt$coefficients["cc_expo_ew"], o_a_iy_ovrl_amt$se["cc_expo_ew"]), 3)
+o_a_iy_ovrl_amt_estimates <- round(c(o_a_iy_ovrl_amt$coefficients["cc_expo_ew"], o_a_iy_ovrl_amt$se["cc_expo_ew"]), 3)
 t <- o_a_iy_ovrl_amt$coefficients["cc_expo_ew"] / o_a_iy_ovrl_amt$se["cc_expo_ew"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
-o_a_iy_ovrl_amt_ready_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_amt_ready[1], strs), std.error=o_a_iy_ovrl_amt_ready[2])
+o_a_iy_amt_ovrl_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_amt_estimates[1], strs), std.error=o_a_iy_ovrl_amt_estimates[2])
 
 o_a_iy_ovrl_amt_N <- o_a_iy_ovrl_amt$nobs
 
-o_a_iy_ovrl_amt_R <- round(r2(o_a_iy_ovrl_amt, type = "ar2"), 3) #adjusted R2
+o_a_iy_ovrl_amt_R <- unname(round(r2(o_a_iy_ovrl_amt, type = "ar2"), 3)) #adjusted R2
 
-o_a_iy_ovrl_amt_out <- c(`Num. Obs.` = o_a_iy_ovrl_amt_N,
-                     `Adjusted R-Squared` =  o_a_iy_ovrl_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = '10-K Expo.',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Yr',
-                     `Wald Stat (Opp - Reg = 0)` = ' ',
-                     `Wald Stat (Opp - Phy = 0)` = ' ',
-                     `Wald Stat (Reg - Phy = 0)` = ' ')
+o_a_iy_ovrl_amt_diagnostics <- c(`Num. Obs.` = o_a_iy_ovrl_amt_N,
+                                 `Adjusted R-Squared` =  o_a_iy_ovrl_amt_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = '10-K Expo.',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Firm-Yr',
+                                 `Wald Stat (Opp - Reg = 0)` = ' ',
+                                 `Wald Stat (Opp - Phy = 0)` = ' ',
+                                 `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_a_iy_amt_ovrl_out <- list("Estimates" = o_a_iy_ovrl_amt_estimates,
+                            "Diagnostics" = o_a_iy_ovrl_amt_diagnostics)
 
 ## Occ: Annual Model with 10-K Exposure Measure ------------------------------------------------
 
 o_a_iy_tenk_amt <- out[[4]]
 
-o_a_iy_tenk_amt_ready <- round(c(o_a_iy_tenk_amt$coefficients["tenk_exposure"], o_a_iy_tenk_amt$se["tenk_exposure"]), 3)
+o_a_iy_tenk_amt_estimates <- round(c(o_a_iy_tenk_amt$coefficients["tenk_exposure"], o_a_iy_tenk_amt$se["tenk_exposure"]), 3)
 t <- o_a_iy_tenk_amt$coefficients["tenk_exposure"] / o_a_iy_tenk_amt$se["tenk_exposure"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
-o_a_iy_tenk_amt_ready_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_amt_ready[1], strs), std.error=o_a_iy_tenk_amt_ready[2])
+o_a_iy_amt_tenk_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_amt_estimates[1], strs), std.error=o_a_iy_tenk_amt_estimates[2])
 
 o_a_iy_tenk_amt_N <- o_a_iy_tenk_amt$nobs
 
 o_a_iy_tenk_amt_R <- round(r2(o_a_iy_tenk_amt, type = "ar2"), 3) #adjusted R2
 
-o_a_iy_tenk_amt_out <- c(`Num. Obs.` = o_a_iy_tenk_amt_N,
-                         `Adjusted R-Squared` =  o_a_iy_tenk_amt_R,
-                         `Year FE` = ' ',
-                         `Industry x Year FE` = '\\checkmark',
-                         `Firm FE` = ' ',
-                         `Firm Controls` = '\\checkmark',
-                         `Lagged DV` = ' ',
-                         `Climate Measure` = '10-K Expo.',
-                         `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Yr',
-                         `Wald Stat (Opp - Reg = 0)` = ' ',
-                         `Wald Stat (Opp - Phy = 0)` = ' ',
-                         `Wald Stat (Reg - Phy = 0)` = ' ')
+o_a_iy_tenk_amt_diagnostics <- c(`Num. Obs.` = o_a_iy_tenk_amt_N,
+                                 `Adjusted R-Squared` =  o_a_iy_tenk_amt_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = '10-K Expo.',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Firm-Yr',
+                                 `Wald Stat (Opp - Reg = 0)` = ' ',
+                                 `Wald Stat (Opp - Phy = 0)` = ' ',
+                                 `Wald Stat (Reg - Phy = 0)` = ' ')
 
+o_a_iy_amt_tenk_out <- list("Estimates" = o_a_iy_tenk_amt_estimates,
+                            "Diagnostics" = o_a_iy_tenk_amt_diagnostics)
 
 ## Amt: Main Model with Annual Panel ------------------------------------------
 
@@ -1400,32 +889,7 @@ load("data/03_final/climate_ols_annual_bycomponent_MODELS_REVISION_NEW.RData")
 
 o_a_iy_amt <- models[[2]]
 
-o_a_iy_amt_ready <- c(o_a_iy_amt$coefficients["op_expo_ew"], o_a_iy_amt$se["op_expo_ew"],
-                      o_a_iy_amt$coefficients["rg_expo_ew"], o_a_iy_amt$se["rg_expo_ew"],
-                      o_a_iy_amt$coefficients["ph_expo_ew"], o_a_iy_amt$se["ph_expo_ew"])
-
-o_a_iy_amt_N <- o_a_iy_amt$nobs
-
-o_a_iy_amt_R <- round(r2(o_a_iy_amt, type = "ar2"), 3) #adjusted R2
-
-o_a_iy_amt_Wald <- c(round(compute_wald(o_a_iy_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                 round(compute_wald(o_a_iy_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                 round(compute_wald(o_a_iy_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_a_iy_amt_out <- c(`Num. Obs.` = o_a_iy_amt_N,
-                `Adjusted R-Squared` =  o_a_iy_amt_R,
-                `Year FE` = ' ',
-                `Industry x Year FE` = '\\checkmark',
-                `Firm FE` = ' ',
-                `Firm Controls` = '\\checkmark',
-                `Lagged DV` = ' ',
-                `Climate Measure` = 'Exposure',
-                `Estimation` = 'OLS',
-                `Panel` = 'Firm-Yr',
-                `Wald Stat (Opp - Reg = 0)` = as.character(o_a_iy_amt_Wald[1]),
-                `Wald Stat (Opp - Phy = 0)` = as.character(o_a_iy_amt_Wald[2]),
-                `Wald Stat (Reg - Phy = 0)` = as.character(o_a_iy_amt_Wald[3]))
+o_a_iy_amt_out <- process_model(o_a_iy_amt, Panel = "Firm-Yr")
 
 
 ## Amount: Bills-Based Measure of Climate Lobbying ------------------------------------------
@@ -1434,32 +898,7 @@ load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW_altcl
 
 o_q_iy_amt_bills <- models[[1]]
 
-o_q_iy_amt_bills_ready <- c(o_q_iy_amt_bills$coefficients["op_expo_ew"], o_q_iy_amt_bills$se["op_expo_ew"],
-                            o_q_iy_amt_bills$coefficients["rg_expo_ew"], o_q_iy_amt_bills$se["rg_expo_ew"],
-                            o_q_iy_amt_bills$coefficients["ph_expo_ew"], o_q_iy_amt_bills$se["ph_expo_ew"])
-
-o_q_iy_amt_bills_N <- o_q_iy_amt_bills$nobs
-
-o_q_iy_amt_bills_R <- round(r2(o_q_iy_amt_bills, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_amt_bills_Wald <- c(round(compute_wald(o_q_iy_amt_bills, "op_expo_ew", "rg_expo_ew"), 3), 
-                       round(compute_wald(o_q_iy_amt_bills, "op_expo_ew", "ph_expo_ew"), 3), 
-                       round(compute_wald(o_q_iy_amt_bills, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_amt_bills_out <- c(`Num. Obs.` = o_q_iy_amt_bills_N,
-                      `Adjusted R-Squared` =  o_q_iy_amt_bills_R,
-                      `Year FE` = ' ',
-                      `Industry x Year FE` = '\\checkmark',
-                      `Firm FE` = ' ',
-                      `Firm Controls` = '\\checkmark',
-                      `Lagged DV` = ' ',
-                      `Climate Measure` = 'Exposure',
-                      `Estimation` = 'OLS',
-                      `Panel` = 'Firm-Qtr',
-                      `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_amt_bills_Wald[1]),
-                      `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_amt_bills_Wald[2]),
-                      `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_amt_bills_Wald[3]))
+o_q_iy_amt_bills_out <- process_model(o_q_iy_amt_bills)
 
 ## Amt: Keyword-Based Measure of Climate Lobbying ------------------------------------------
 
@@ -1467,94 +906,21 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altkeywords.
 
 o_q_iy_kywd_amt <- models[[4]]
 
-o_q_iy_kywd_amt_ready <- c(o_q_iy_kywd_amt$coefficients["op_expo_ew"], o_q_iy_kywd_amt$se["op_expo_ew"],
-                       o_q_iy_kywd_amt$coefficients["rg_expo_ew"], o_q_iy_kywd_amt$se["rg_expo_ew"],
-                       o_q_iy_kywd_amt$coefficients["ph_expo_ew"], o_q_iy_kywd_amt$se["ph_expo_ew"])
+o_q_iy_amt_kywd_out <- process_model(o_q_iy_kywd_amt)
 
-o_q_iy_kywd_amt_N <- o_q_iy_kywd_amt$nobs
-
-o_q_iy_kywd_amt_R <- round(r2(o_q_iy_kywd_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_amt_Wald <- c(round(compute_wald(o_q_iy_kywd_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_kywd_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                      round(compute_wald(o_q_iy_kywd_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_amt_N,
-                     `Adjusted R-Squared` =  o_q_iy_kywd_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_amt_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_amt_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_amt_Wald[3]))
 
 ## Amt: Keyword-Based Measure of Climate MITIGATION Lobbying ------------------------------------------
 
 o_q_iy_kywd_miti_amt <- models[[5]]
 
-o_q_iy_kywd_miti_amt_ready <- c(o_q_iy_kywd_miti_amt$coefficients["op_expo_ew"], o_q_iy_kywd_miti_amt$se["op_expo_ew"],
-                                o_q_iy_kywd_miti_amt$coefficients["rg_expo_ew"], o_q_iy_kywd_miti_amt$se["rg_expo_ew"],
-                                o_q_iy_kywd_miti_amt$coefficients["ph_expo_ew"], o_q_iy_kywd_miti_amt$se["ph_expo_ew"])
-
-o_q_iy_kywd_miti_amt_N <- o_q_iy_kywd_miti_amt$nobs
-
-o_q_iy_kywd_miti_amt_R <- round(r2(o_q_iy_kywd_miti_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_miti_amt_Wald <- c(round(compute_wald(o_q_iy_kywd_miti_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_miti_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_miti_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_miti_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_miti_amt_N,
-                          `Adjusted R-Squared` =  o_q_iy_kywd_miti_amt_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_miti_amt_Wald[3]))
+o_q_iy_amt_kywd_miti_out <- process_model(o_q_iy_kywd_miti_amt)
 
 ## Occ: Keyword-Based Measure of Climate ADAPTATION Lobbying ------------------------------------------
 
 o_q_iy_kywd_adpt_amt <- models[[6]]
 
-o_q_iy_kywd_adpt_amt_ready <- c(o_q_iy_kywd_adpt_amt$coefficients["op_expo_ew"], o_q_iy_kywd_adpt_amt$se["op_expo_ew"],
-                                o_q_iy_kywd_adpt_amt$coefficients["rg_expo_ew"], o_q_iy_kywd_adpt_amt$se["rg_expo_ew"],
-                                o_q_iy_kywd_adpt_amt$coefficients["ph_expo_ew"], o_q_iy_kywd_adpt_amt$se["ph_expo_ew"])
+o_q_iy_amt_kywd_adpt_out <- process_model(o_q_iy_kywd_adpt_amt)
 
-o_q_iy_kywd_adpt_amt_N <- o_q_iy_kywd_adpt_amt$nobs
-
-o_q_iy_kywd_adpt_amt_R <- round(r2(o_q_iy_kywd_adpt_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_kywd_adpt_amt_Wald <- c(round(compute_wald(o_q_iy_kywd_adpt_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_adpt_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_q_iy_kywd_adpt_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_kywd_adpt_amt_out <- c(`Num. Obs.` = o_q_iy_kywd_adpt_amt_N,
-                          `Adjusted R-Squared` =  o_q_iy_kywd_adpt_amt_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Qtr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_kywd_adpt_amt_Wald[3]))
 
 ## Amt: Main Models with Augmented Controls ------------------------------------------
 
@@ -1562,32 +928,7 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_augmented.RD
 
 o_q_iy_aug_amt <- models[[2]]
 
-o_q_iy_aug_amt_ready <- c(o_q_iy_aug_amt$coefficients["op_expo_ew"], o_q_iy_aug_amt$se["op_expo_ew"],
-                          o_q_iy_aug_amt$coefficients["rg_expo_ew"], o_q_iy_aug_amt$se["rg_expo_ew"],
-                          o_q_iy_aug_amt$coefficients["ph_expo_ew"], o_q_iy_aug_amt$se["ph_expo_ew"])
-
-o_q_iy_aug_amt_N <- o_q_iy_aug_amt$nobs
-
-o_q_iy_aug_amt_R <- round(r2(o_q_iy_aug_amt, type = "ar2"), 3) #adjusted R2
-
-o_q_iy_aug_amt_Wald <- c(round(compute_wald(o_q_iy_aug_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_aug_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_aug_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_q_iy_aug_amt_out <- c(`Num. Obs.` = o_q_iy_aug_amt_N,
-                    `Adjusted R-Squared` =  o_q_iy_aug_amt_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = 'Augmented',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_aug_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_aug_amt_Wald[3]))
+o_q_iy_amt_aug_out <- process_model(o_q_iy_aug_amt, Firm_Controls = 'Augm.')
 
 ## Occ: Coalition Based Directionality Models ------------------------------------------
 
@@ -1597,63 +938,13 @@ load("data/03_final/climate_ols_yr_coalition_MODELS_REVISION_NEW.RData")
 
 o_y_iy_coal_pro_amt <- models[[5]]
 
-o_y_iy_coal_pro_amt_ready <- c(o_y_iy_coal_pro_amt$coefficients["op_expo_ew"], o_y_iy_coal_pro_amt$se["op_expo_ew"],
-                               o_y_iy_coal_pro_amt$coefficients["rg_expo_ew"], o_y_iy_coal_pro_amt$se["rg_expo_ew"],
-                               o_y_iy_coal_pro_amt$coefficients["ph_expo_ew"], o_y_iy_coal_pro_amt$se["ph_expo_ew"])
-
-o_y_iy_coal_pro_amt_N <- o_y_iy_coal_pro_amt$nobs
-
-o_y_iy_coal_pro_amt_R <- round(r2(o_y_iy_coal_pro_amt, type = "ar2"), 3) #adjusted R2
-
-o_y_iy_coal_pro_amt_Wald <- c(round(compute_wald(o_y_iy_coal_pro_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                          round(compute_wald(o_y_iy_coal_pro_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                          round(compute_wald(o_y_iy_coal_pro_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_y_iy_coal_pro_amt_out <- c(`Num. Obs.` = o_y_iy_coal_pro_amt_N,
-                         `Adjusted R-Squared` =  o_y_iy_coal_pro_amt_R,
-                         `Year FE` = ' ',
-                         `Industry x Year FE` = '\\checkmark',
-                         `Firm FE` = ' ',
-                         `Firm Controls` = '\\checkmark',
-                         `Lagged DV` = ' ',
-                         `Climate Measure` = 'Exposure',
-                         `Estimation` = 'OLS',
-                         `Panel` = 'Firm-Yr',
-                         `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[1]),
-                         `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[2]),
-                         `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_pro_amt_Wald[3]))
+o_y_iy_amt_coal_pro_out <- process_model(o_y_iy_coal_pro_amt, Panel = "Firm-Yr")
 
 ## Anti ---
 
 o_y_iy_coal_anti_amt <- models[[6]]
 
-o_y_iy_coal_anti_amt_ready <- c(o_y_iy_coal_anti_amt$coefficients["op_expo_ew"], o_y_iy_coal_anti_amt$se["op_expo_ew"],
-                                o_y_iy_coal_anti_amt$coefficients["rg_expo_ew"], o_y_iy_coal_anti_amt$se["rg_expo_ew"],
-                                o_y_iy_coal_anti_amt$coefficients["ph_expo_ew"], o_y_iy_coal_anti_amt$se["ph_expo_ew"])
-
-o_y_iy_coal_anti_amt_N <- o_y_iy_coal_anti_amt$nobs
-
-o_y_iy_coal_anti_amt_R <- round(r2(o_y_iy_coal_anti_amt, type = "ar2"), 3) #adjusted R2
-
-o_y_iy_coal_anti_amt_Wald <- c(round(compute_wald(o_y_iy_coal_anti_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                           round(compute_wald(o_y_iy_coal_anti_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                           round(compute_wald(o_y_iy_coal_anti_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-
-
-o_y_iy_coal_anti_amt_out <- c(`Num. Obs.` = o_y_iy_coal_anti_amt_N,
-                          `Adjusted R-Squared` =  o_y_iy_coal_anti_amt_R,
-                          `Year FE` = ' ',
-                          `Industry x Year FE` = '\\checkmark',
-                          `Firm FE` = ' ',
-                          `Firm Controls` = '\\checkmark',
-                          `Lagged DV` = ' ',
-                          `Climate Measure` = 'Exposure',
-                          `Estimation` = 'OLS',
-                          `Panel` = 'Firm-Yr',
-                          `Wald Stat (Opp - Reg = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[1]),
-                          `Wald Stat (Opp - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[2]),
-                          `Wald Stat (Reg - Phy = 0)` = as.character(o_y_iy_coal_anti_amt_Wald[3]))
+o_y_iy_amt_coal_anti_out <- process_model(o_y_iy_coal_anti_amt, Panel = "Firm-Yr")
 
 ## Amt: Imputation Model ------------------------------------------
 
@@ -1661,61 +952,69 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RDat
 
 o_q_iy_impt_amt <- models[2,,drop=F]
 
-o_q_iy_impt_amt_ready <- c(o_q_iy_impt_amt$op_expo_ew_coef, o_q_iy_impt_amt$op_expo_ew_se,
-                       o_q_iy_impt_amt$rg_expo_ew_coef, o_q_iy_impt_amt$rg_expo_ew_se,
-                       o_q_iy_impt_amt$ph_expo_ew_coef, o_q_iy_impt_amt$ph_expo_ew_se)
+o_q_iy_impt_amt_estimates <- c(o_q_iy_impt_amt$op_expo_ew_coef, o_q_iy_impt_amt$op_expo_ew_se,
+                               o_q_iy_impt_amt$rg_expo_ew_coef, o_q_iy_impt_amt$rg_expo_ew_se,
+                               o_q_iy_impt_amt$ph_expo_ew_coef, o_q_iy_impt_amt$ph_expo_ew_se)
 
 o_q_iy_impt_amt_N <- o_q_iy_impt_amt$n
 
-o_q_iy_impt_amt_R <- round(o_q_iy_impt_amt$r, 3)
+o_q_iy_impt_amt_R <- unname(round(o_q_iy_impt_amt$r, 3))
 
 o_q_iy_impt_amt_Wald <- abs(round(c(o_q_iy_impt_amt$wald1, o_q_iy_impt_amt$wald2, o_q_iy_impt_amt$wald3), 3)) #Wald stats
 
 
-o_q_iy_impt_amt_out <- c(`Num. Obs.` = o_q_iy_impt_amt_N,
-                     `Adjusted R-Squared` =  o_q_iy_impt_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'OLS',
-                     `Panel` = 'Imputed FQ',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_amt_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[3]))
+o_q_iy_impt_amt_diagnostics <- c(`Num. Obs.` = o_q_iy_impt_amt_N,
+                                 `Adjusted R-Squared` =  o_q_iy_impt_amt_R,
+                                 `Year FE` = ' ',
+                                 `Industry x Year FE` = '\\checkmark',
+                                 `Industry x Qtr FE` = ' ',
+                                 `Firm FE` = ' ',
+                                 `Firm Controls` = '\\checkmark',
+                                 `Lagged DV` = ' ',
+                                 `Climate Measure` = 'Exposure',
+                                 `Estimation` = 'OLS',
+                                 `Panel` = 'Imputed FQ',
+                                 `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_impt_amt_Wald[1]),
+                                 `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[2]),
+                                 `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_impt_amt_Wald[3]))
+
+o_q_iy_amt_impt_out <- list("Estimates" = o_q_iy_impt_amt_estimates,
+                            "Diagnostics" = o_q_iy_impt_amt_diagnostics)
 
 ## Amt: Tobit Model --------------------------------------------------------
 
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_tobit.RData")
 
-o_q_iy_tobit_amt <- tobit[1,,drop=F]
+t_q_iy_amt <- tobit[1,,drop=F]
 
-o_q_iy_tobit_amt_ready <- c(o_q_iy_tobit_amt$op_expo_ew_coef, o_q_iy_tobit_amt$op_expo_ew_se,
-                            o_q_iy_tobit_amt$rg_expo_ew_coef, o_q_iy_tobit_amt$rg_expo_ew_se,
-                           o_q_iy_tobit_amt$ph_expo_ew_coef, o_q_iy_tobit_amt$ph_expo_ew_se)
+t_q_iy_amt_estimates <- c(t_q_iy_amt$op_expo_ew_coef, t_q_iy_amt$op_expo_ew_se,
+                          t_q_iy_amt$rg_expo_ew_coef, t_q_iy_amt$rg_expo_ew_se,
+                          t_q_iy_amt$ph_expo_ew_coef, t_q_iy_amt$ph_expo_ew_se)
 
-o_q_iy_tobit_amt_N <- o_q_iy_tobit_amt$n
+t_q_iy_amt_N <- t_q_iy_amt$n
 
-o_q_iy_tobit_amt_R <- round(o_q_iy_tobit_amt$r, 3)
+t_q_iy_amt_R <- round(t_q_iy_amt$r, 3)
 
-o_q_iy_tobit_amt_Wald <- abs(round(c(o_q_iy_tobit_amt$wald1, o_q_iy_tobit_amt$wald2, o_q_iy_tobit_amt$wald3), 3)) #Wald stats
+t_q_iy_amt_Wald <- abs(round(c(t_q_iy_amt$wald1, t_q_iy_amt$wald2, t_q_iy_amt$wald3), 3)) #Wald stats
 
 
-o_q_iy_tobit_amt_out <- c(`Num. Obs.` = o_q_iy_tobit_amt_N,
-                     `Adjusted R-Squared` =  o_q_iy_tobit_amt_R,
-                     `Year FE` = ' ',
-                     `Industry x Year FE` = '\\checkmark',
-                     `Firm FE` = ' ',
-                     `Firm Controls` = '\\checkmark',
-                     `Lagged DV` = ' ',
-                     `Climate Measure` = 'Exposure',
-                     `Estimation` = 'Tobit',
-                     `Panel` = 'Firm-Qtr',
-                     `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_tobit_amt_Wald[1]),
-                     `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_tobit_amt_Wald[2]),
-                     `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_tobit_amt_Wald[3]))
+t_q_iy_amt_diagnostics <- c(`Num. Obs.` = t_q_iy_amt_N,
+                            `Adjusted R-Squared` =  t_q_iy_amt_R,
+                            `Year FE` = ' ',
+                            `Industry x Year FE` = '\\checkmark',
+                            `Industry x Qtr FE` = ' ',
+                            `Firm FE` = ' ',
+                            `Firm Controls` = '\\checkmark',
+                            `Lagged DV` = ' ',
+                            `Climate Measure` = 'Exposure',
+                            `Estimation` = 'Tobit',
+                            `Panel` = 'Firm-Qtr',
+                            `Wald Stat (Opp - Reg = 0)` = as.character(t_q_iy_amt_Wald[1]),
+                            `Wald Stat (Opp - Phy = 0)` = as.character(t_q_iy_amt_Wald[2]),
+                            `Wald Stat (Reg - Phy = 0)` = as.character(t_q_iy_amt_Wald[3]))
+
+t_q_iy_amt_out <- list("Estimates" = t_q_iy_amt_estimates,
+                       "Diagnostics" = t_q_iy_amt_diagnostics)
 
 ## Occ: Issue-Specific Models ------------------------------------------
 
@@ -1723,259 +1022,130 @@ load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData
 
 ## CAW
 o_q_iy_caw_amt <- models[[12]]
-o_q_iy_caw_amt_ready <- c(o_q_iy_caw_amt$coefficients["op_expo_ew"], o_q_iy_caw_amt$se["op_expo_ew"],
-                          o_q_iy_caw_amt$coefficients["rg_expo_ew"], o_q_iy_caw_amt$se["rg_expo_ew"],
-                          o_q_iy_caw_amt$coefficients["ph_expo_ew"], o_q_iy_caw_amt$se["ph_expo_ew"])
-o_q_iy_caw_amt_N <- o_q_iy_caw_amt$nobs
-o_q_iy_caw_amt_R <- round(r2(o_q_iy_caw_amt, type = "ar2"), 3) #adjusted R2
-o_q_iy_caw_amt_Wald <- c(round(compute_wald(o_q_iy_caw_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_caw_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_caw_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_caw_amt_out <- c(`Num. Obs.` = o_q_iy_caw_amt_N,
-                    `Adjusted R-Squared` =  o_q_iy_caw_amt_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_caw_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_caw_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_caw_amt_Wald[3]))
+o_q_iy_amt_caw_out <- process_model(o_q_iy_caw_amt)
 
 ## ENG
 o_q_iy_eng_amt <- models[[13]]
-o_q_iy_eng_amt_ready <- c(o_q_iy_eng_amt$coefficients["op_expo_ew"], o_q_iy_eng_amt$se["op_expo_ew"],
-                          o_q_iy_eng_amt$coefficients["rg_expo_ew"], o_q_iy_eng_amt$se["rg_expo_ew"],
-                          o_q_iy_eng_amt$coefficients["ph_expo_ew"], o_q_iy_eng_amt$se["ph_expo_ew"])
-o_q_iy_eng_amt_N <- o_q_iy_eng_amt$nobs
-o_q_iy_eng_amt_R <- round(r2(o_q_iy_eng_amt, type = "ar2"), 3) #adjusted R2
-o_q_iy_eng_amt_Wald <- c(round(compute_wald(o_q_iy_eng_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_eng_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_eng_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_eng_amt_out <- c(`Num. Obs.` = o_q_iy_eng_amt_N,
-                    `Adjusted R-Squared` =  o_q_iy_eng_amt_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_eng_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_eng_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_eng_amt_Wald[3]))
+
+o_q_iy_amt_eng_out <- process_model(o_q_iy_eng_amt)
 
 ## ENV
 o_q_iy_env_amt <- models[[14]]
-o_q_iy_env_amt_ready <- c(o_q_iy_env_amt$coefficients["op_expo_ew"], o_q_iy_env_amt$se["op_expo_ew"],
-                          o_q_iy_env_amt$coefficients["rg_expo_ew"], o_q_iy_env_amt$se["rg_expo_ew"],
-                          o_q_iy_env_amt$coefficients["ph_expo_ew"], o_q_iy_env_amt$se["ph_expo_ew"])
-o_q_iy_env_amt_N <- o_q_iy_env_amt$nobs
-o_q_iy_env_amt_R <- round(r2(o_q_iy_env_amt, type = "ar2"), 3) #adjusted R2
-o_q_iy_env_amt_Wald <- c(round(compute_wald(o_q_iy_env_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_env_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_env_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_env_amt_out <- c(`Num. Obs.` = o_q_iy_env_amt_N,
-                    `Adjusted R-Squared` =  o_q_iy_env_amt_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_env_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_env_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_env_amt_Wald[3]))
+
+o_q_iy_amt_env_out <- process_model(o_q_iy_env_amt)
 
 ## FUE
 o_q_iy_fue_amt <- models[[15]]
-o_q_iy_fue_amt_ready <- c(o_q_iy_fue_amt$coefficients["op_expo_ew"], o_q_iy_fue_amt$se["op_expo_ew"],
-                          o_q_iy_fue_amt$coefficients["rg_expo_ew"], o_q_iy_fue_amt$se["rg_expo_ew"],
-                          o_q_iy_fue_amt$coefficients["ph_expo_ew"], o_q_iy_fue_amt$se["ph_expo_ew"])
-o_q_iy_fue_amt_N <- o_q_iy_fue_amt$nobs
-o_q_iy_fue_amt_R <- round(r2(o_q_iy_fue_amt, type = "ar2"), 3) #adjusted R2
-o_q_iy_fue_amt_Wald <- c(round(compute_wald(o_q_iy_fue_amt, "op_expo_ew", "rg_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_fue_amt, "op_expo_ew", "ph_expo_ew"), 3), 
-                     round(compute_wald(o_q_iy_fue_amt, "rg_expo_ew", "ph_expo_ew"), 3)) #Wald stats
-o_q_iy_fue_amt_out <- c(`Num. Obs.` = o_q_iy_fue_amt_N,
-                    `Adjusted R-Squared` =  o_q_iy_fue_amt_R,
-                    `Year FE` = ' ',
-                    `Industry x Year FE` = '\\checkmark',
-                    `Firm FE` = ' ',
-                    `Firm Controls` = '\\checkmark',
-                    `Lagged DV` = ' ',
-                    `Climate Measure` = 'Exposure',
-                    `Estimation` = 'OLS',
-                    `Panel` = 'Firm-Qtr',
-                    `Wald Stat (Opp - Reg = 0)` = as.character(o_q_iy_fue_amt_Wald[1]),
-                    `Wald Stat (Opp - Phy = 0)` = as.character(o_q_iy_fue_amt_Wald[2]),
-                    `Wald Stat (Reg - Phy = 0)` = as.character(o_q_iy_fue_amt_Wald[3]))
 
-## Combine and export --------------------------------------------------
+o_q_iy_amt_fue_out <- process_model(o_q_iy_fue_amt)
 
-o_q_y_ready_stars <- stars(o_q_y_ready)
+## Amt: Quarter FE ---------------------------------------------------------
 
-o_q_iy_ready_stars <- stars(o_q_iy_ready)
-o_q_iyf_ready_stars <- stars(o_q_iyf_ready)
-o_q_iy_intr_ready_stars <- stars(o_q_iy_intr_ready)
-o_q_iy_ldv_ready_stars <- stars(o_q_iy_ldv_ready, ldv=TRUE)
-o_q_sent_iy_ready_stars <- stars(o_q_sent_iy_ready)
-o_q_risk_iy_ready_stars <- stars(o_q_risk_iy_ready)
-o_q_iy_cong_ready_stars <- stars(o_q_iy_cong_ready)
-o_q_iy_epa_ready_stars <- stars(o_q_iy_epa_ready)
-o_q_iy_doe_ready_stars <- stars(o_q_iy_doe_ready)
-l_q_iy_ready_stars <- stars(l_q_iy_ready)
-o_a_iy_ready_stars <- stars(o_a_iy_ready)
-o_q_iy_bills_ready_stars <- stars(o_q_iy_bills_ready)
-o_q_iy_kywd_ready_stars <- stars(o_q_iy_kywd_ready)
-o_q_iy_kywd_miti_ready_stars <- stars(o_q_iy_kywd_miti_ready)
-o_q_iy_kywd_adpt_ready_stars <- stars(o_q_iy_kywd_adpt_ready)
-o_q_iy_aug_ready_stars <- stars(o_q_iy_aug_ready)
-o_y_iy_coal_pro_ready_stars <- stars(o_y_iy_coal_pro_ready)
-o_y_iy_coal_anti_ready_stars <- stars(o_y_iy_coal_anti_ready)
-o_q_iy_impt_ready_stars <- stars(o_q_iy_impt_ready)
+load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 
-o_q_iy_caw_ready_stars <- stars(o_q_iy_caw_ready)
-o_q_iy_eng_ready_stars <- stars(o_q_iy_eng_ready)
-o_q_iy_env_ready_stars <- stars(o_q_iy_env_ready)
-o_q_iy_fue_ready_stars <- stars(o_q_iy_fue_ready)
+o_q_iq_amt <- models[[11]]
 
-o_q_y_amt_ready_stars <- stars(o_q_y_amt_ready)
-o_q_iy_amt_ready_stars <- stars(o_q_iy_amt_ready)
-o_q_iyf_amt_ready_stars <- stars(o_q_iyf_amt_ready)
-o_q_iy_amt_intr_ready_stars <- stars(o_q_iy_amt_intr_ready)
-o_q_iy_amt_ldv_ready_stars <- stars(o_q_iy_amt_ldv_ready, ldv=T)
-o_q_sent_iy_amt_ready_stars <- stars(o_q_sent_iy_amt_ready)
-o_q_risk_iy_amt_ready_stars <- stars(o_q_risk_iy_amt_ready)
-o_q_iy_amt_cong_ready_stars <- stars(o_q_iy_amt_cong_ready)
-o_q_iy_amt_epa_ready_stars <- stars(o_q_iy_amt_epa_ready)
-o_q_iy_amt_doe_ready_stars <- stars(o_q_iy_amt_doe_ready)
-#t_q_iy_amt_ready_stars <- stars(t_q_iy_amt_ready)
-o_a_iy_amt_ready_stars <- stars(o_a_iy_amt_ready)
-o_q_iy_amt_bills_ready_stars <- stars(o_q_iy_amt_bills_ready)
-o_q_iy_kywd_amt_ready_stars <- stars(o_q_iy_kywd_amt_ready)
-o_q_iy_kywd_miti_amt_ready_stars <- stars(o_q_iy_kywd_miti_amt_ready)
-o_q_iy_kywd_adpt_amt_ready_stars <- stars(o_q_iy_kywd_adpt_amt_ready)
-o_q_iy_aug_amt_ready_stars <- stars(o_q_iy_aug_amt_ready)
-o_y_iy_coal_pro_amt_ready_stars <- stars(o_y_iy_coal_pro_amt_ready)
-o_y_iy_coal_anti_amt_ready_stars <- stars(o_y_iy_coal_anti_amt_ready)
-o_q_iy_impt_amt_ready_stars <- stars(o_q_iy_impt_amt_ready)
-o_q_iy_tobit_amt_ready_stars <- stars(o_q_iy_tobit_amt_ready)
+o_q_iq_amt_out <- process_model(o_q_iq_amt, IndbyQtr_FE = '\\checkmark')
 
-o_q_iy_caw_amt_ready_stars <- stars(o_q_iy_caw_amt_ready)
-o_q_iy_eng_amt_ready_stars <- stars(o_q_iy_eng_amt_ready)
-o_q_iy_env_amt_ready_stars <- stars(o_q_iy_env_amt_ready)
-o_q_iy_fue_amt_ready_stars <- stars(o_q_iy_fue_amt_ready)
+## Amt: Error Correction -------------------------------------------------------
 
-## Full Table ----------------------------------------------------------------------------
+load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
-m1 <- list(tidy=o_q_iy_ready_stars); class(m1) <- "modelsummary_list"
-m2 <- list(tidy=o_q_iyf_ready_stars); class(m2) <- "modelsummary_list"
-m3 <- list(tidy=o_q_iy_intr_ready_stars); class(m3) <- "modelsummary_list"
-m4 <- list(tidy=o_q_iy_ldv_ready_stars); class(m4) <- "modelsummary_list"
-m5 <- list(tidy=o_q_sent_iy_ready_stars); class(m5) <- "modelsummary_list"
-m6 <- list(tidy=o_q_risk_iy_ready_stars); class(m6) <- "modelsummary_list"
-m13 <- list(tidy=o_q_iy_cong_ready_stars); class(m13) <- "modelsummary_list"
-m14 <- list(tidy=o_q_iy_epa_ready_stars); class(m14) <- "modelsummary_list"
-m15 <- list(tidy=o_q_iy_doe_ready_stars); class(m15) <- "modelsummary_list"
-m19 <- list(tidy=o_q_y_ready_stars); class(m19) <- "modelsummary_list"
-m21 <- list(tidy=l_q_iy_ready_stars); class(m21) <- "modelsummary_list"
-m23 <- list(tidy=o_a_iy_ovrl_ready_stars); class(m23) <- "modelsummary_list"
-m24 <- list(tidy=o_a_iy_tenk_ready_stars); class(m24) <- "modelsummary_list"
-m27 <- list(tidy=o_a_iy_ready_stars); class(m27) <- "modelsummary_list"
-m29 <- list(tidy=o_q_iy_bills_ready_stars); class(m29) <- "modelsummary_list"
-m31 <- list(tidy=o_q_iy_kywd_ready_stars); class(m31) <- "modelsummary_list"
-m32 <- list(tidy=o_q_iy_kywd_miti_ready_stars); class(m32) <- "modelsummary_list"
-m33 <- list(tidy=o_q_iy_kywd_adpt_ready_stars); class(m33) <- "modelsummary_list"
-m37 <- list(tidy=o_q_iy_aug_ready_stars); class(m37) <- "modelsummary_list"
-m39 <- list(tidy=o_y_iy_coal_pro_ready_stars); class(m39) <- "modelsummary_list"
-m40 <- list(tidy=o_y_iy_coal_anti_ready_stars); class(m40) <- "modelsummary_list"
-m43 <- list(tidy=o_q_iy_impt_ready_stars); class(m43) <- "modelsummary_list"
+o_q_iy_amt_ec <- models$`(2`
 
-m7 <- list(tidy=o_q_iy_amt_ready_stars); class(m7) <- "modelsummary_list"
-m8 <- list(tidy=o_q_iyf_amt_ready_stars); class(m8) <- "modelsummary_list"
-m9 <- list(tidy=o_q_iy_amt_intr_ready_stars); class(m9) <- "modelsummary_list"
-m10 <- list(tidy=o_q_iy_amt_ldv_ready_stars); class(m10) <- "modelsummary_list"
-m11 <- list(tidy=o_q_sent_iy_amt_ready_stars); class(m11) <- "modelsummary_list"
-m12 <- list(tidy=o_q_risk_iy_amt_ready_stars); class(m12) <- "modelsummary_list"
-m16 <- list(tidy=o_q_iy_amt_cong_ready_stars); class(m16) <- "modelsummary_list"
-m17 <- list(tidy=o_q_iy_amt_epa_ready_stars); class(m17) <- "modelsummary_list"
-m18 <- list(tidy=o_q_iy_amt_doe_ready_stars); class(m18) <- "modelsummary_list"
-m20 <- list(tidy=o_q_y_amt_ready_stars); class(m20) <- "modelsummary_list"
-#m22 <- list(tidy=t_q_iy_amt_ready_stars); class(m22) <- "modelsummary_list"
-m22 <- list(tidy=o_q_iy_tobit_amt_ready_stars); class(m22) <- "modelsummary_list"
-m25 <- list(tidy=o_a_iy_ovrl_amt_ready_stars); class(m25) <- "modelsummary_list"
-m26 <- list(tidy=o_a_iy_tenk_amt_ready_stars); class(m26) <- "modelsummary_list"
-m28 <- list(tidy=o_a_iy_amt_ready_stars); class(m28) <- "modelsummary_list"
-m30 <- list(tidy=o_q_iy_amt_bills_ready_stars); class(m30) <- "modelsummary_list"
-m34 <- list(tidy=o_q_iy_kywd_amt_ready_stars); class(m34) <- "modelsummary_list"
-m35 <- list(tidy=o_q_iy_kywd_miti_amt_ready_stars); class(m35) <- "modelsummary_list"
-m36 <- list(tidy=o_q_iy_kywd_adpt_amt_ready_stars); class(m36) <- "modelsummary_list"
-m38 <- list(tidy=o_q_iy_aug_amt_ready_stars); class(m38) <- "modelsummary_list"
-m41 <- list(tidy=o_y_iy_coal_pro_amt_ready_stars); class(m41) <- "modelsummary_list"
-m42 <- list(tidy=o_y_iy_coal_anti_amt_ready_stars); class(m42) <- "modelsummary_list"
-m44 <- list(tidy=o_q_iy_impt_amt_ready_stars); class(m44) <- "modelsummary_list"
+o_q_iy_amt_ec_estimates <- round(c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"], o_q_iy_amt_ec$se["op_expo_ew_l1"],
+                                   o_q_iy_amt_ec$coefficients["op_expo_ew_chg"], o_q_iy_amt_ec$se["op_expo_ew_chg"],
+                                   o_q_iy_amt_ec$coefficients["rg_expo_ew_l1"], o_q_iy_amt_ec$se["rg_expo_ew_l1"],
+                                   o_q_iy_amt_ec$coefficients["rg_expo_ew_chg"], o_q_iy_amt_ec$se["rg_expo_ew_chg"],
+                                   o_q_iy_amt_ec$coefficients["ph_expo_ew_l1"], o_q_iy_amt_ec$se["ph_expo_ew_l1"],
+                                   o_q_iy_amt_ec$coefficients["ph_expo_ew_chg"], o_q_iy_amt_ec$se["ph_expo_ew_chg"],
+                                   o_q_iy_amt_ec$coefficients["CLI_l1"], o_q_iy_amt_ec$se["CLI_l1"]), 3)
 
+t <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"] / o_q_iy_amt_ec$se["op_expo_ew_l1"],
+       o_q_iy_amt_ec$coefficients["op_expo_ew_chg"] / o_q_iy_amt_ec$se["op_expo_ew_chg"],
+       o_q_iy_amt_ec$coefficients["rg_expo_ew_l1"] / o_q_iy_amt_ec$se["rg_expo_ew_l1"],
+       o_q_iy_amt_ec$coefficients["rg_expo_ew_chg"] / o_q_iy_amt_ec$se["rg_expo_ew_chg"],
+       o_q_iy_amt_ec$coefficients["ph_expo_ew_l1"] / o_q_iy_amt_ec$se["ph_expo_ew_l1"],
+       o_q_iy_amt_ec$coefficients["ph_expo_ew_chg"] / o_q_iy_amt_ec$se["ph_expo_ew_chg"],
+       o_q_iy_amt_ec$coefficients["CLI_l1"] / o_q_iy_amt_ec$se["CLI_l1"])
 
-mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, 
-                 "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, "OLS 15.6"=m24, "OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33,
-                 "OLS 15.96"=m39, "OLS 15.97"=m40, "OLS 15.98"=m43,
-                 "OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 8.5"=m38, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
-                 "OLS 12"=m12, "OLS 16"=m16, "OLS 17"=m17, "OLS 18"=m18, "OLS 18.3"=m25, "OLS 18.6"=m26, "OLS 18.7"=m30,
-                 "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42, "OLS 18.98"=m44)
-# mod_list <- list("Occurrence" = list("OLS 1"=m1, "OLS 2"=m2, "OLS 3"=m3, "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6),
-#                  "Amount" = list("OLS 7"=m7, "OLS 8"=m8, "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, "OLS 12"=m12))
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 
-auxiliary <- data.frame(o_q_y_out,
-                        o_q_iy_out,
-                        l_q_iy_out,
-                        o_a_iy_out,
-                        o_q_iyf_out,
-                        o_q_iy_aug_out,
-                        o_q_iy_intr_out,
-                        o_q_iy_ldv_out,
-                        o_q_sent_iy_out,
-                        o_q_risk_iy_out,
-                        o_q_iy_cong_out,
-                        o_q_iy_epa_out,
-                        o_q_iy_doe_out,
-                        o_a_iy_ovrl_out,
-                        o_a_iy_tenk_out,
-                        o_q_iy_bills_out,
-                        o_q_iy_kywd_out,
-                        o_q_iy_kywd_miti_out,
-                        o_q_iy_kywd_adpt_out,
-                        o_y_iy_coal_pro_out,
-                        o_y_iy_coal_anti_out,
-                        o_q_iy_impt_out,
-                        o_q_y_amt_out,
-                        o_q_iy_amt_out,
-                        o_q_iy_tobit_amt_out,
-                        o_a_iy_amt_out,
-                        o_q_iyf_amt_out,
-                        o_q_iy_aug_amt_out,
-                        o_q_iy_amt_intr_out,
-                        o_q_iy_amt_ldv_out,
-                        o_q_sent_iy_amt_out,
-                        o_q_risk_iy_amt_out,
-                        o_q_iy_amt_cong_out,
-                        o_q_iy_amt_epa_out,
-                        o_q_iy_amt_doe_out,
-                        o_a_iy_ovrl_amt_out,
-                        o_a_iy_tenk_amt_out,
-                        o_q_iy_amt_bills_out,
-                        o_q_iy_kywd_amt_out,
-                        o_q_iy_kywd_miti_amt_out,
-                        o_q_iy_kywd_adpt_amt_out,
-                        o_y_iy_coal_pro_amt_out,
-                        o_y_iy_coal_anti_amt_out,
-                        o_q_iy_impt_amt_out)
+o_q_iy_amt_ec_stars <- data.frame(term=c("op_expo_ew_l1"="Opp_{t-1}", "rg_expo_ew_l1"="Reg_{t-1}", "ph_expo_ew_l1"="Phy_{t-1}",
+                                         "op_expo_ew_chg"="Opp \\Delta", "rg_expo_ew_chg"="Reg \\Delta", "ph_expo_ew_chg"="Phy \\Delta",
+                                         "CLI_l1" = "Lagged DV"), 
+                              estimate=paste0(o_q_iy_amt_ec_estimates[seq(1, length(o_q_iy_amt_ec_estimates), 2)], strs), 
+                              std.error=o_q_iy_amt_ec_estimates[seq(2, length(o_q_iy_amt_ec_estimates), 2)])
+
+o_q_iy_amt_ec_N <- o_q_iy_amt_ec$nobs
+
+o_q_iy_amt_ec_R <- round(r2(o_q_iy_amt_ec, type = "ar2"), 3) #adjusted R2
+
+o_q_iy_amt_ec_diagnostics <- c(`Num. Obs.` = o_q_iy_amt_ec_N,
+                               `Adjusted R-Squared` =  o_q_iy_amt_ec_R,
+                               `Year FE` = ' ',
+                               `Industry x Year FE` = '\\checkmark',
+                               `Industry x Qtr FE` = ' ',
+                               `Firm FE` = ' ',
+                               `Firm Controls` = '\\checkmark',
+                               `Lagged DV` = '\\checkmark',
+                               `Climate Measure` = 'Exposure',
+                               `Estimation` = 'OLS',
+                               `Panel` = 'Firm-Qtr',
+                               `Wald Stat (Opp - Reg = 0)` = ' ',
+                               `Wald Stat (Opp - Phy = 0)` = ' ',
+                               `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_amt_ec_out <- list("Estimates" = o_q_iy_amt_ec_estimates, 
+                          "Diagnostics" = o_q_iy_amt_ec_diagnostics)
+
+## Build Occurrence Non-Alt DV Table -------------------------------------------
+
+o_a_iy_ovrl_stars <- list(tidy=o_a_iy_ovrl_stars)
+class(o_a_iy_ovrl_stars) <- "modelsummary_list"
+
+o_a_iy_tenk_stars <- list(tidy=o_a_iy_tenk_stars)
+class(o_a_iy_tenk_stars) <- "modelsummary_list"
+
+o_q_iy_ec_stars <- list(tidy=o_q_iy_ec_stars)
+class(o_q_iy_ec_stars) <- "modelsummary_list"
+
+mod_list <- list("Main" = stars(o_q_iy_out$Estimates),
+                 "EPA" = stars(o_q_iy_epa_out$Estimates),
+                 "DOE" = stars(o_q_iy_doe_out$Estimates),
+                 "Yr FE" = stars(o_q_y_out$Estimates),
+                 "Ind-Qtr FE" = stars(o_q_iq_out$Estimates),
+                 "Logit" = stars(l_q_iy_out$Estimates),
+                 "Yr Panel" = stars(o_a_iy_out$Estimates),
+                 "Firm FE" = stars(o_q_iyf_out$Estimates),
+                 "Aug Ctrl" = stars(o_q_iy_aug_out$Estimates),
+                 "Impute" = stars(o_q_iy_impt_out$Estimates),
+                 "Lag DV" = stars(o_q_iy_ldv_out$Estimates, ldv=T),
+                 "Err Cor" = o_q_iy_ec_stars,
+                 "Intr." = stars(o_q_iy_intr_out$Estimates),
+                 "Sent" = stars(o_q_iy_sent_out$Estimates),
+                 "Risk" = stars(o_q_iy_risk_out$Estimates),
+                 "Ovrl" = o_a_iy_ovrl_stars,
+                 "10-K" = o_a_iy_tenk_stars)
+
+auxiliary <- data.frame(o_q_iy_out$Diagnostics,
+                        o_q_iy_epa_out$Diagnostics,
+                        o_q_iy_doe_out$Diagnostics,
+                        o_q_y_out$Diagnostics,
+                        o_q_iq_out$Diagnostics,
+                        l_q_iy_out$Diagnostics,
+                        o_a_iy_out$Diagnostics,
+                        o_q_iyf_out$Diagnostics,
+                        o_q_iy_aug_out$Diagnostics,
+                        o_q_iy_impt_out$Diagnostics,
+                        o_q_iy_ldv_out$Diagnostics,
+                        o_q_iy_ec_out$Diagnostics,
+                        o_q_iy_intr_out$Diagnostics,
+                        o_q_iy_sent_out$Diagnostics,
+                        o_q_iy_risk_out$Diagnostics,
+                        o_a_iy_ovrl_out$Diagnostics,
+                        o_a_iy_tenk_out$Diagnostics)
+
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -1986,127 +1156,80 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
   pivot_wider(names_from = Model, values_from = Value) %>%
   # add test name
   rename(Test = `Fixed Effects`) %>%
-  # Test: Industry x Year FE
   mutate(
     Test = case_when(
       Test == "Industry.FE" ~ "Industry FE",
       Test == "Firm.FE" ~ "Firm FE",
       Test == "Year.FE" ~ "Year FE",
       Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Industry.x.Qtr.FE" ~ "Industry x Qtr FE",
       Test == "Firm.Controls" ~ "Firm Controls",
       Test == "Estimation" ~ "Estimation",
       Test == "Climate.Measure" ~ "Climate Measure",
-      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
-      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
-      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
-      Test == "Num..Obs." ~ "Num. Obs.",
-      Test == "Panel" ~ "Panel",
-      Test == "Lagged.DV" ~ "Lagged DV",
-      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
-      TRUE ~ " "
-    )
-  )
-
-names(mod_list) <- c("Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occur.", "Occ. (Cong.)", 
-                     "Occ. (EPA)", "Occ. (DOE)", "Occur.", "Occur.", "Occur. (Bills)", "Occur. (Kywd.)", 
-                     "Occur. (Kywd.-Miti.)", "Occur. (Kywd.-Adpt.)", "Occur. (Pro-Coal.)", "Occur. (Anti-Coal.)", "Occur.",
-                     "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amt. (Cong.)", 
-                     "Amt. (EPA)", "Amt. (DOE)", "Amount", "Amount", "Amt. (Bills)", "Amt. (Kywd.)", 
-                     "Amt. (Kywd.-Miti.)", "Amt. (Kywd.-Adpt.)", "Amt. (Pro-Coal.)", "Amt. (Anti-Coal.)", "Amt")
-
-modelsummary(mod_list
-             ,add_rows=auxiliary_out
-             ,output="results/tables/appendix_table_test_ols_NEW.tex"
-)
-
-
-## Occurrence models -- no alt. dv ---------------------------------------------
-
-mod_list <- list("OLS 0"=m19, "OLS 1"=m1, "OLS 1.5"=m21, "OLS 1.75"=m27, "OLS 2"=m2, "OLS 2.5"=m37, "OLS 15.98"=m43, "OLS 3"=m3, 
-                 "OLS 4"=m4, "OLS 5"=m5, "OLS 6"=m6, "OLS 13"=m13, "OLS 14"=m14, "OLS 15"=m15, "OLS 15.3"=m23, 
-                 "OLS 15.6"=m24)
-
-auxiliary <- data.frame(o_q_y_out,
-                        o_q_iy_out,
-                        l_q_iy_out,
-                        o_a_iy_out,
-                        o_q_iyf_out,
-                        o_q_iy_aug_out,
-                        o_q_iy_intr_out,
-                        o_q_iy_impt_out,
-                        o_q_iy_ldv_out,
-                        o_q_sent_iy_out,
-                        o_q_risk_iy_out,
-                        o_q_iy_cong_out,
-                        o_q_iy_epa_out,
-                        o_q_iy_doe_out,
-                        o_a_iy_ovrl_out,
-                        o_a_iy_tenk_out)
-model_names <- names(mod_list)
-auxiliary <- rbind(auxiliary, "Model"=model_names)
-
-auxiliary_out <- data.frame(t(auxiliary)) %>%
-  # invert dataframe
-  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
-  # to wider
-  pivot_wider(names_from = Model, values_from = Value) %>%
-  # add test name
-  rename(Test = `Fixed Effects`) %>%
-  # Test: Industry x Year FE
-  mutate(
-    Test = case_when(
-      Test == "Industry.FE" ~ "Industry FE",
-      Test == "Firm.FE" ~ "Firm FE",
-      Test == "Year.FE" ~ "Year FE",
-      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
-      Test == "Firm.Controls" ~ "Firm Controls",
-      Test == "Estimation" ~ "Estimation",
-      Test == "Climate.Measure" ~ "Climate Measure",
-      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
-      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
-      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Wald..Opp.Reg.0." ~ "Wald (Op-Rg=0)",
+      Test == "Wald..Opp.Phy.0." ~ "Wald (Op-Ph=0)",
+      Test == "Wald..Reg.Phy.0." ~ "Wald (Rg-Ph=0)",
       Test == "Num..Obs." ~ "Num. Obs.",
       Test == "Panel" ~ "Panel",
       Test == "Lagged.DV" ~ "Lagged DV",
       Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.ar2" ~ "Adj. R-Squared",
       TRUE ~ " "
     )
   )
-
-names(mod_list) <- c("Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occur", "Occ (Cong)", 
-                     "Occ (EPA)", "Occ (DOE)", "Occur", "Occur")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test_ols_NEW_occur_noaltdv.tex"
+             ,escape=F
 )
 
+## Build Amount Non-Alt DV Table -------------------------------------------
 
-## Amount models - no alt dv ---------------------------------------------------
+o_a_iy_amt_ovrl_stars <- list(tidy=o_a_iy_amt_ovrl_stars)
+class(o_a_iy_amt_ovrl_stars) <- "modelsummary_list"
 
-mod_list <- list("OLS 6.5"=m20, "OLS 7"=m7, "OLS 7.5"=m22, "OLS 7.75"=m28, "OLS 8"=m8, "OLS 8.5"=m38, "OLS 18.98"=m44, 
-                 "OLS 9"=m9, "OLS 10"=m10, "OLS 11"=m11, 
-                 "OLS 12"=m12, "OLS 16"=m16, "OLS 17"=m17, "OLS 18"=m18, "OLS 18.3"=m25, "OLS 18.6"=m26)
+o_a_iy_amt_tenk_stars <- list(tidy=o_a_iy_amt_tenk_stars)
+class(o_a_iy_amt_tenk_stars) <- "modelsummary_list"
 
-auxiliary <- data.frame(o_q_y_amt_out,
-                        o_q_iy_amt_out,
-                        o_q_iy_tobit_amt_out,
-                        o_a_iy_amt_out,
-                        o_q_iyf_amt_out,
-                        o_q_iy_aug_amt_out,
-                        o_q_iy_impt_amt_out,
-                        o_q_iy_amt_intr_out,
-                        o_q_iy_amt_ldv_out,
-                        o_q_sent_iy_amt_out,
-                        o_q_risk_iy_amt_out,
-                        o_q_iy_amt_cong_out,
-                        o_q_iy_amt_epa_out,
-                        o_q_iy_amt_doe_out,
-                        o_a_iy_ovrl_amt_out,
-                        o_a_iy_tenk_amt_out)
+o_q_iy_amt_ec_stars <- list(tidy=o_q_iy_amt_ec_stars)
+class(o_q_iy_amt_ec_stars) <- "modelsummary_list"
+
+mod_list <- list("Main" = stars(o_q_iy_amt_out$Estimates),
+                 "EPA" = stars(o_q_iy_amt_epa_out$Estimates),
+                 "DOE" = stars(o_q_iy_amt_doe_out$Estimates),
+                 "Yr FE" = stars(o_q_y_amt_out$Estimates),
+                 "Ind-Qtr FE" = stars(o_q_iq_amt_out$Estimates),
+                 "Tobit" = stars(t_q_iy_amt_out$Estimates),
+                 "Yr Panel" = stars(o_a_iy_amt_out$Estimates),
+                 "Firm FE" = stars(o_q_iyf_amt_out$Estimates),
+                 "Aug Ctrl" = stars(o_q_iy_amt_aug_out$Estimates),
+                 "Impute" = stars(o_q_iy_amt_impt_out$Estimates),
+                 "Lag DV" = stars(o_q_iy_amt_ldv_out$Estimates, ldv=T),
+                 "Err Cor" = o_q_iy_ec_stars,
+                 "Intr." = stars(o_q_iy_amt_intr_out$Estimates),
+                 "Sent" = stars(o_q_iy_amt_sent_out$Estimates),
+                 "Risk" = stars(o_q_iy_amt_risk_out$Estimates),
+                 "Ovrl" = o_a_iy_amt_ovrl_stars,
+                 "10-K" = o_a_iy_amt_tenk_stars)
+
+auxiliary <- data.frame(o_q_iy_amt_out$Diagnostics,
+                        o_q_iy_amt_epa_out$Diagnostics,
+                        o_q_iy_amt_doe_out$Diagnostics,
+                        o_q_y_amt_out$Diagnostics,
+                        o_q_iq_amt_out$Diagnostics,
+                        t_q_iy_amt_out$Diagnostics,
+                        o_a_iy_amt_out$Diagnostics,
+                        o_q_iyf_amt_out$Diagnostics,
+                        o_q_iy_amt_aug_out$Diagnostics,
+                        o_q_iy_amt_impt_out$Diagnostics,
+                        o_q_iy_amt_ldv_out$Diagnostics,
+                        o_q_iy_ec_out$Diagnostics,
+                        o_q_iy_amt_intr_out$Diagnostics,
+                        o_q_iy_amt_sent_out$Diagnostics,
+                        o_q_iy_amt_risk_out$Diagnostics,
+                        o_a_iy_amt_ovrl_out$Diagnostics,
+                        o_a_iy_amt_tenk_out$Diagnostics)
+
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -2117,58 +1240,63 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
   pivot_wider(names_from = Model, values_from = Value) %>%
   # add test name
   rename(Test = `Fixed Effects`) %>%
-  # Test: Industry x Year FE
   mutate(
     Test = case_when(
       Test == "Industry.FE" ~ "Industry FE",
       Test == "Firm.FE" ~ "Firm FE",
       Test == "Year.FE" ~ "Year FE",
       Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Industry.x.Qtr.FE" ~ "Industry x Qtr FE",
       Test == "Firm.Controls" ~ "Firm Controls",
       Test == "Estimation" ~ "Estimation",
       Test == "Climate.Measure" ~ "Climate Measure",
-      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
-      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
-      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Wald..Opp.Reg.0." ~ "Wald (Op-Rg=0)",
+      Test == "Wald..Opp.Phy.0." ~ "Wald (Op-Ph=0)",
+      Test == "Wald..Reg.Phy.0." ~ "Wald (Rg-Ph=0)",
       Test == "Num..Obs." ~ "Num. Obs.",
       Test == "Panel" ~ "Panel",
       Test == "Lagged.DV" ~ "Lagged DV",
-      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.ar2" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
       TRUE ~ " "
     )
   )
-
-names(mod_list) <- c("Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", "Amount", 
-                     "Amount", "Amount", "Amt (Cong)", 
-                     "Amt (EPA)", "Amt (DOE)", "Amount", "Amount")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test_ols_NEW_amount_noaltdv.tex"
+             ,escape=F
 )
+
 
 
 ## Alternate Dependent Variable Specifications ---------------------------------
 
-mod_list <- list("OLS 15.7"=m29, "OLS 15.8"=m31, "OLS 15.9"=m32, "OLS 15.95"=m33,
-                 "OLS 15.96"=m39, "OLS 15.97"=m40,
-                 "OLS 18.7"=m30,
-                 "OLS 18.8"=m34, "OLS 18.9"=m35, "OLS 18.95"=m36, "OLS 18.96"=m41, "OLS 18.97"=m42)
+mod_list <- list("Bills (Occ)" = stars(o_q_iy_bills_out$Estimates),
+                 "Kywd (Occ)" = stars(o_q_iy_kywd_out$Estimates),
+                 "Miti (Occ)" = stars(o_q_iy_kywd_miti_out$Estimates),
+                 "Adpt (Occ)" = stars(o_q_iy_kywd_adpt_out$Estimates),
+                 "Pro Clim Oc" = stars(o_y_iy_coal_pro_out$Estimates),
+                 "Anti Clim Oc" = stars(o_y_iy_coal_anti_out$Estimates),
+                 "Bills (Amt)" = stars(o_q_iy_amt_bills_out$Estimates),
+                 "Kywd (Amt)" = stars(o_q_iy_amt_kywd_out$Estimates),
+                 "Miti (Amt)" = stars(o_q_iy_amt_kywd_miti_out$Estimates),
+                 "Adpt (Amt)" = stars(o_q_iy_amt_kywd_adpt_out$Estimates),
+                 "Pro Clim Am" = stars(o_y_iy_amt_coal_pro_out$Estimates),
+                 "Anti Clim Am" = stars(o_y_iy_amt_coal_anti_out$Estimates))
 
-auxiliary <- data.frame(o_q_iy_bills_out,
-                        o_q_iy_kywd_out,
-                        o_q_iy_kywd_miti_out,
-                        o_q_iy_kywd_adpt_out,
-                        o_y_iy_coal_pro_out,
-                        o_y_iy_coal_anti_out,
-                        o_q_iy_amt_bills_out,
-                        o_q_iy_kywd_amt_out,
-                        o_q_iy_kywd_miti_amt_out,
-                        o_q_iy_kywd_adpt_amt_out,
-                        o_y_iy_coal_pro_amt_out,
-                        o_y_iy_coal_anti_amt_out)
+auxiliary <- data.frame(o_q_iy_bills_out$Diagnostics,
+                        o_q_iy_kywd_out$Diagnostics,
+                        o_q_iy_kywd_miti_out$Diagnostics,
+                        o_q_iy_kywd_adpt_out$Diagnostics,
+                        o_y_iy_coal_pro_out$Diagnostics,
+                        o_y_iy_coal_anti_out$Diagnostics,
+                        o_q_iy_amt_bills_out$Diagnostics,
+                        o_q_iy_amt_kywd_out$Diagnostics,
+                        o_q_iy_amt_kywd_miti_out$Diagnostics,
+                        o_q_iy_amt_kywd_adpt_out$Diagnostics,
+                        o_y_iy_amt_coal_pro_out$Diagnostics,
+                        o_y_iy_amt_coal_anti_out$Diagnostics)
+
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -2186,26 +1314,20 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
       Test == "Firm.FE" ~ "Firm FE",
       Test == "Year.FE" ~ "Year FE",
       Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Industry.x.Qtr.FE" ~ "Industry x Qtr FE",
       Test == "Firm.Controls" ~ "Firm Controls",
       Test == "Estimation" ~ "Estimation",
       Test == "Climate.Measure" ~ "Climate Measure",
-      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
-      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
-      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Wald..Opp.Reg.0." ~ "Wald (Op-Rg=0)",
+      Test == "Wald..Opp.Phy.0." ~ "Wald (Op-Ph=0)",
+      Test == "Wald..Reg.Phy.0." ~ "Wald (Rg-Ph=0)",
       Test == "Num..Obs." ~ "Num. Obs.",
       Test == "Panel" ~ "Panel",
       Test == "Lagged.DV" ~ "Lagged DV",
-      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.ar2" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
       TRUE ~ " "
     )
   )
-
-names(mod_list) <- c("Occ (Bills)", "Occ (Kywd)", 
-                     "Occ (Kywd-Miti)", "Occ (Kywd-Adpt)", "Occ (Pro-Coal)", "Occ (Anti-Coal)",
-                     "Amt (Bills)", "Amt (Kywd)", 
-                     "Amt (Kywd-Miti)", "Amt (Kywd-Adpt)", "Amt (Pro-Coal)", "Amt (Anti-Coal)")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
@@ -2215,28 +1337,26 @@ modelsummary(mod_list
 
 ## Issue Specific Table --------------------------------------------------------
 
-m45 <- list(tidy=o_q_iy_caw_ready_stars); class(m45) <- "modelsummary_list"
-m46 <- list(tidy=o_q_iy_eng_ready_stars); class(m46) <- "modelsummary_list"
-m47 <- list(tidy=o_q_iy_env_ready_stars); class(m47) <- "modelsummary_list"
-m48 <- list(tidy=o_q_iy_fue_ready_stars); class(m48) <- "modelsummary_list"
 
-m49 <- list(tidy=o_q_iy_caw_amt_ready_stars); class(m49) <- "modelsummary_list"
-m50 <- list(tidy=o_q_iy_eng_amt_ready_stars); class(m50) <- "modelsummary_list"
-m51 <- list(tidy=o_q_iy_env_amt_ready_stars); class(m51) <- "modelsummary_list"
-m52 <- list(tidy=o_q_iy_fue_amt_ready_stars); class(m52) <- "modelsummary_list"
+mod_list <- list("CAW (Occ)" = stars(o_q_iy_caw_out$Estimates),
+                 "ENG (Occ)" = stars(o_q_iy_eng_out$Estimates),
+                 "ENV (Occ)" = stars(o_q_iy_env_out$Estimates),
+                 "FUE (Occ)" = stars(o_q_iy_fue_out$Estimates),
+                 "CAW (Amt)" = stars(o_q_iy_amt_caw_out$Estimates),
+                 "ENG (Amt)" = stars(o_q_iy_amt_eng_out$Estimates),
+                 "ENV (Amt)" = stars(o_q_iy_amt_env_out$Estimates),
+                 "FUE (Amt)" = stars(o_q_iy_amt_fue_out$Estimates))
+
+auxiliary <- data.frame(o_q_iy_caw_out$Diagnostics,
+                        o_q_iy_eng_out$Diagnostics,
+                        o_q_iy_env_out$Diagnostics,
+                        o_q_iy_fue_out$Diagnostics,
+                        o_q_iy_amt_caw_out$Diagnostics,
+                        o_q_iy_amt_eng_out$Diagnostics,
+                        o_q_iy_amt_env_out$Diagnostics,
+                        o_q_iy_amt_fue_out$Diagnostics)
 
 
-mod_list <- list("OLS 1"=m45, "OLS 2"=m46, "OLS 3"=m47, "OLS 4"=m48,
-                 "OLS 5"=m49, "OLS 6"=m50, "OLS 7"=m51, "OLS 8"=m52)
-
-auxiliary <- data.frame(o_q_iy_caw_out,
-                        o_q_iy_eng_out,
-                        o_q_iy_env_out,
-                        o_q_iy_fue_out,
-                        o_q_iy_caw_amt_out,
-                        o_q_iy_eng_amt_out,
-                        o_q_iy_env_amt_out,
-                        o_q_iy_fue_amt_out)
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -2254,30 +1374,25 @@ auxiliary_out <- data.frame(t(auxiliary)) %>%
       Test == "Firm.FE" ~ "Firm FE",
       Test == "Year.FE" ~ "Year FE",
       Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Industry.x.Qtr.FE" ~ "Industry x Qtr FE",
       Test == "Firm.Controls" ~ "Firm Controls",
       Test == "Estimation" ~ "Estimation",
       Test == "Climate.Measure" ~ "Climate Measure",
-      Test == "Wald.Stat..Opp...Reg...0." ~ "Wald Stat (Op-Rg=0)",
-      Test == "Wald.Stat..Opp...Phy...0." ~ "Wald Stat (Op-Ph=0)",
-      Test == "Wald.Stat..Reg...Phy...0." ~ "Wald Stat (Rg-Ph=0)",
+      Test == "Wald..Opp.Reg.0." ~ "Wald (Op-Rg=0)",
+      Test == "Wald..Opp.Phy.0." ~ "Wald (Op-Ph=0)",
+      Test == "Wald..Reg.Phy.0." ~ "Wald (Rg-Ph=0)",
       Test == "Num..Obs." ~ "Num. Obs.",
       Test == "Panel" ~ "Panel",
       Test == "Lagged.DV" ~ "Lagged DV",
-      #Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
-      Test == "Adjusted.R.Squared.apr2" ~ "Adj. R-Squared",
+      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
       TRUE ~ " "
     )
   )
-
-names(mod_list) <- c("Occ (CAW)", "Occ (ENG)", "Occ (ENV)", "Occ (FUE)", 
-                     "Amt (CAW)", "Amt (ENG)", "Amt (ENV)", "Amt (FUE)")
 
 modelsummary(mod_list
              ,add_rows=auxiliary_out
              ,output="results/tables/appendix_table_test_ols_NEW_issues.tex"
 )
-
-
 
 
 

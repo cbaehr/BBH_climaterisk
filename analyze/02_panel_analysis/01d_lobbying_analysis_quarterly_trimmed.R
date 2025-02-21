@@ -808,5 +808,22 @@ names(tobit) <- c("op_expo_ew_coef", "op_expo_ew_se", "rg_expo_ew_coef", "rg_exp
 
 save(tobit, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_tobit.RData")
 
+## Error Correction Model ------------------------------------------------------
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+
+df <- process_df(df)
+
+
+## Effect of climate exposure on lobbying occurrence
+models <- list(
+  "(1)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, df, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
+
 
 ### END
