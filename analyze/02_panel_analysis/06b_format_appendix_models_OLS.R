@@ -385,7 +385,9 @@ load("data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
 
 o_a_iy_ovrl <- out[[1]]
 
-o_a_iy_ovrl_estimates <- round(c(o_a_iy_ovrl$coefficients["cc_expo_ew"], o_a_iy_ovrl$se["cc_expo_ew"]), 3)
+o_a_iy_ovrl_estimates <- c(o_a_iy_ovrl$coefficients["cc_expo_ew"], o_a_iy_ovrl$se["cc_expo_ew"])
+o_a_iy_ovrl_estimates <- round(o_a_iy_ovrl_estimates * 100, 3)
+
 t <- o_a_iy_ovrl$coefficients["cc_expo_ew"] / o_a_iy_ovrl$se["cc_expo_ew"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 o_a_iy_ovrl_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_estimates[1], strs), std.error=o_a_iy_ovrl_estimates[2])
@@ -416,7 +418,8 @@ o_a_iy_ovrl_out <- list("Estimates" = o_a_iy_ovrl_estimates,
 
 o_a_iy_tenk <- out[[2]]
 
-o_a_iy_tenk_estimates <- round(c(o_a_iy_tenk$coefficients["tenk_exposure"], o_a_iy_tenk$se["tenk_exposure"]), 3)
+o_a_iy_tenk_estimates <- c(o_a_iy_tenk$coefficients["tenk_exposure"], o_a_iy_tenk$se["tenk_exposure"])
+o_a_iy_tenk_estimates <- round(o_a_iy_tenk_estimates * 100, 3)
 t <- o_a_iy_tenk$coefficients["tenk_exposure"] / o_a_iy_tenk$se["tenk_exposure"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 o_a_iy_tenk_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_estimates[1], strs), std.error=o_a_iy_tenk_estimates[2])
@@ -580,13 +583,14 @@ load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
 o_q_iy_ec <- models$`(1`
 
-o_q_iy_ec_estimates <- round(c(o_q_iy_ec$coefficients["op_expo_ew_l1"], o_q_iy_ec$se["op_expo_ew_l1"],
+o_q_iy_ec_estimates <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"], o_q_iy_ec$se["op_expo_ew_l1"],
                                o_q_iy_ec$coefficients["op_expo_ew_chg"], o_q_iy_ec$se["op_expo_ew_chg"],
                                o_q_iy_ec$coefficients["rg_expo_ew_l1"], o_q_iy_ec$se["rg_expo_ew_l1"],
                                o_q_iy_ec$coefficients["rg_expo_ew_chg"], o_q_iy_ec$se["rg_expo_ew_chg"],
                                o_q_iy_ec$coefficients["ph_expo_ew_l1"], o_q_iy_ec$se["ph_expo_ew_l1"],
                                o_q_iy_ec$coefficients["ph_expo_ew_chg"], o_q_iy_ec$se["ph_expo_ew_chg"],
-                               o_q_iy_ec$coefficients["CLI_l1"], o_q_iy_ec$se["CLI_l1"]), 3)
+                               o_q_iy_ec$coefficients["CLI_l1"], o_q_iy_ec$se["CLI_l1"])
+o_q_iy_ec_estimates <- round(o_q_iy_ec_estimates * 100, 3)
 
 t <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"] / o_q_iy_ec$se["op_expo_ew_l1"],
        o_q_iy_ec$coefficients["op_expo_ew_chg"] / o_q_iy_ec$se["op_expo_ew_chg"],
@@ -825,7 +829,9 @@ load("data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RData")
 
 o_a_iy_ovrl_amt <- out[[3]]
 
-o_a_iy_ovrl_amt_estimates <- round(c(o_a_iy_ovrl_amt$coefficients["cc_expo_ew"], o_a_iy_ovrl_amt$se["cc_expo_ew"]), 3)
+o_a_iy_ovrl_amt_estimates <- c(o_a_iy_ovrl_amt$coefficients["cc_expo_ew"], o_a_iy_ovrl_amt$se["cc_expo_ew"])
+o_a_iy_ovrl_amt_estimates <- round(o_a_iy_ovrl_amt_estimates * 100, 3)
+
 t <- o_a_iy_ovrl_amt$coefficients["cc_expo_ew"] / o_a_iy_ovrl_amt$se["cc_expo_ew"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 o_a_iy_amt_ovrl_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_ovrl_amt_estimates[1], strs), std.error=o_a_iy_ovrl_amt_estimates[2])
@@ -856,7 +862,8 @@ o_a_iy_amt_ovrl_out <- list("Estimates" = o_a_iy_ovrl_amt_estimates,
 
 o_a_iy_tenk_amt <- out[[4]]
 
-o_a_iy_tenk_amt_estimates <- round(c(o_a_iy_tenk_amt$coefficients["tenk_exposure"], o_a_iy_tenk_amt$se["tenk_exposure"]), 3)
+o_a_iy_tenk_amt_estimates <- c(o_a_iy_tenk_amt$coefficients["tenk_exposure"], o_a_iy_tenk_amt$se["tenk_exposure"])
+o_a_iy_tenk_amt_estimates <- round(o_a_iy_tenk_amt_estimates * 100, 3)
 t <- o_a_iy_tenk_amt$coefficients["tenk_exposure"] / o_a_iy_tenk_amt$se["tenk_exposure"]
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 o_a_iy_amt_tenk_stars <- data.frame(term="Exposure", estimate=paste0(o_a_iy_tenk_amt_estimates[1], strs), std.error=o_a_iy_tenk_amt_estimates[2])
@@ -1053,13 +1060,14 @@ load("data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
 o_q_iy_amt_ec <- models$`(2`
 
-o_q_iy_amt_ec_estimates <- round(c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"], o_q_iy_amt_ec$se["op_expo_ew_l1"],
+o_q_iy_amt_ec_estimates <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"], o_q_iy_amt_ec$se["op_expo_ew_l1"],
                                    o_q_iy_amt_ec$coefficients["op_expo_ew_chg"], o_q_iy_amt_ec$se["op_expo_ew_chg"],
                                    o_q_iy_amt_ec$coefficients["rg_expo_ew_l1"], o_q_iy_amt_ec$se["rg_expo_ew_l1"],
                                    o_q_iy_amt_ec$coefficients["rg_expo_ew_chg"], o_q_iy_amt_ec$se["rg_expo_ew_chg"],
                                    o_q_iy_amt_ec$coefficients["ph_expo_ew_l1"], o_q_iy_amt_ec$se["ph_expo_ew_l1"],
                                    o_q_iy_amt_ec$coefficients["ph_expo_ew_chg"], o_q_iy_amt_ec$se["ph_expo_ew_chg"],
-                                   o_q_iy_amt_ec$coefficients["CLI_l1"], o_q_iy_amt_ec$se["CLI_l1"]), 3)
+                                   o_q_iy_amt_ec$coefficients["CLI_l1"], o_q_iy_amt_ec$se["CLI_l1"])
+o_q_iy_amt_ec_estimates <- round(o_q_iy_amt_ec_estimates * 100, 3)
 
 t <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"] / o_q_iy_amt_ec$se["op_expo_ew_l1"],
        o_q_iy_amt_ec$coefficients["op_expo_ew_chg"] / o_q_iy_amt_ec$se["op_expo_ew_chg"],
