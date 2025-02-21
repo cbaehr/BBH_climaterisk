@@ -575,7 +575,7 @@ load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 o_q_iq <- models[[11]]
 
-o_q_iq_out <- process_model(o_q_iq, IndbyQtr_FE = '\\checkmark')
+o_q_iq_out <- process_model(o_q_iq, IndbyQtr_FE = '\\checkmark', IndbyYear_FE = ' ')
 
 ## Occ: Error Correction ---------------------------------------------------------
 
@@ -1052,7 +1052,7 @@ load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData
 
 o_q_iq_amt <- models[[11]]
 
-o_q_iq_amt_out <- process_model(o_q_iq_amt, IndbyQtr_FE = '\\checkmark')
+o_q_iq_amt_out <- process_model(o_q_iq_amt, IndbyQtr_FE = '\\checkmark', IndbyYear_FE = ' ')
 
 ## Amt: Error Correction -------------------------------------------------------
 
