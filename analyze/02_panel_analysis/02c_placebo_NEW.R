@@ -96,18 +96,6 @@ ggsave("results/Figures/descriptives/issue_codes_n_amount.pdf", width = 9, heigh
 
 # Occurrence --------------------------------------------------------------
 
-
-# Specify covariate names
-cm <- c("op_expo_ew" = "Opportunity Exposure",
-        "rg_expo_ew" = "Regulatory Exposure",
-        "ph_expo_ew" = "Physical Exposure", 
-        "cc_expo_ew" = "Overall Exposure",
-        "ebit" = "EBIT",
-        "ebit_at" = "EBIT/Assets",
-        "us_dummy" = "US HQ",
-        "total_lobby_quarter" = "Total Lobbying (\\$)"
-)
-
 ##Identify placebo variables
 # Specify columns to remove: climate issues + REL constant zero (no lobbying) +  NA
 columns_to_remove <- c("CAW", "ENV", "ENG", "FUE", "REL")
@@ -125,7 +113,7 @@ end_index <- which(names(df_placebo) == "MON")
 dependent_vars <- names(df_placebo)[start_index:end_index]
 
 # Initialize an empty list to store model results
-results_list <- list()
+results_list_occurrence <- list()
 
 # Iterate over the dependent variables and fit the feglm model with fixed effects for each
 
@@ -139,25 +127,25 @@ for (dv in dependent_vars) { {
   model <- feols(formula, data = df_placebo, vcov = ~ isin + year)
   
   # Store the model results in the list
-  results_list[[paste(dv, sep = "_")]] <- summary(model)
+  results_list_occurrence[[paste(dv, sep = "_")]] <- summary(model)
 }
 }
 
-summary(results_list[[1]])
+#summary(results_list_occurrence[[1]])
 
 # Create an empty dataframe to store tidied results
 tidied_results <- data.frame()
 
 # Iterate over the results_list to tidy each model's results
-for (dv in names(results_list)) {
+for (dv in names(results_list_occurrence)) {
   # Extract 95% confidence intervals
-  tidied_model_95 <- tidy(results_list[[dv]], conf.int = TRUE, conf.level = 0.95) %>%
+  tidied_model_95 <- tidy(results_list_occurrence[[dv]], conf.int = TRUE, conf.level = 0.95) %>%
     filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
     mutate(dependent_var = dv) %>%
     rename(conf.low95 = conf.low, conf.high95 = conf.high)
   
   # Extract 90% confidence intervals
-  tidied_model_90 <- tidy(results_list[[dv]], conf.int = TRUE, conf.level = 0.90) %>%
+  tidied_model_90 <- tidy(results_list_occurrence[[dv]], conf.int = TRUE, conf.level = 0.90) %>%
     filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
     mutate(dependent_var = dv) %>%
     select(-c(statistic, p.value, std.error, estimate)) %>%
@@ -167,7 +155,7 @@ for (dv in names(results_list)) {
   tidied_model <- left_join(tidied_model_95, tidied_model_90, by = c("dependent_var", "term"))
   
   # Add number of observations to the tidied results
-  nobs <- nobs(results_list[[dv]])
+  nobs <- nobs(results_list_occurrence[[dv]])
   tidied_model$nobs <- nobs
   
   tidied_results <- bind_rows(tidied_results, tidied_model)
@@ -228,7 +216,7 @@ ggsave("results/figures/regressions/placebos_occurrence_NEW.pdf", width = 8.5, h
 
 # Expenditure -------------------------------------------------------------
 
-names(df)
+#names(df)
 
 ##Identify placebo variables (+ REL)
 columns_to_remove <- c(
@@ -251,46 +239,10 @@ dependent_vars <- names(df_placebo)[start_index:end_index]
 df_placebo <- df_placebo %>%
   mutate_at(vars(all_of(dependent_vars)), ~log(. + 1))
 
-glimpse(df_placebo)
-
-
-df %>%
-  select(isin, year, qtr, TAX, TAX_amount) %>%
-  # filter firms that ever lobby on TAX
-  group_by(isin) %>%
-  mutate(ever_lobby_on_TAX = ifelse(any(TAX_amount > 0), 1, 0)) %>%
-  ungroup() %>%
-  filter(ever_lobby_on_TAX == 1) %>%
-  mutate(TAX_amount_log = log(1 + TAX_amount)) %>%
-  arrange(isin, year, qtr) %>%
-  print(n = 100)
-
-df_placebo %>%
-  filter(isin == "BMG0450A1053" & year == 2002 & qtr == 1) %>%
-  select(isin, year, qtr, TAX_amount)
-# worked
-
-summary(df$TAX_amount)
-
-
-df %>%
-select(isin, year, qtr, ENV, ENV_amount) %>%
-  # filter firms that ever lobby on TAX
-  group_by(isin) %>%
-  mutate(ever_lobby_on_ENV = ifelse(any(ENV_amount > 0), 1, 0)) %>%
-  ungroup() %>%
-  filter(ever_lobby_on_ENV == 1) %>%
-  mutate(ENV_amount_log = log(1 + ENV_amount)) %>%
-  arrange(isin, year, qtr) %>%
-  print(n = 100)
-
-
-
 
 # Initialize an empty list to store model results
-results_list <- list()
+results_list_expenditure <- list()
 
-# Iterate over the dependent variables and fit the feglm model with fixed effects for each
 
 for (dv in dependent_vars) { {
   formula <- as.formula(paste(dv, "~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | industry_year")) # Include fixed effects in the formula
@@ -302,25 +254,25 @@ for (dv in dependent_vars) { {
   model <- feols(formula, data = df_placebo, vcov = ~ isin + year)
   
   # Store the model results in the list
-  results_list[[paste(dv, sep = "_")]] <- summary(model)
+  results_list_expenditure[[paste(dv, sep = "_")]] <- summary(model)
 }
 }
 
-summary(results_list[[9]])
+summary(results_list_expenditure[[9]])
 
 # Create an empty dataframe to store tidied results
 tidied_results <- data.frame()
 
 # Iterate over the results_list to tidy each model's results
-for (dv in names(results_list)) {
+for (dv in names(results_list_expenditure)) {
   # Extract 95% confidence intervals
-  tidied_model_95 <- tidy(results_list[[dv]], conf.int = TRUE, conf.level = 0.95) %>%
+  tidied_model_95 <- tidy(results_list_expenditure[[dv]], conf.int = TRUE, conf.level = 0.95) %>%
     filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
     mutate(dependent_var = dv) %>%
     rename(conf.low95 = conf.low, conf.high95 = conf.high)
   
   # Extract 90% confidence intervals
-  tidied_model_90 <- tidy(results_list[[dv]], conf.int = TRUE, conf.level = 0.90) %>%
+  tidied_model_90 <- tidy(results_list_expenditure[[dv]], conf.int = TRUE, conf.level = 0.90) %>%
     filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
     mutate(dependent_var = dv) %>%
     select(-c(statistic, p.value, std.error, estimate)) %>%
@@ -330,7 +282,7 @@ for (dv in names(results_list)) {
   tidied_model <- left_join(tidied_model_95, tidied_model_90, by = c("dependent_var", "term"))
   
   # Add number of observations to the tidied results
-  nobs <- nobs(results_list[[dv]])
+  nobs <- nobs(results_list_expenditure[[dv]])
   tidied_model$nobs <- nobs
   
   tidied_results <- bind_rows(tidied_results, tidied_model)
@@ -388,285 +340,229 @@ ggsave("results/figures/regressions/placebos_amount_NEW.pdf", width = 8.5, heigh
 move_plots_to_overleaf("./")
 
 
-# ##Identify placebo variables
-# # Specify columns to remove
-# columns_to_remove <- c("amount_num_CAW", "amount_num_ENV", "amount_num_ENG", "amount_num_FUE", "amount_num_REL") # climate issues + REL constant zero (no lobbying)
-# 
-# # Remove specified columns
-# df_placebo <- df |>
-#   select(-all_of(columns_to_remove)) |>
-#   # all to numeric
-#   mutate_at(vars(amount_num_AGR:amount_num_FAM), as.numeric)
-# 
-# start_index <- which(names(df_placebo) == "amount_num_AGR")
-# end_index <- which(names(df_placebo) == "amount_num_FAM")
-# 
-# # Extract column names between "AGR" and "REL" into a character vector
-# dependent_vars <- names(df_placebo)[start_index:end_index]
-# 
-# # View the character vector of column names
-# print(dependent_vars)
-# 
-# # Initialize an empty list to store model results
-# results_list_expenditure <- list()
-# 
-# # Iterate over the dependent variables and fit the feols model with fixed effects for each
-# for (dv in dependent_vars) {
-#   formula <- as.formula(paste("log(", dv, " + 1) ~ op_expo_ew_y + rg_expo_ew_y + ph_expo_ew_y + ebit + I(ebit/at) + us_dummy + total_lobby | year + industry + industry_year"))
-#   
-#   # Debugging
-#   print(formula)
-#   
-#   # Fit the feols model
-#   model <- feols(formula, data = df_placebo)
-#   
-#   # Store the model results in the list
-#   results_list_expenditure[[paste(dv, sep = "_")]] <- summary(model)
-# }
-# 
-# # Create an empty dataframe to store tidied results
-# tidied_results_expenditure <- data.frame()
-# 
-# # Iterate over the results_list to tidy each model's results
-# for (dv in names(results_list_expenditure)) {
-#   # Debug
-#   print(dv)
-#   
-#   # Extract 95% confidence intervals
-#   tidied_model_95 <- tidy(results_list_expenditure[[dv]], conf.int = TRUE, conf.level = 0.95) %>%
-#     filter(term %in% c("op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y")) %>%
-#     mutate(dependent_var = dv) %>%
-#     rename(conf.low95 = conf.low, conf.high95 = conf.high)
-#   
-#   # Extract 90% confidence intervals
-#   tidied_model_90 <- tidy(results_list_expenditure[[dv]], conf.int = TRUE, conf.level = 0.90) %>%
-#     filter(term %in% c("op_expo_ew_y", "rg_expo_ew_y", "ph_expo_ew_y")) %>%
-#     mutate(dependent_var = dv) %>%
-#     select(-c(statistic, p.value, std.error, estimate)) %>%
-#     rename(conf.low90 = conf.low, conf.high90 = conf.high)
-#   
-#   # Join the 95% and 90% results by dependent_var and term
-#   tidied_model <- left_join(tidied_model_95, tidied_model_90, by = c("dependent_var", "term"))
-#   
-#   # Add number of observations to the tidied results
-#   nobs <- nobs(results_list_expenditure[[dv]])
-#   tidied_model$nobs <- nobs
-#   
-#   tidied_results_expenditure <- bind_rows(tidied_results_expenditure, tidied_model)
-# }
-# 
-# 
-# 
-# ### Plot
-# 
-# tidied_results_expenditure |>
-#   mutate(term = case_when(
-#     term == "op_expo_ew_y" ~ "Opportunity",
-#     term == "rg_expo_ew_y" ~ "Regulatory",
-#     term == "ph_expo_ew_y" ~ "Physical",
-#     TRUE ~ term
-#   ),
-#   color = ifelse(p.value < 0.05, "black", "darkgrey"),
-#   dependent_var = str_replace(dependent_var, "amount_num_", ""),
-#   ) |>
-#   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
-#   facet_wrap(facets = ~term, scales = "free_x") +
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
-#   geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-#   geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
-#   geom_point(shape = 21, fill = "white", size = 2) +
-#   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-#   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
-#   labs(x = "Coefficient", y = "Issue") +
-#   theme(text = element_text(size = 15)) +
-#   theme_bw()
-# 
-# ggsave("results/figures/regressions/placebos_expenditure.pdf", width = 8.5, height = 11)
 
 
 
-# Produce tables for selected issue codes ---------------------------------
+
+# Equivalence Testing -----------------------------------------------------
 
 
-# bind plot_dfs
-plot_df_comb <- rbind(
-  plot_df_logit |> 
-    select(-c(nobs, statistic)) |>
-    mutate(Outcome = "Occurrence"), 
-  plot_df_tobit |>
-    mutate(Outcome = "Expenditure")
+# =========================================
+# TOST with z-approx for fixest coefficient
+# =========================================
+# - model_list: a named list of fixest model objects (e.g. results_list_occurrence)
+# - dv_names:   character vector of equal length to model_list, specifying each model’s DV name
+# - data:       data.frame used to fit the models
+# - treat_vars: which coefficient names to run TOST on (default: op_expo_ew, rg_expo_ew, ph_expo_ew)
+# - alpha:      significance level (default 0.05)
+#
+# Output: a data.frame with TOST results for each model & coefficient
+
+tost_equiv_fixest <- function(
+  model_list,
+  dv_names,
+  data,
+  treat_vars = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),
+  alpha = 0.05
+) {
+  # Basic check: must have same length
+  if (length(model_list) != length(dv_names)) {
+    stop("model_list and dv_names must have the same length!")
+  }
+  
+  # Initialize container for all results
+  all_results <- data.frame()
+  
+  # Loop over models
+  for (i in seq_along(model_list)) {
+    mod <- model_list[[i]]
+    this_dv <- dv_names[i]
+    
+    # 1) Compute st.dev. of the outcome in 'data'
+    #    (NB: If your model uses a transformed outcome, e.g., log( dv + 1 ),
+    #    then the SD you get here is for the *transformed* variable!)
+    y_sd <- sd(data[[this_dv]], na.rm = TRUE)
+    
+    # 2) Equivalence range: epsilon = 0.36 * SD
+    epsilon <- 0.36 * y_sd
+    
+    # 3) Extract the coefficient table from the fixest model
+    ctab <- summary(mod)$coeftable
+    
+    # 4) For each treatment variable, run TOST
+    for (tv in treat_vars) {
+      # If the model doesn't have this coefficient (e.g. omitted), skip or store NA
+      if (! tv %in% rownames(ctab)) {
+        rowdf <- data.frame(
+          dv                 = this_dv,
+          treat_var          = tv,
+          estimate           = NA_real_,
+          se                 = NA_real_,
+          epsilon            = epsilon,
+          T1                 = NA_real_,
+          pval1              = NA_real_,
+          T2                 = NA_real_,
+          pval2              = NA_real_,
+          reject_equivalence = NA,
+          stringsAsFactors   = FALSE
+        )
+        
+      } else {
+        # Pull out estimate and std. error
+        est <- ctab[tv, "Estimate"]
+        se  <- ctab[tv, "Std. Error"]
+        
+        # TOST with normal approximation:
+        #   H0 #1: beta >= +epsilon  vs  H1: beta < +epsilon   => T1 = (est - epsilon)/se
+        #   H0 #2: beta <= -epsilon  vs  H1: beta > -epsilon   => T2 = (est + epsilon)/se
+        # p-value #1 = pnorm(T1)
+        # p-value #2 = 1 - pnorm(T2)
+        
+        T1    <- (est - epsilon) / se
+        pval1 <- pnorm(T1)         # one-sided
+        
+        T2    <- (est + epsilon) / se
+        pval2 <- 1 - pnorm(T2)     # one-sided
+        
+        # We say "equivalent" if both p-values < alpha
+        reject_equiv <- (pval1 < alpha & pval2 < alpha)
+        
+        # Collect results
+        rowdf <- data.frame(
+          dv                 = this_dv,
+          treat_var          = tv,
+          estimate           = est,
+          se                 = se,
+          epsilon            = epsilon,
+          T1                 = T1,
+          pval1              = pval1,
+          T2                 = T2,
+          pval2              = pval2,
+          reject_equivalence = reject_equiv,
+          stringsAsFactors   = FALSE
+        )
+      }
+      
+      # Bind to the master results data.frame
+      all_results <- rbind(all_results, rowdf)
+    }
+  }
+  
+  return(all_results)
+}
+
+
+
+## Occurrence --------------------------------------------------------------
+
+dependent_vars <- names(results_list_occurrence)
+
+# For Occurrence
+equiv_occ <- tost_equiv_fixest(
+  model_list = results_list_occurrence,
+  dv_names   = dependent_vars,
+  data       = df_placebo,
+  treat_vars = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),  # main treatments
+  alpha      = 0.05
 )
 
-# Only keep issue codes with 6 observations
-plot_df_comb <- plot_df_comb |>
-  group_by(dependent_var) |>
-  mutate(n = n()) |>
-  filter(n == 6) |>
-  ungroup() |>
-  select(-n)
+# Inspect
+head(equiv_occ)
 
-
-# # # Plot this: dodge by outcome and different colors for outcome
-# plot_df_comb |>
-#   mutate(term = case_when(
-#     term == "op_expo_ew" ~ "Opportunity",
-#     term == "rg_expo_ew" ~ "Regulatory",
-#     term == "ph_expo_ew" ~ "Physical",
-#     TRUE ~ term
-#   ),
-#   Outcome = case_when(
-#     Outcome == "Occurrence" ~ "Occurrence",
-#     Outcome == "Expenditure" ~ "Expenditure",
-#     TRUE ~ Outcome
-#   ),
-#   color = ifelse(p.value < 0.05, "black", "darkgrey"),
-#   dependent_var = str_replace(dependent_var, "amount_num_", ""),
-#   ) |>
-#   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
-#   facet_wrap(facets = ~term, scales = "free_x") +
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
-#   # dodge errorbars & points by outcome
-#   geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95, color = Outcome), width = 0, linewidth = .5, position = position_dodge(width = 0.5)) +
-#   geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90, color = Outcome), width = 0, linewidth = 1, position = position_dodge(width = 0.5)) +
-#   geom_point(aes(color = Outcome), shape = 21, fill = "white", size = 2, position = position_dodge(width = 0.5)) +
-#   # color red and blue
-#   scale_color_manual(values = c("red", "blue")) +
-#   # scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-#   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
-#   labs(x = "Coefficient", y = "Issue") +
-#   theme_bw() +
-#   theme(text = element_text(size = 15), legend.position = "bottom")
-# 
-# 
-# 
-# plot_df_comb |>
-#   filter(dependent_var %in% c("AGR", "AUT", "BUD", "NAT", "TAX", "TRA")) |>
-#   mutate(
-#     color = ifelse(p.value < 0.05, "black", "darkgrey"),
-#     Outcome=factor(Outcome, levels=c("Occurrence", "Expenditure")),
-#     ) |>
-#   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
-#   facet_grid(Outcome ~ term, scales = "free") +
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
-#   geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-#   geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
-#   geom_point(shape = 21, fill = "white", size = 2) +
-#   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-#   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
-#   labs(x = "Coefficient", y = "Issue") +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(), 
-#         text = element_text(size = 12))
-
-
-placebo_plot_df <- plot_df_comb |>
-  filter(dependent_var %in% c("CSP", "IMM", "BAN", "VET")) |>
+# Modify plot to show standardized effects
+equiv_occ %>%
   mutate(
-    dependent_var = case_when(
-      dependent_var == "CSP" ~ "Consumer Protection",
-      dependent_var == "IMM" ~ "Immigration",
-      dependent_var == "BAN" ~ "Banking",
-      dependent_var == "VET" ~ "Veterans",
-      TRUE ~ dependent_var
-    )
+    treat_var = case_when(
+      treat_var == "op_expo_ew" ~ "Opportunity",
+      treat_var == "rg_expo_ew" ~ "Regulatory", 
+      treat_var == "ph_expo_ew" ~ "Physical"
+    ),
+    climate_adjacent = ifelse(dv %in% climate_adjacent,
+      "Climate-Adjacent", "Placebos"
+    ),
+    dv = factor(dv, levels = rev(levels(factor(dv)))),
+    treat_var = factor(treat_var, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) %>%
+  ggplot(aes(x = dv, y = estimate)) +
+  facet_grid(climate_adjacent ~ treat_var, scales = "free", space = "free") +
+  # Gray bars for equivalence range
+  geom_errorbar(aes(ymin = -epsilon, ymax = epsilon), 
+                width = 0, 
+                color = "darkgrey",
+                linewidth = 3,
+                alpha = 0.5) +
+  # # Dashed lines for equivalence bounds
+  # geom_hline(yintercept = 0.36, linetype = "dashed", color = "black", linewidth = .25, alpha = 0.75) +
+  # geom_hline(yintercept = -0.36, linetype = "dashed", color = "black", linewidth = .25, alpha = 0.75) +
+  # Point estimates
+  geom_point(size = 2, color = "black", shape = "diamond") +
+  coord_flip() +
+  labs(
+    x = "Issue Code",
+    y = expression(paste("Equivalence Range (in standard deviations ", sigma, ")"))
+  ) +
+  theme_hanno() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
   )
 
+ggsave("results/figures/regressions/placebo_equiv_tests_occurrence.pdf", 
+       width = 8.5, height = 11)
 
-# Plot
-placebo_plot_df |>
+
+# Similar plot for expenditure results
+# For Expenditure
+equiv_exp <- tost_equiv_fixest(
+  model_list = results_list_expenditure,
+  dv_names   = dependent_vars,
+  data       = df_placebo,
+  treat_vars = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),  # main treatments
+  alpha      = 0.05
+)
+
+head(equiv_exp)
+
+equiv_exp %>%
   mutate(
-    Outcome=factor(Outcome, levels=c("Expenditure", "Occurrence")),
-    term = factor(term, levels = c("Opportunity", "Regulatory", "Physical")),
-  ) |>
-  ggplot(aes(x = estimate, y = dependent_var, color = Outcome, shape = Outcome)) +
-  facet_grid(~ term, scales = "fixed") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
-  geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5, position = position_dodge(width = 0.25)) +
-  geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1, position = position_dodge(width = 0.25)) +
-  geom_point(size = 2, position = position_dodge(width = 0.25)) +
-  scale_y_discrete(limits=rev) +
-  # color manual black and darkgrey
-  scale_color_manual(values = c("black", "dimgray"), breaks = c("Occurrence", "Expenditure")) +
-  scale_shape_manual(values = c(15, 16), breaks = c("Occurrence", "Expenditure")) +
-  #scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-  # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
-  labs(x = "Coefficient", y = "Lobbying Issue", color = "", shape = "") +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), 
-        text = element_text(size = 12),
-        legend.position = "bottom")
+    dv = str_remove(dv, "_amount"),
+    treat_var = case_when(
+      treat_var == "op_expo_ew" ~ "Opportunity",
+      treat_var == "rg_expo_ew" ~ "Regulatory", 
+      treat_var == "ph_expo_ew" ~ "Physical"
+    ),
+    climate_adjacent = ifelse(dv %in% climate_adjacent,
+      "Climate-Adjacent", "Placebos"
+    ),
+    dv = factor(dv, levels = rev(levels(factor(dv)))),
+    treat_var = factor(treat_var, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) %>%
+  ggplot(aes(x = dv, y = estimate)) +
+  facet_grid(climate_adjacent ~ treat_var, scales = "free", space = "free") +
+  # Gray bars for equivalence range
+  geom_errorbar(aes(ymin = -epsilon, ymax = epsilon), 
+                width = 0, 
+                color = "darkgrey",
+                linewidth = 3,
+                alpha = 0.5) +
+  # # Dashed lines for equivalence bounds  
+  # geom_hline(yintercept = 0.36, linetype = "dashed", color = "black", linewidth = .25, alpha = 0.75) +
+  # geom_hline(yintercept = -0.36, linetype = "dashed", color = "black", linewidth = .25, alpha = 0.75) +
+  # Point estimates
+  geom_point(size = 2, color = "black", shape = "diamond") +
+  coord_flip() +
+  labs(
+    x = "Issue Code",
+    y = expression(paste("Equivalence Range (in standard deviations ", sigma, ")"))
+  ) +
+  theme_hanno() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  )
 
+ggsave("results/figures/regressions/placebo_equiv_tests_expenditure.pdf", 
+       width = 8.5, height = 11)
 
-ggsave("results/figures/regressions/placebos_sample.pdf", width = 8, height = 4)
-
-
-
-
-
-# placebo_plot_df <- tidied_results |>
-#   mutate(Outcome = "Occurrence") |>
-#   bind_rows(tidied_results_expenditure |>
-#               mutate(Outcome = "Expenditure")) |>
-#   mutate(dependent_var = str_replace(dependent_var, "amount_num_", "")) |>
-#   filter(dependent_var %in% c("TAR", "MIA", "MON", "FIR", "TAX", "TRA", "ROD", "AUT")) |>
-#   mutate(
-#     term = case_when(
-#       term == "op_expo_ew_y" ~ "Opportunity",
-#       term == "rg_expo_ew_y" ~ "Regulatory",
-#       term == "ph_expo_ew_y" ~ "Physical",
-#       TRUE ~ term
-#       ),
-#     Category = case_when(
-#       dependent_var == "TAR" ~ "Not Climate-related",
-#       dependent_var == "MIA" ~ "Not Climate-related",
-#       dependent_var == "MON" ~ "Not Climate-related",
-#       dependent_var == "FIR" ~ "Not Climate-related",
-#       dependent_var == "TAX" ~ "Climate-related",
-#       dependent_var == "TRA" ~ "Climate-related",
-#       dependent_var == "ROD" ~ "Climate-related",
-#       dependent_var == "AUT" ~ "Climate-related",
-#       TRUE ~ dependent_var
-#     ),
-#     dependent_var = case_when(
-#       dependent_var == "TAR" ~ "Tariffs",
-#       dependent_var == "MIA" ~ "Media",
-#       dependent_var == "MON" ~ "Money",
-#       dependent_var == "FIR" ~ "Guns",
-#       dependent_var == "TAX" ~ "Taxation",
-#       dependent_var == "TRA" ~ "Transportation",
-#       dependent_var == "ROD" ~ "Roads",
-#       dependent_var == "AUT" ~ "Automotives",
-#       TRUE ~ dependent_var
-#     )
-#   )
-# 
-# 
-# # Plot
-# placebo_plot_df |>
-#   mutate(
-#     color = ifelse(p.value < 0.05, "black", "darkgrey"),
-#     Outcome=factor(Outcome, levels=c("Occurrence", "Expenditure")),
-#     Category = factor(Category, levels = c("Not Climate-related", "Climate-related"))
-#     ) |>
-#   ggplot(aes(x = estimate, y = dependent_var, color = color)) +
-#   facet_grid(Category + Outcome ~ term, scales = "free") +
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) + 
-#   geom_errorbar(aes(xmin = conf.low95, xmax = conf.high95), width = 0, linewidth = .5) +
-#   geom_errorbar(aes(xmin = conf.low90, xmax = conf.high90), width = 0, linewidth = 1) +
-#   geom_point(shape = 21, fill = "white", size = 2) +
-#   scale_color_identity(guide = "none") +  # Use the actual colors in the 'color' column without a legend
-#   # scale_y_discrete(limits = rev(unique(tidied_results$dependent_var))) +
-#   labs(x = "Coefficient", y = "Issue") +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(), 
-#         text = element_text(size = 12))
-#   
-# 
-# ggsave("results/figures/regressions/placebos_sample.pdf", width = 8.5, height = 6.2)
-
+move_plots_to_overleaf("./")
 
 # Issue codes table -------------------------------------------------------
 
@@ -690,180 +586,4 @@ codes |>
   cat()
 
 
-
-
-# Equivalence testing -----------------------------------------------------
-
-# Load data
-df <- fread("data/03_final/lobbying_df_quarterly_REVISE_normal.csv")
-
-names(df)
-
-?equiv.t.test
-
-# Function to run TOST for each exposure type and issue
-run_tost_analysis <- function(data, dv, exposures = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"), 
-                            eps_sub = 0.1, alpha = 0.05) {
-  
-  results <- data.frame()
-  
-  for(exposure in exposures) {
-    # Get treatment and control groups based on exposure within industry-quarter groups
-    grouped_data <- data %>%
-      group_by(industry, yearqtr) %>%
-      mutate(
-        exposure_group = ifelse(!!sym(exposure) > median(!!sym(exposure), na.rm = TRUE), 
-                              "high", "low")
-      ) %>%
-      ungroup()
-    
-    # Split into high and low exposure groups
-    high_exposure <- grouped_data %>% 
-      filter(exposure_group == "high") %>% 
-      pull(!!sym(dv))
-    
-    low_exposure <- grouped_data %>% 
-      filter(exposure_group == "low") %>% 
-      pull(!!sym(dv))
-    
-    # Skip if either group is empty
-    if(length(high_exposure) == 0 || length(low_exposure) == 0) {
-      results <- rbind(results, data.frame(
-        issue = dv,
-        exposure = exposure,
-        rejected_null = NA,
-        lower_t = NA,
-        upper_t = NA,
-        stringsAsFactors = FALSE
-      ))
-      next
-    }
-    
-    # Run TOST
-    tost_result <- try(tost(high_exposure, low_exposure, eps_sub = eps_sub, alpha = alpha), silent = TRUE)
-    
-    if(inherits(tost_result, "try-error")) {
-      # If test fails, add row with NAs
-      results <- rbind(results, data.frame(
-        issue = dv,
-        exposure = exposure,
-        rejected_null = NA,
-        lower_t = NA,
-        upper_t = NA,
-        stringsAsFactors = FALSE
-      ))
-    } else {
-      # If test succeeds, add results
-      results <- rbind(results, data.frame(
-        issue = dv,
-        exposure = exposure,
-        rejected_null = tost_result$reject,
-        lower_t = tost_result$t.lower,
-        upper_t = tost_result$t.upper,
-        stringsAsFactors = FALSE
-      ))
-    }
-  }
-  
-  return(results)
-}
-
-# For occurrence
-# Get all issue variables (CLI_*_quarter)
-occurrence_vars <- names(df)[grep("^CLI_.*_quarter$", names(df))]
-occurrence_vars <- occurrence_vars[!occurrence_vars %in% 
-                                 c("CLI_CAW_quarter", "CLI_ENV_quarter", "CLI_ENG_quarter", 
-                                   "CLI_FUE_quarter", "CLI_NA_quarter", "CLI_REL_quarter")]
-
-# Run TOST for each occurrence variable
-occurrence_results <- do.call(rbind, lapply(occurrence_vars, function(x) {
-  run_tost_analysis(df, x)
-}))
-
-# For expenditure
-# Get all amount variables (amount_num_*)
-expenditure_vars <- names(df)[grep("^amount_num_", names(df))]
-expenditure_vars <- expenditure_vars[!expenditure_vars %in% 
-                                   c("amount_num_CAW", "amount_num_ENV", "amount_num_ENG", 
-                                     "amount_num_FUE", "amount_num_REL")]
-
-# Run TOST for each expenditure variable
-expenditure_results <- do.call(rbind, lapply(expenditure_vars, function(x) {
-  run_tost_analysis(df, x)
-}))
-
-# Combine results
-all_results <- rbind(
-  cbind(occurrence_results, type = "Occurrence"),
-  cbind(expenditure_results, type = "Expenditure")
-)
-
-# Clean up issue codes
-all_results <- all_results %>%
-  mutate(
-    issue = str_remove(issue, "CLI_"),
-    issue = str_remove(issue, "_quarter"),
-    issue = str_remove(issue, "amount_num_"),
-    exposure = case_when(
-      exposure == "op_expo_ew" ~ "Opportunity",
-      exposure == "rg_expo_ew" ~ "Regulatory",
-      exposure == "ph_expo_ew" ~ "Physical"
-    )
-  )
-
-# Save results
-fwrite(all_results, "results/Tables/equivalence_test_results.csv")
-
-# Create summary visualization
-ggplot(all_results, aes(x = exposure, y = issue, fill = rejected_null)) +
-  facet_wrap(~type) +
-  geom_tile() +
-  scale_fill_manual(values = c("white", "red"), 
-                    labels = c("Not Equivalent", "Equivalent")) +
-  labs(x = "Exposure Type", y = "Issue", fill = "Test Result") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggsave("results/figures/regressions/equivalence_tests.pdf", width = 10, height = 12)
-
-
 ### END
-
-# Test run for a single exposure and outcome
-test_exposure <- "op_expo_ew"
-test_outcome <- "CLI_CON_quarter"  # Using Homeland Security as test placebo
-
-# Group data and create exposure groups
-test_grouped <- df %>%
-  group_by(industry, yearqtr) %>%
-  mutate(
-    exposure_group = ifelse(!!sym(test_exposure) > median(!!sym(test_exposure), na.rm = TRUE), 
-                          "high", "low")
-  ) %>%
-  ungroup()
-
-# Split into high and low exposure groups
-high_exposure <- test_grouped %>% 
-  filter(exposure_group == "high") %>% 
-  pull(!!sym(test_outcome))
-
-low_exposure <- test_grouped %>% 
-  filter(exposure_group == "low") %>% 
-  pull(!!sym(test_outcome))
-
-# Print summary statistics
-print("Summary of test groups:")
-print(paste("High exposure group n:", length(high_exposure)))
-print(paste("Low exposure group n:", length(low_exposure)))
-print(paste("High exposure mean:", mean(high_exposure, na.rm = TRUE)))
-print(paste("Low exposure mean:", mean(low_exposure, na.rm = TRUE)))
-
-# Run 
-# ?equiv.t.test
-test_equiv <- equiv.t.test(high_exposure, low_exposure, eps_tol = "strict", alpha = 0.05)
-summary(test_equiv)
-
-
-# Print results
-print("TOST results:")
-print(test_tost)
