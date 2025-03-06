@@ -818,4 +818,34 @@ names(tobit) <- c("op_expo_ew_coef", "op_expo_ew_se", "rg_expo_ew_coef", "rg_exp
 
 save(tobit, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_tobit.RData")
 
+## Transition/Physical Risk ----------------------------------------------------
+
+
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- process_df(df)
+
+df$`Industry x Quarter` <- paste(df$industry, df$yearqtr)
+
+li <- readxl::read_xlsx("data/01_raw/Li_et_al/Measures_LSTY_092023/Measures_LSTY_092023.xlsx")
+li_ext <- readxl::read_xlsx("data/01_raw/Li_et_al/Data Extension_LSTY 19_23/Data Extension_2019_2023.xlsx")
+
+li_ext <- li_ext[ , names(li)]
+
+li <- rbind(li, li_ext)
+sum(duplicated(li))
+names(li)
+
+df_li <- merge(df, li, by=c("gvkey", "year", "qtr"))
+
+df_li$phy_risk <- df_li$phy_risk_acute_w_std + df_li$phy_risk_chronic_w_std
+
+models <- list(
+  "(1)" = feols(CLI ~ tran_risk_w_std + phy_risk + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df_li, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ tran_risk_w_std + phy_risk + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df_li, vcov = ~ Year + Firm)
+)
+
+save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_LiEtAl.RData")
+
+
+
 ### END
