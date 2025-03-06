@@ -134,6 +134,9 @@ models <- list(
   "(14)" = feols(CLI_ENV_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
   "(15)" = feols(CLI_FUE_quarter ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 )
+
+wald(models$`(5`, "op_expo_ew - rg_expo_ew = 0")
+
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 ## Effect of climate exposure on lobbying occurrence
@@ -330,6 +333,15 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW
 ## Bills-based measure of climate lobbying -------------------------------------
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
+
+df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df3 <- merge(df[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")],
+             df2[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")],
+             by=c("isin", "yearqtr"))
+cor(df3$CLI_quarter.x, df3$CLI_quarter.y)
+cor(log(df3$CLI_amount_quarter.x+1), log(df3$CLI_amount_quarter.y+1))
+
+
 df <- process_df(df)
 m1 <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
@@ -359,6 +371,12 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVIS
 ## Keywords-based measure of climate lobbying -----------------------------------
 # load data
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+
+df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df3 <- merge(df[ , c("isin", "yearqtr", "CLI_kw", "CLI_amount_kw")],
+             df2[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")])
+cor(df3$CLI_quarter, df3$CLI_kw)
+cor(log(df3$CLI_amount_quarter+1), log(df3$CLI_amount_kw+1))
 
 names(df)
 
