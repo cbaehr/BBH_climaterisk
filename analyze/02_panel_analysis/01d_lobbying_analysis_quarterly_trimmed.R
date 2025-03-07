@@ -101,6 +101,11 @@ process_df <- function(data) {
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 df <- process_df(df)
 
+# noaa <- df[which(df$CLI_NOAA_quarter>0),]
+# length(unique(noaa$lob_id))
+# fema <- df[which(df$CLI_FEMA_quarter>0),]
+# length(unique(fema$lob_id))
+
 glimpse(df)
 
 # inspect
