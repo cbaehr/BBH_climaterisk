@@ -632,6 +632,47 @@ o_q_iy_ec_out <- list("Estimates" = o_q_iy_ec_estimates,
                       "Diagnostics" = o_q_iy_ec_diagnostics)
 
 
+## Occ: Transition vs. Physical Risk
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_LiEtAl.RData")
+
+o_q_iy_li <- models[[1]]
+
+o_q_iy_li_estimates <- c(o_q_iy_li$coefficients["tran_risk_w_std"], o_q_iy_li$se["tran_risk_w_std"],
+                         o_q_iy_li$coefficients["phy_risk"], o_q_iy_li$se["phy_risk"])
+o_q_iy_li_estimates <- round(o_q_iy_li_estimates * 100, 3)
+t <- c(o_q_iy_li$coefficients["tran_risk_w_std"] / o_q_iy_li$se["tran_risk_w_std"],
+       o_q_iy_li$coefficients["phy_risk"] / o_q_iy_li$se["phy_risk"])
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+o_q_iy_li_stars <- data.frame(term=c("Transition", "Physical"), 
+                              estimate=c(paste0(o_q_iy_li_estimates[1], strs[1]),
+                                         paste0(o_q_iy_li_estimates[3], strs[2])), 
+                              std.error=c(o_q_iy_li_estimates[2],
+                                          o_q_iy_li_estimates[4]))
+
+o_q_iy_li_N <- o_q_iy_li$nobs
+
+o_q_iy_li_R <- round(r2(o_q_iy_li, type = "ar2"), 3) #adjusted R2
+
+o_q_iy_li_diagnostics <- c(`Num. Obs.` = o_q_iy_li_N,
+                             `Adjusted R-Squared` =  o_q_iy_li_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = '\\checkmark',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = ' ',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Li et al.',
+                             `Estimation` = 'OLS',
+                             `Panel` = 'Firm-Qtr',
+                             `Wald Stat (Opp - Reg = 0)` = ' ',
+                             `Wald Stat (Opp - Phy = 0)` = ' ',
+                             `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_li_out <- list("Estimates" = o_q_iy_li_estimates,
+                        "Diagnostics" = o_q_iy_li_diagnostics)
+
+
 ## Amount --------------------------------------------------
 
 
@@ -1107,6 +1148,48 @@ o_q_iy_amt_ec_diagnostics <- c(`Num. Obs.` = o_q_iy_amt_ec_N,
 o_q_iy_amt_ec_out <- list("Estimates" = o_q_iy_amt_ec_estimates, 
                           "Diagnostics" = o_q_iy_amt_ec_diagnostics)
 
+## Amt: Transition vs Physical Risk --------------------------------------------
+
+## Occ: Transition vs. Physical Risk
+
+load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_LiEtAl.RData")
+
+o_q_iy_li_amt <- models[[2]]
+
+o_q_iy_li_amt_estimates <- c(o_q_iy_li_amt$coefficients["tran_risk_w_std"], o_q_iy_li_amt$se["tran_risk_w_std"],
+                             o_q_iy_li_amt$coefficients["phy_risk"], o_q_iy_li_amt$se["phy_risk"])
+o_q_iy_li_amt_estimates <- round(o_q_iy_li_amt_estimates * 100, 3)
+t <- c(o_q_iy_li_amt$coefficients["tran_risk_w_std"] / o_q_iy_li_amt$se["tran_risk_w_std"],
+       o_q_iy_li_amt$coefficients["phy_risk"] / o_q_iy_li_amt$se["phy_risk"])
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+o_q_iy_li_amt_stars <- data.frame(term=c("Transition", "Physical"), 
+                              estimate=c(paste0(o_q_iy_li_amt_estimates[1], strs[1]),
+                                         paste0(o_q_iy_li_amt_estimates[3], strs[2])), 
+                              std.error=c(o_q_iy_li_amt_estimates[2],
+                                          o_q_iy_li_amt_estimates[4]))
+
+o_q_iy_li_amt_N <- o_q_iy_li_amt$nobs
+
+o_q_iy_li_amt_R <- round(r2(o_q_iy_li_amt, type = "ar2"), 3) #adjusted R2
+
+o_q_iy_li_amt_diagnostics <- c(`Num. Obs.` = o_q_iy_li_amt_N,
+                           `Adjusted R-Squared` =  o_q_iy_li_amt_R,
+                           `Year FE` = ' ',
+                           `Industry x Year FE` = '\\checkmark',
+                           `Industry x Qtr FE` = ' ',
+                           `Firm FE` = ' ',
+                           `Firm Controls` = '\\checkmark',
+                           `Lagged DV` = ' ',
+                           `Climate Measure` = 'Li et al.',
+                           `Estimation` = 'OLS',
+                           `Panel` = 'Firm-Qtr',
+                           `Wald Stat (Opp - Reg = 0)` = ' ',
+                           `Wald Stat (Opp - Phy = 0)` = ' ',
+                           `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_li_amt_out <- list("Estimates" = o_q_iy_li_amt_estimates,
+                      "Diagnostics" = o_q_iy_li_amt_diagnostics)
+
 ## Build Occurrence Non-Alt DV Table -------------------------------------------
 
 o_a_iy_ovrl_stars <- list(tidy=o_a_iy_ovrl_stars)
@@ -1117,6 +1200,9 @@ class(o_a_iy_tenk_stars) <- "modelsummary_list"
 
 o_q_iy_ec_stars <- list(tidy=o_q_iy_ec_stars)
 class(o_q_iy_ec_stars) <- "modelsummary_list"
+
+o_q_iy_li_stars <- list(tidy=o_q_iy_li_stars)
+class(o_q_iy_li_stars) <- "modelsummary_list"
 
 mod_list <- list("Main" = stars(o_q_iy_out$Estimates),
                  "EPA" = stars(o_q_iy_epa_out$Estimates),
@@ -1134,7 +1220,8 @@ mod_list <- list("Main" = stars(o_q_iy_out$Estimates),
                  "Sent" = stars(o_q_iy_sent_out$Estimates),
                  "Risk" = stars(o_q_iy_risk_out$Estimates),
                  "Ovrl" = o_a_iy_ovrl_stars,
-                 "10-K" = o_a_iy_tenk_stars)
+                 "10-K" = o_a_iy_tenk_stars,
+                 "Li et al" = o_q_iy_li_stars)
 
 auxiliary <- data.frame(o_q_iy_out$Diagnostics,
                         o_q_iy_epa_out$Diagnostics,
@@ -1152,7 +1239,8 @@ auxiliary <- data.frame(o_q_iy_out$Diagnostics,
                         o_q_iy_sent_out$Diagnostics,
                         o_q_iy_risk_out$Diagnostics,
                         o_a_iy_ovrl_out$Diagnostics,
-                        o_a_iy_tenk_out$Diagnostics)
+                        o_a_iy_tenk_out$Diagnostics,
+                        o_q_iy_li_out$Diagnostics)
 
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
@@ -1202,6 +1290,9 @@ class(o_a_iy_amt_tenk_stars) <- "modelsummary_list"
 o_q_iy_amt_ec_stars <- list(tidy=o_q_iy_amt_ec_stars)
 class(o_q_iy_amt_ec_stars) <- "modelsummary_list"
 
+o_q_iy_li_amt_stars <- list(tidy=o_q_iy_li_amt_stars)
+class(o_q_iy_li_amt_stars) <- "modelsummary_list"
+
 mod_list <- list("Main" = stars(o_q_iy_amt_out$Estimates),
                  "EPA" = stars(o_q_iy_amt_epa_out$Estimates),
                  "DOE" = stars(o_q_iy_amt_doe_out$Estimates),
@@ -1218,7 +1309,8 @@ mod_list <- list("Main" = stars(o_q_iy_amt_out$Estimates),
                  "Sent" = stars(o_q_iy_amt_sent_out$Estimates),
                  "Risk" = stars(o_q_iy_amt_risk_out$Estimates),
                  "Ovrl" = o_a_iy_amt_ovrl_stars,
-                 "10-K" = o_a_iy_amt_tenk_stars)
+                 "10-K" = o_a_iy_amt_tenk_stars,
+                 "Li et al" = o_q_iy_li_amt_stars)
 
 auxiliary <- data.frame(o_q_iy_amt_out$Diagnostics,
                         o_q_iy_amt_epa_out$Diagnostics,
@@ -1236,7 +1328,8 @@ auxiliary <- data.frame(o_q_iy_amt_out$Diagnostics,
                         o_q_iy_amt_sent_out$Diagnostics,
                         o_q_iy_amt_risk_out$Diagnostics,
                         o_a_iy_amt_ovrl_out$Diagnostics,
-                        o_a_iy_amt_tenk_out$Diagnostics)
+                        o_a_iy_amt_tenk_out$Diagnostics,
+                        o_q_iy_li_amt_out$Diagnostics)
 
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
