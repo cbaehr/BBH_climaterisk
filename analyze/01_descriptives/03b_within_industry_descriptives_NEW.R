@@ -15,11 +15,10 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # df <- fread("02_processed/exposure_year.csv", colClasses = c("sic"="character"))
 # df$sic <- as.numeric(substr(df$sic, 1, 2))
 
-df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df_orig <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 
-
+df <- df_orig
 # Within industry variation in exposure -----------------------------------
-
 
 # merge
 df <- df |> 
@@ -137,6 +136,39 @@ df |>
 
 
 ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed.pdf", width=10, height=6)
+
+
+glimpse(df)
+summary(df$Value)
+
+summary(log$Value)
+
+# Log scale version
+log <- df |>
+  filter(industry %in% industry_var_levels$industry) |>
+  mutate(
+    Value = ifelse(Value == 0, 0.000001, Value),
+    industry=factor(industry, levels=industry_var_levels$industry),
+    industry = fct_relabel(industry, ~str_wrap(., width = 40)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) |>
+  ggplot(aes(y=Value,x=industry)) +
+  facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+  ) +
+  coord_flip() + 
+  scale_y_log10(labels = scales::label_number()) +
+  theme_bw() +
+  labs(y = "Distribution of Exposure Variables (log scale)", x = "") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 15))
+
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_log.pdf", width=10, height=6)
 
 
 

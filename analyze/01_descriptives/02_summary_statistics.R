@@ -13,7 +13,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 ## Load data
 #Lobbying analysis dataset
-df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
 
 
 
@@ -21,6 +21,9 @@ df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
 
 ## Number of firms
 df |> distinct(gvkey) |> count() # 11826
+
+df |> filter(!is.na(op_expo_ew)) |> distinct(gvkey) |> count() # 11826
+
 
 ## Years analyzed
 df |> 

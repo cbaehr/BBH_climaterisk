@@ -942,3 +942,17 @@ sum(duplicated(exposure_orbis_lobby_long[, c("gvkey", "yearqtr")]))
 # a lot of duplicate gvkeys in long data
 sum(duplicated(exposure_orbis_lobby_long[, c("bvdid", "yearqtr")]))
 # none
+
+# inspect
+exposure_orbis_lobby_long <- data.table::fread("02_processed/exposure_orbis_client_quarter_long_REVISE_NEW.csv")
+
+# check missingness 
+names(exposure_orbis_lobby_long)
+vars <- c(
+  "gvkey", "hqcountrycode", "op_expo_ew", "rg_expo_ew", "ph_expo_ew",
+  "total_assets_usd", "n_employees", "operating_rev_usd", "P_L_b4tax_usd"
+)
+
+haschaR::check_missings_plot(exposure_orbis_lobby_long, vars, "year")
+
+## looks good

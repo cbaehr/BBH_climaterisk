@@ -24,7 +24,7 @@ lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv"
 
 # lobby_report_old <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
-
+# glimpse(lobby_report)
 # lobby_report <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___report_level.csv")
 # lobby_issue_old <- fread("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/lobbyview/dataset___issue_level.csv")
 
@@ -36,8 +36,39 @@ lobby_report$report_quarter_code <- ifelse(lobby_report$filing_period_code=="H1"
 
 lobby_report$n_quarters <- str_count(as.character(lobby_report$report_quarter_code), "")
 
+
+# inspect merged report + issue
+inspect_report_issue <- lobby_report |>
+  left_join(lobby_issue, by = "report_uuid")  
+
+glimpse(inspect_report_issue)
+
+# look at issue_code across filing_year
+inspect_report_issue |>
+  group_by(filing_year) |>
+  summarise(
+    n_total = n(),
+    n_missing = sum(is.na(general_issue_code)),
+    share_missing = n_missing / n_total
+  ) |>
+  ungroup() |>
+  ggplot(aes(x = filing_year, y = share_missing)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "Filing Year",
+    y = "Share of Reports with Missing Issue Code"
+  ) +
+  theme_bw()
+
+ggsave("results/figures/descriptives/share_missing_issue_code.pdf", width = 8, height = 4)
+
+inspect_report_issue |> filter(filing_year == 2024 & amount > 5000)
+
+
 lobby_issue_map <- fread("data/01_raw/lobbyview_20250103/issues_codebook/government_entity_mapping.csv")
 lobby_issue_map <- lobby_issue_map[!duplicated(lobby_issue_map) , ]
+
 
 process_entity <- function(ids) {
   a <- gsub("\\{|\\}", "", ids)
@@ -76,9 +107,7 @@ glimpse(lobby_issue)
 #lobby_issue_old$gov_entity <- trimws(lobby_issue_old$gov_entity)
 
 ## remove special escape characters
-lobby_text$issue_text <- gsub("[^A-z0-9. ]", " ", lobby_text$issue_text)
-lobby_text$issue_text <- gsub("`|\\^|\\[|\\]|\\\\|_", " ", lobby_text$issue_text)
-lobby_text$issue_text <- gsub("\\s+", " ", lobby_text$issue_text) # remove redundant spaces
+lobby_text$issue_text <- gsub("\\s+", " ", gsub("`|\\^|\\[|\\]|\\\\|_", " ", gsub("[^A-z0-9. ]", " ", lobby_text$issue_text))) # remove special chars and redundant spaces
 
 # Convert issue_ordinal_position to integer in both dataframes before merging
 lobby_issue[, issue_ordinal_position := as.integer(issue_ordinal_position)]
@@ -195,9 +224,24 @@ names(lobbying_firmyear) <- c("filing_year", "lob_id",
 
 lobbying_firmyear$n_issue_codes <- str_count(lobbying_firmyear$issue_code, "\\|") + 1
 
+### Inspect missingness
+
+# look at years in lobbying_firmyear
+unique(lobbying_firmyear$filing_year)
+
+# After the merge with lobby_issuetext_nodup and lobby_client
+lobbying |>
+  filter(filing_year >= 2022) |>
+  summarise(
+    n_reports = n(),
+    n_with_issues = sum(!is.na(issue_code)),
+    n_with_amounts = sum(!is.na(amount))
+  )
+
 ###
 
 rm(list = setdiff(ls(), "lobbying_firmyear"))
+
 
 #####
 
@@ -752,6 +796,29 @@ write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_RE
 df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 
 names(df)
+
+names(exposure_orbis_lobby_long)
+vars <- c(
+  "gvkey", "hqcountrycode", "op_expo_ew", "rg_expo_ew", "ph_expo_ew",
+  "total_assets_usd", "n_employees", "operating_rev_usd", "P_L_b4tax_usd",
+  "CLI_quarter", "CLI_amount_quarter", "total_lobby_quarter"
+)
+
+haschaR::check_missings_plot(df, vars, "year")
+
+# calculate mean CLI_quarter and CLI_amount_quarter for each year
+df |>
+  group_by(year) |>
+  summarise(mean_CLI_quarter = mean(CLI_quarter, na.rm = TRUE),
+            mean_CLI_amount_quarter = mean(CLI_amount_quarter, na.rm = TRUE)) |>
+  ungroup() |>
+  # plot both
+  pivot_longer(cols = c(mean_CLI_quarter, mean_CLI_amount_quarter), names_to = "variable", values_to = "value") |>
+  ggplot(aes(x = year, y = value, color = variable)) +
+    geom_line() +
+    theme_minimal() +
+    labs(x = "Year", y = "Mean CLI_quarter") +
+    facet_wrap(~variable, scales = "free")
 
 
 ### END

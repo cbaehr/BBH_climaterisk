@@ -12,7 +12,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
+df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df_kw <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
 
 # Filter: Firms that were exposed to climate
 firms_exposed <- df %>%
@@ -24,15 +25,20 @@ firms_lobby_CLI <- df %>%
   filter(CLI_quarter > 0) %>%
   distinct(isin)
 
+firms_lobby_CLI_kw <- df_kw %>%
+  filter(CLI_kw > 0) %>%
+  distinct(isin)
+
 
 # Firms that were exposed to climate and lobbied on climate
 firms_exposed_lobby_CLI <- firms_exposed %>%
-  filter(isin %in% firms_lobby_CLI$isin) %>%
+  filter(isin %in% firms_lobby_CLI$isin | isin %in% firms_lobby_CLI_kw$isin) %>%
   distinct(isin)
+nrow(firms_exposed_lobby_CLI)
 
 # Save
-saveRDS(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI.rds")
-fwrite(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI.csv")
+saveRDS(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI_new.rds")
+fwrite(firms_exposed_lobby_CLI, "data/xx_other/firms_exposed_lobby_CLI_new.csv")
 
 glimpse(firms_exposed_lobby_CLI)
 
