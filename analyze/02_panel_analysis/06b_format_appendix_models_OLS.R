@@ -62,7 +62,7 @@ compute_wald <- function(fixest_mod, var1, var2) {
   a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
   b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
   ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
-  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  wald <- (a-b) / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
   return(abs(wald))
 }
 
@@ -1560,16 +1560,6 @@ se2 <- sqrt(vcov(doe)["ph_expo_ew", "ph_expo_ew"])
 wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
 p_value <- 1 - pchisq(wald_stat, df = 1)
 cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
-
-compute_wald <- function(fixest_mod, var1, var2) {
-  a <- fixest_mod$coefficients[var1] #var1 coef
-  b <- fixest_mod$coefficients[var2] #var2 coef
-  a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
-  b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
-  ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
-  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
-  return(wald)
-}
 
 
 
