@@ -698,7 +698,7 @@ compute_wald <- function(fixest_mod, var1, var2) {
   a_var <- vcov(fixest_mod)[var1, var1] #var1 variance
   b_var <- vcov(fixest_mod)[var2, var2] #var2 variance
   ab_cov <- vcov(fixest_mod)[var1, var2] #var1-2 covariance
-  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  wald <- (a-b) / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
   return(wald)
 }
 
@@ -805,7 +805,7 @@ compute_wald <- function(censReg_mod, vcov, var1, var2) {
   a_var <- vcov[var1, var1] #var1 variance
   b_var <- vcov[var2, var2] #var2 variance
   ab_cov <- vcov[var1, var2] #var1-2 covariance
-  wald <- a-b / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
+  wald <- (a-b) / sqrt(a_var + b_var - 2 * ab_cov) #wald stat
   return(wald)
 }
 
