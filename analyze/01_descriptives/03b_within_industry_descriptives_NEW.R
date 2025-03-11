@@ -334,9 +334,6 @@ df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.r
 
 # get extra covars (similar code to 01d_lobbying_analysis_quarterly_trimmed.R)
 df$subs_iso3c <- unlist(lapply(df$subs_iso3c, FUN = function(x) paste(gsub("n.a.", "", unique(unlist(strsplit(x, "\n")))), collapse="|")))
-sum(df$subs_iso3c=="n.a.")
-sum(df$subs_iso3c=="")
-
 df$subs_iso3c <- gsub("NA", "", df$subs_iso3c)
 
 df$subs_iso3c[which(nchar(df$subs_iso3c)==3)] <- gsub("\\|", "", df$subs_iso3c[which(nchar(df$subs_iso3c)==3)])
@@ -372,9 +369,25 @@ names <- c("EBIT", "EBIT/Assets", "Total Lobbying ($)", "Opportunity", "Regulato
 # 1. identify whether firms is above or below/equal median for each industry - year
 # 2. calculate mean of covariates for each group
 
+# transform
+df_trans <- df |> 
+  # filter out empty industry
+  filter(industry != "") |> 
+  # select variables we need
+  select(isin, year, qtr, industry, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  pivot_longer(cols = op_expo_ew:ph_expo_ew, names_to = "Exposure", values_to = "Value") |>
+  mutate(Exposure = recode(Exposure,
+                           op_expo_ew = "Opportunity",
+                           ph_expo_ew = "Physical",
+                           rg_expo_ew = "Regulatory"),
+         round = round(Value, digits = 2))
+
+names(df)
+
 # Note: we select 2010, qtr == 1as year for balance table
 df_10 <- df_trans |>
   filter(year == 2010 & qtr == 1)
+
 
 # 1. identify whether firms is above or below/equal median for each industry - year
 above_median <- df_10 |>
@@ -462,7 +475,7 @@ bal5 <- haschaR::get_bal(treatvar = "above_median",
 bal6 <- haschaR::get_bal(treatvar = "above_median", 
                          cov_list = clist,
                          data.df = prep_df_phy,
-                         FE = NULL, weights = NULL
+                         FE = "industry", weights = NULL
 )
 
 b_plot_levels_phy <- bal5 %>%
@@ -491,7 +504,7 @@ b_plot_levels %>%
   haschaR::theme_hanno() +
   labs(
     x = "",
-    y = "Standardized mean difference in levels in Q1 2010",
+    y = "Correlations with Exposure Variables",
     color = ""
   ) +
   coord_flip() +

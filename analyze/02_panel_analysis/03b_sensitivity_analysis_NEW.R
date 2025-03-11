@@ -1103,7 +1103,7 @@ bounds <- bind_rows(bounds_occurrence_op, bounds_occurrence_rg, bounds_occurrenc
 bounds |>
   mutate(
     bound_label = factor(as.numeric(str_remove_all(bound_label, "[a-zA-Z_]")), levels = c(1, 0.5, 0), ordered = TRUE),
-    dv = factor(dv, levels = c("Occurrence", "Expenditure")),
+    dv = factor(dv, levels = c("Occurrence", "Amount")),
     treatment = factor(treatment, levels = c("Opportunity", "Regulatory", "Physical"))
     ) |>
   ggplot(aes(x = adjusted_estimate, y = bound_label, xmin = adjusted_lower_CI, xmax = adjusted_upper_CI)) +
@@ -1119,14 +1119,14 @@ bounds |>
     legend.position = "bottom",
     legend.title = element_blank()
     ) +
-  scale_color_brewer(palette = "Dark2") +
+  scale_color_viridis_d(option = "D", end = 0.9) +
   scale_shape_manual(values = c(16, 17, 15))
 
 ggsave("results/figures/sensitivity/sensitivity_plot_ldv.pdf", width = 7, height = 3.5)
 
 
 
-move_plots_to_overleaf("./")
+# move_plots_to_overleaf("./")
 
 
 

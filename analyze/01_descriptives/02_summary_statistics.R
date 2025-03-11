@@ -20,16 +20,18 @@ df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.r
 # Number of firms & years -------------------------------------------------
 
 ## Number of firms
-df |> distinct(gvkey) |> count() # 11826
+df |> distinct(gvkey) |> count() # 11552
 
-df |> filter(!is.na(op_expo_ew)) |> distinct(gvkey) |> count() # 11826
+df |> filter(!is.na(op_expo_ew)) |> distinct(gvkey) |> count() # 11552
+
+df |> filter(is.na(op_expo_ew) & !is.na(CLI_quarter)) |> distinct(gvkey) |> count() # 11552
 
 
 ## Years analyzed
 df |> 
   filter(!is.na(op_expo_ew)) |>
   distinct(year) |>
-  pull() # 2000-2020
+  pull() # 2000-2023
 
 df |> 
   filter(!is.na(CLI_quarter)) |>
@@ -81,6 +83,7 @@ df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(year == "2019") |>
 # #Create new variable that is ebit/assets
 # df$ebit_at <- df$ebit / df$at
 
+df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 
 ##Summary statistics for all variables
 datasummary(
