@@ -71,7 +71,8 @@ mods_df <- mods_df %>%
 
 
 # Create the coefficient plot
-ggplot(mods_df, aes(y = estimate, x = term, color=fes)) +
+ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year FE", "Industry-by-Year FE"))), 
+       aes(y = estimate, x = term, color=fes)) +
   facet_wrap(~model, scales="free_x") +
   geom_errorbar(aes(ymin = conf.low95, ymax = conf.high95), 
                 position = position_dodge(width = 0.4), width = 0, linewidth = .5) +
@@ -79,16 +80,15 @@ ggplot(mods_df, aes(y = estimate, x = term, color=fes)) +
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("Year FE" = "gray70", "Industry-by-Year FE" = "black"),
-                     #labels = c("EPA"="EPA", "DOE"="DOE", "CONG"="Congress"),
-                     breaks = c("Year FE", "Industry-by-Year FE")) +
+  scale_color_manual(values = c("Industry-by-Year FE" = "black", "Year FE" = "gray70"),
+                     breaks = c("Industry-by-Year FE", "Year FE")) +
   labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     text = element_text(size = 15),
-    legend.position = "bottom",
+    legend.position = "bottom", 
     legend.title = element_blank(),
     axis.title.y = element_blank()
   ) + 

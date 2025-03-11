@@ -16,10 +16,14 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # df$sic <- as.numeric(substr(df$sic, 1, 2))
 
 df_orig <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
-
 df <- df_orig
+
 # Within industry variation in exposure -----------------------------------
 
+glimpse(df)
+summary(df$op_expo_ew)
+summary(df$rg_expo_ew)
+summary(df$ph_expo_ew)
 # merge
 df <- df |> 
   # filter out empty industry
@@ -30,8 +34,7 @@ df <- df |>
   mutate(Exposure = recode(Exposure,
                            op_expo_ew = "Opportunity",
                            ph_expo_ew = "Physical",
-                           rg_expo_ew = "Regulatory"),
-         round = round(Value, digits = 2))
+                           rg_expo_ew = "Regulatory"))
 
 # calculate number of firms per industry
 industry_n_firms <- df |>
@@ -141,15 +144,19 @@ ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fix
 glimpse(df)
 summary(df$Value)
 
-summary(log$Value)
+# summary(log$Value)
+
+# log |>
+#   filter(Value == 0)
+#   # none
 
 # Log scale version
-log <- df |>
+df |>
   filter(industry %in% industry_var_levels$industry) |>
   mutate(
-    Value = ifelse(Value == 0, 0.000001, Value),
+    Value = log(Value + 0.000001),
     industry=factor(industry, levels=industry_var_levels$industry),
-    industry = fct_relabel(industry, ~str_wrap(., width = 40)),
+    industry = fct_relabel(industry, ~str_wrap(., width = 35)),
     Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
   ) |>
   ggplot(aes(y=Value,x=industry)) +
@@ -160,7 +167,7 @@ log <- df |>
                , varwidth = TRUE
   ) +
   coord_flip() + 
-  scale_y_log10(labels = scales::label_number()) +
+  # scale_y_log10(labels = scales::label_number()) +
   theme_bw() +
   labs(y = "Distribution of Exposure Variables (log scale)", x = "") +
   theme(panel.grid.major = element_blank(), 
@@ -168,7 +175,153 @@ log <- df |>
         legend.position = "bottom",
         text = element_text(size = 15))
 
-ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_log.pdf", width=10, height=6)
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_log.pdf", width=10, height=8)
+
+
+# W/ sautner data before processing ----------------------------------------
+
+df_orbis <- data.table::fread("data/02_processed/exposure_orbis_client_quarter_long_REVISE_NEW.csv")
+
+summary(df_orbis$op_expo_ew)
+hist(df_orbis$op_expo_ew)
+names(df_orbis)
+nrow(df_orbis)
+# merge
+df <- df_orbis |> 
+  # filter out empty industry
+  filter(bvdsector != "") |> 
+  # select variables we need
+  select(isin, year, bvdsector, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  pivot_longer(cols = op_expo_ew:ph_expo_ew, names_to = "Exposure", values_to = "Value") |>
+  mutate(Exposure = recode(Exposure,
+                           op_expo_ew = "Opportunity",
+                           ph_expo_ew = "Physical",
+                           rg_expo_ew = "Regulatory"),
+         round = round(Value, digits = 5))
+
+glimpse(df)
+hist(df$Value)
+# calculate number of firms per industry
+industry_n_firms <- df |>
+  group_by(bvdsector) |>
+  count()
+
+# Calculate variance within each industry
+industry_var <- df |>
+  # group by industry
+  group_by(bvdsector, Exposure) |>
+  # get variance for each industry
+  summarise(Variance = var(Value, na.rm = TRUE)) |>
+  ungroup() |>
+  filter(!is.na(bvdsector)) |>
+  arrange(desc(Variance))
+
+# Calculate mean variance across exposure variables
+industry_var_levels <- industry_var |>
+  group_by(bvdsector) |>
+  summarise(mean = mean(Variance, na.rm = TRUE)) |>
+  ungroup() |>
+  filter(!is.na(bvdsector)) |>
+  arrange((mean)) |>
+  tail(15)
+
+
+## BoxPlot with same axis -----
+df |>
+  filter(bvdsector %in% industry_var_levels$bvdsector) |>
+  mutate(
+    bvdsector=factor(bvdsector, levels=industry_var_levels$bvdsector),
+    bvdsector = fct_relabel(bvdsector, ~str_wrap(., width = 40)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) |>
+  ggplot(aes(y=Value,x=bvdsector)) +
+  facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+  ) +
+  coord_flip() + 
+  theme_bw() +
+  labs(y = "Distribution of Exposure Variables", x = "") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 15))
+
+
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_orbis.pdf", width=10, height=6)
+
+# Log scale version
+summary(df$Value)
+
+
+df |>
+  filter(bvdsector %in% industry_var_levels$bvdsector) |>
+  mutate(
+    Value = log(Value),
+    bvdsector=factor(bvdsector, levels=industry_var_levels$bvdsector),
+    bvdsector = fct_relabel(bvdsector, ~str_wrap(., width = 35)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) |>
+  ggplot(aes(y=Value,x=bvdsector)) +
+  facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+  ) +
+  coord_flip() + 
+  # scale_y_log10(labels = scales::label_number()) +
+  theme_bw() +
+  labs(y = "Distribution of Exposure Variables (log scale)", x = "") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 15))
+
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_log_orbis.pdf", width=10, height=8)
+
+
+
+
+glimpse(df)
+summary(df$Value)
+
+# summary(log$Value)
+
+# log |>
+#   filter(Value == 0)
+#   # none
+
+# Log scale version
+df |>
+  filter(industry %in% industry_var_levels$industry) |>
+  mutate(
+    Value = log(Value + 0.000001),
+    industry=factor(industry, levels=industry_var_levels$industry),
+    industry = fct_relabel(industry, ~str_wrap(., width = 35)),
+    Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
+  ) |>
+  ggplot(aes(y=Value,x=industry)) +
+  facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
+  geom_boxplot(fill="darkgrey"
+               ,na.rm = TRUE
+               , outlier.alpha = .075
+               , varwidth = TRUE
+  ) +
+  coord_flip() + 
+  # scale_y_log10(labels = scales::label_number()) +
+  theme_bw() +
+  labs(y = "Distribution of Exposure Variables (log scale)", x = "") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        legend.position = "bottom",
+        text = element_text(size = 15))
+
+ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fixed_log.pdf", width=10, height=8)
+
 
 
 
@@ -177,27 +330,6 @@ ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fix
 
 # load data
 df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
-
-# exposure data is scaled (standardized): need to unscale for balance table
-df$op_expo_ew <- df$op_expo_ew * sd(df$op_expo_ew, na.rm = TRUE) + mean(df$op_expo_ew, na.rm = TRUE)
-df$rg_expo_ew <- df$rg_expo_ew * sd(df$rg_expo_ew, na.rm = TRUE) + mean(df$rg_expo_ew, na.rm = TRUE)
-df$ph_expo_ew <- df$ph_expo_ew * sd(df$ph_expo_ew, na.rm = TRUE) + mean(df$ph_expo_ew, na.rm = TRUE)
-
-
-# transform
-df_trans <- df |> 
-  # filter out empty industry
-  filter(industry != "") |> 
-  # select variables we need
-  select(isin, year, qtr, industry, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
-  pivot_longer(cols = op_expo_ew:ph_expo_ew, names_to = "Exposure", values_to = "Value") |>
-  mutate(Exposure = recode(Exposure,
-                           op_expo_ew = "Opportunity",
-                           ph_expo_ew = "Physical",
-                           rg_expo_ew = "Regulatory"),
-         round = round(Value, digits = 2))
-
-names(df)
 
 
 # get extra covars (similar code to 01d_lobbying_analysis_quarterly_trimmed.R)
