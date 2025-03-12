@@ -1190,6 +1190,88 @@ o_q_iy_li_amt_diagnostics <- c(`Num. Obs.` = o_q_iy_li_amt_N,
 o_q_iy_li_amt_out <- list("Estimates" = o_q_iy_li_amt_estimates,
                       "Diagnostics" = o_q_iy_li_amt_diagnostics)
 
+## Complete Results for Main Models --------------------------------------------
+
+mod_list <- list(
+  "Year FE Occ" = o_q_y,
+  "Ind-Yr FE Occ" = o_q_iy,
+  "EPA Occ" = o_q_iy_epa,
+  "DOE Occ" = o_q_iy_doe,
+  "Year FE Amt" = o_q_y_amt,
+  "Ind-Yr FE Amt" = o_q_iy_amt,
+  "EPA Amt" = o_q_iy_amt_epa,
+  "DOE Amt" = o_q_iy_amt_doe
+)
+
+scaleby100 <- function(x) {
+  #x$coefficients <- x$coefficients * 100
+  x$coeftable[,1] <- x$coeftable[,1] * 100
+  x$coeftable[,2] <- x$coeftable[,2] * 100
+  #x$se <- x$se * 100
+  return(x)
+}
+
+mod_list <- lapply(mod_list, FUN = function(x) scaleby100(x))
+
+wald1 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "rg_expo_ew"), 3)))
+wald2 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "ph_expo_ew"), 3)))
+wald3 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "rg_expo_ew", "ph_expo_ew"), 3)))
+
+n <- unlist(lapply(mod_list, FUN = function(x) x$nobs))
+r2 <- unlist(lapply(mod_list, FUN = function(x) round(r2(x, type="ar2"), 3)))
+
+auxiliary <- data.frame("Num. Obs." = unname(n),
+                        "Adjusted R-Squared" = unname(r2),
+                        "Year FE" = c('\\checkmark', ' ', ' ', ' ', '\\checkmark', ' ', ' ', ' '),
+                        "Industry x Year FE" = c(' ', '\\checkmark', '\\checkmark', '\\checkmark', ' ', '\\checkmark', '\\checkmark', '\\checkmark'),
+                        "Wald (Opp - Reg = 0)" = unname(wald1),
+                        "Wald (Opp - Phy = 0)" = unname(wald2),
+                        "Wald (Reg - Phy = 0)" = unname(wald3))
+
+model_names <- names(mod_list)
+auxiliary <- rbind(t(auxiliary), "Model"=model_names)
+
+auxiliary_out <- data.frame(t(auxiliary)) %>%
+  # invert dataframe
+  pivot_longer(cols = -Model, names_to = "Fixed Effects", values_to = "Value") %>%
+  # to wider
+  pivot_wider(names_from = Model, values_from = Value) %>%
+  # add test name
+  rename(Test = `Fixed Effects`) %>%
+  mutate(
+    Test = case_when(
+      Test == "Year.FE" ~ "Year FE",
+      Test == "Industry.x.Year.FE" ~ "Industry x Year FE",
+      Test == "Wald..Opp...Reg...0." ~ "Wald (Op-Rg=0)",
+      Test == "Wald..Opp...Phy...0." ~ "Wald (Op-Ph=0)",
+      Test == "Wald..Reg...Phy...0." ~ "Wald (Rg-Ph=0)",
+      Test == "Num..Obs." ~ "Num. Obs.",
+      Test == "Adjusted.R.Squared" ~ "Adj. R-Squared",
+      TRUE ~ " "
+    )
+  )
+
+cm <- c("op_expo_ew" = "Opportunity Exposure",
+        "rg_expo_ew" = "Regulatory Exposure",
+        "ph_expo_ew" = "Physical Exposure",
+        "ebit" = "EBIT",
+        "ebit_at" = "EBIT/Assets",
+        "us_dummy" = "US HQ",
+        "total_lobby_quarter" = "Total Lobbying (\\$)"
+)
+
+
+modelsummary(mod_list
+             ,add_rows=auxiliary_out
+             ,gof_omit="."
+             ,stars = c('*'=0.1, '**'=0.05, '***'=0.01)
+             ,coef_map=cm
+             ,output="results/tables/appendix_table_test_ols_NEW_mainmodels.tex"
+             ,escape=F
+)
+
+
+
 ## Build Occurrence Non-Alt DV Table -------------------------------------------
 
 o_a_iy_ovrl_stars <- list(tidy=o_a_iy_ovrl_stars)
@@ -1204,11 +1286,11 @@ class(o_q_iy_ec_stars) <- "modelsummary_list"
 o_q_iy_li_stars <- list(tidy=o_q_iy_li_stars)
 class(o_q_iy_li_stars) <- "modelsummary_list"
 
-mod_list <- list("Main" = stars(o_q_iy_out$Estimates),
-                 "EPA" = stars(o_q_iy_epa_out$Estimates),
-                 "DOE" = stars(o_q_iy_doe_out$Estimates),
+mod_list <- list(#"Main" = stars(o_q_iy_out$Estimates),
+                 #"EPA" = stars(o_q_iy_epa_out$Estimates),
+                 #"DOE" = stars(o_q_iy_doe_out$Estimates),
                  "CONG" = stars(o_q_iy_cong_out$Estimates),
-                 "Yr FE" = stars(o_q_y_out$Estimates),
+                 #"Yr FE" = stars(o_q_y_out$Estimates),
                  "Ind-Qtr FE" = stars(o_q_iq_out$Estimates),
                  "Logit" = stars(l_q_iy_out$Estimates),
                  "Yr Panel" = stars(o_a_iy_out$Estimates),
@@ -1224,11 +1306,11 @@ mod_list <- list("Main" = stars(o_q_iy_out$Estimates),
                  "10-K" = o_a_iy_tenk_stars,
                  "Li et al" = o_q_iy_li_stars)
 
-auxiliary <- data.frame(o_q_iy_out$Diagnostics,
-                        o_q_iy_epa_out$Diagnostics,
-                        o_q_iy_doe_out$Diagnostics,
+auxiliary <- data.frame(#o_q_iy_out$Diagnostics,
+                        #o_q_iy_epa_out$Diagnostics,
+                        #o_q_iy_doe_out$Diagnostics,
                         o_q_iy_cong_out$Diagnostics,
-                        o_q_y_out$Diagnostics,
+                        #o_q_y_out$Diagnostics,
                         o_q_iq_out$Diagnostics,
                         l_q_iy_out$Diagnostics,
                         o_a_iy_out$Diagnostics,
@@ -1295,11 +1377,11 @@ class(o_q_iy_amt_ec_stars) <- "modelsummary_list"
 o_q_iy_li_amt_stars <- list(tidy=o_q_iy_li_amt_stars)
 class(o_q_iy_li_amt_stars) <- "modelsummary_list"
 
-mod_list <- list("Main" = stars(o_q_iy_amt_out$Estimates),
-                 "EPA" = stars(o_q_iy_amt_epa_out$Estimates),
-                 "DOE" = stars(o_q_iy_amt_doe_out$Estimates),
+mod_list <- list(#"Main" = stars(o_q_iy_amt_out$Estimates),
+                 #"EPA" = stars(o_q_iy_amt_epa_out$Estimates),
+                 #"DOE" = stars(o_q_iy_amt_doe_out$Estimates),
                  "CONG" = stars(o_q_iy_amt_cong_out$Estimates),
-                 "Yr FE" = stars(o_q_y_amt_out$Estimates),
+                 #"Yr FE" = stars(o_q_y_amt_out$Estimates),
                  "Ind-Qtr FE" = stars(o_q_iq_amt_out$Estimates),
                  "Tobit" = stars(t_q_iy_amt_out$Estimates),
                  "Yr Panel" = stars(o_a_iy_amt_out$Estimates),
@@ -1315,11 +1397,11 @@ mod_list <- list("Main" = stars(o_q_iy_amt_out$Estimates),
                  "10-K" = o_a_iy_amt_tenk_stars,
                  "Li et al" = o_q_iy_li_amt_stars)
 
-auxiliary <- data.frame(o_q_iy_amt_out$Diagnostics,
-                        o_q_iy_amt_epa_out$Diagnostics,
-                        o_q_iy_amt_doe_out$Diagnostics,
+auxiliary <- data.frame(#o_q_iy_amt_out$Diagnostics,
+                        #o_q_iy_amt_epa_out$Diagnostics,
+                        #o_q_iy_amt_doe_out$Diagnostics,
                         o_q_iy_amt_cong_out$Diagnostics,
-                        o_q_y_amt_out$Diagnostics,
+                        #o_q_y_amt_out$Diagnostics,
                         o_q_iq_amt_out$Diagnostics,
                         t_q_iy_amt_out$Diagnostics,
                         o_a_iy_amt_out$Diagnostics,

@@ -88,6 +88,13 @@ process_df <- function(data) {
   df$op_expo_ew_chg <- df$op_expo_ew - df$op_expo_ew_l1
   df$rg_expo_ew_chg <- df$rg_expo_ew - df$rg_expo_ew_l1
   df$ph_expo_ew_chg <- df$ph_expo_ew - df$ph_expo_ew_l1
+  
+  df$ebit <- as.numeric(scale(df$ebit))
+  df$ebit_at <- as.numeric(scale(df$ebit_at))
+  df$total_lobby_quarter <- as.numeric(scale(df$total_lobby_quarter))
+  df$total_lobby_annual <- as.numeric(scale(df$total_lobby_annual))
+  df$n_employees <- as.numeric(scale(df$n_employees))
+  
   return(df)
 }
 
