@@ -994,6 +994,19 @@ o_y_iy_coal_anti_amt <- models[[6]]
 
 o_y_iy_amt_coal_anti_out <- process_model(o_y_iy_coal_anti_amt, Panel = "Firm-Yr")
 
+## Join Pro Coal ---
+
+o_y_iy_coal_joinpro <- models[[3]]
+
+o_y_iy_coal_joinpro_out <- process_model(o_y_iy_coal_joinpro, Panel = "Firm-Yr")
+
+## Join Anti Coal ---
+o_y_iy_coal_joinanti <- models[[4]]
+
+o_y_iy_coal_joinanti_out <- process_model(o_y_iy_coal_joinanti, Panel = "Firm-Yr")
+
+
+
 ## Amt: Imputation Model ------------------------------------------
 
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_imputed.RData")
@@ -1469,7 +1482,9 @@ mod_list <- list("Bills (Occ)" = stars(o_q_iy_bills_out$Estimates),
                  "Miti (Amt)" = stars(o_q_iy_amt_kywd_miti_out$Estimates),
                  "Adpt (Amt)" = stars(o_q_iy_amt_kywd_adpt_out$Estimates),
                  "Pro Clim Am" = stars(o_y_iy_amt_coal_pro_out$Estimates),
-                 "Anti Clim Am" = stars(o_y_iy_amt_coal_anti_out$Estimates))
+                 "Anti Clim Am" = stars(o_y_iy_amt_coal_anti_out$Estimates),
+                 "Join Pro Coal" = stars(o_y_iy_coal_joinpro_out$Estimates),
+                 "Join Anti Coal" = stars(o_y_iy_coal_joinanti_out$Estimates))
 
 auxiliary <- data.frame(o_q_iy_bills_out$Diagnostics,
                         o_q_iy_kywd_out$Diagnostics,
@@ -1482,7 +1497,9 @@ auxiliary <- data.frame(o_q_iy_bills_out$Diagnostics,
                         o_q_iy_amt_kywd_miti_out$Diagnostics,
                         o_q_iy_amt_kywd_adpt_out$Diagnostics,
                         o_y_iy_amt_coal_pro_out$Diagnostics,
-                        o_y_iy_amt_coal_anti_out$Diagnostics)
+                        o_y_iy_amt_coal_anti_out$Diagnostics,
+                        o_y_iy_coal_joinpro_out$Diagnostics,
+                        o_y_iy_coal_joinanti_out$Diagnostics)
 
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
