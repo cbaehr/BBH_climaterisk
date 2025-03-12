@@ -24,7 +24,12 @@ df |> distinct(gvkey) |> count() # 11552
 
 df |> filter(!is.na(op_expo_ew)) |> distinct(gvkey) |> count() # 11552
 
-df |> filter(is.na(op_expo_ew) & !is.na(CLI_quarter)) |> distinct(gvkey) |> count() # 11552
+df |> filter(!is.na(op_expo_ew) & !is.na(CLI_quarter)) |> distinct(gvkey) |> count() # 11552
+
+# Number of firms with lobbying data \& exposure data with headquarter in US
+df |> 
+filter(!is.na(op_expo_ew) & !is.na(CLI_quarter)) |> 
+distinct(gvkey) |> count() # 11552
 
 
 ## Years analyzed
@@ -85,6 +90,8 @@ df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(year == "2019") |>
 
 df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 names(df)
+
+
 ##Summary statistics for all variables
 datasummary(
   (`Climate Lobbying Occurrence` = CLI_quarter) + (`Climate Lobbying Expenditure` = CLI_amount_quarter) + 
