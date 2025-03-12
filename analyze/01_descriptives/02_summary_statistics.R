@@ -84,13 +84,13 @@ df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(year == "2019") |>
 # df$ebit_at <- df$ebit / df$at
 
 df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
-
+names(df)
 ##Summary statistics for all variables
 datasummary(
   (`Climate Lobbying Occurrence` = CLI_quarter) + (`Climate Lobbying Expenditure` = CLI_amount_quarter) + 
     (Opportunity = op_expo_ew) + (Regulatory = rg_expo_ew) + (Physical = ph_expo_ew) + 
     (`Earnings Before Interest and Taxes (EBIT) ($M)` = ebit) + (`EBIT/Total Assets (Productivity)` = ebit_at) + 
-    (`Total Lobbying Per Quarter($M)` = total_lobby_quarter) ~ Mean + SD + Min + Max + N,
+    (`Total Lobbying Per Quarter($M)` = total_lobby_quarter) + (`US Headquarter` = us_dummy) ~ Mean + SD + Min + Max + N,
   data = df,
   title = 'Summary Statistics',
   align = 'lccccc',
