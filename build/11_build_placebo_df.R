@@ -105,15 +105,98 @@ intersect(names(lobby_client), names(lobby_issuedistinct_wide))
 # none
 
 
-lobbying <- lobby_report |>
-  left_join(
-    lobby_issuedistinct_wide,
-    by = c("report_uuid")
+
+# Merge report + client data
+lobbyview <- lobby_report |>
+  left_join(lobby_client, by = "lob_id")
+
+
+# 1) Check for multiple amendments per report
+amendments <- lobbyview |>
+  filter(is_amendment == TRUE) |>
+  group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
+  summarise(
+    n_amendments = n(),
+    amendment_amounts = paste(amount, collapse = "; "),
+    # get mean amount
+    mean_amendment_amount = mean(amount, na.rm = TRUE),
+    # Check if non-NA amounts in the group differ
+    amendment_amounts_differ = length(unique(na.omit(amount))) > 1
   ) |>
-  left_join(
-    lobby_client,
-    by = c("lob_id")
+  ungroup()
+
+## Some inspection
+table(amendments$n_amendments)
+#     1     2     3     4     5     6     7     8     9    10    12    13 
+# 74492  6748   937   167    36    11     3     3     3     1     1     1 
+
+# View(amendments |>
+#   filter(n_amendments > 1) |>
+#   select(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name, n_amendments, amounts, amounts_differ) |>
+#   arrange(lob_id, filing_year, filing_period_code))
+
+table(amendments$amendment_amounts_differ)
+# FALSE  TRUE 
+# 81487   916 
+
+# inspect amounts for multiple amendments
+amendments |>
+  filter(n_amendments > 1) |>
+  select(n_amendments, amendment_amounts, mean_amendment_amount, amendment_amounts_differ)
+
+glimpse(amendments)
+
+
+# 3) Create corrected amount column
+lobbying_corrected <- lobbyview |>
+  # filter out amendments
+  filter(is_amendment == FALSE) |>
+  # join with amendments 
+  left_join(amendments, by = c("lob_id", "registrant_id", "filing_year", "filing_period_code", "gvkey", "client_name"))
+
+glimpse(lobbying_corrected)
+
+# 4) Create corrected amount column
+lobbying_corrected <- lobbying_corrected |>
+  rename(amount_original = amount) |>
+  mutate(
+    amounts_differ = case_when(
+      !is.na(mean_amendment_amount) & (is.na(amount_original) | mean_amendment_amount != amount_original) ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    amount = case_when(
+      !is.na(mean_amendment_amount) & (is.na(amount_original) | mean_amendment_amount != amount_original) ~ mean_amendment_amount,
+      TRUE ~ amount_original
+    )
   )
+
+glimpse(lobbying_corrected)
+
+# # View n_amendments > 1
+# View(lobbying_corrected |>
+#   filter(n_amendments > 1) |>
+#   distinct() |>
+#   arrange(filing_year, filing_period_code))
+
+# # look at gvkey 7186 
+# View(lobbying_corrected |>
+#   filter(gvkey == 7186) |>
+#   distinct() |>
+#   arrange(desc(amount)))
+
+
+summary(lobbying_corrected$amount)
+
+# get highest 10 amounts
+lobbying_corrected |>
+  filter(!is.na(gvkey)) |>
+  arrange(desc(amount)) |>
+  head(10)
+
+glimpse(lobbying_corrected)
+
+lobbying <- merge(lobbying_corrected, lobby_issuedistinct_wide, all.x = T)
+
 
 # glimpse(lobbying)
 

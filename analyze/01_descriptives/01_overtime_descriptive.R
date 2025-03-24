@@ -224,6 +224,7 @@ ggsave("results/figures/descriptives/climate_lobbying_overtime_NEW.pdf", width =
 
 ## By quarter --------------------------------------------------------------
 p2 <- df |>
+  filter(year <= 2021) |>
   group_by(yearqtr) |>
   summarise(CLI = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
   left_join(
@@ -237,7 +238,8 @@ p2 <- df |>
     Share = (CLI / Total)*100
     )
 
-p2 |> print(n=Inf)   
+p2 |> print(n=Inf) 
+
 
 p2 |>
   select(-c(Total, Share)) |>
@@ -291,6 +293,7 @@ df |>
 
 
 p3 <- df |>
+  filter(year <= 2021) |>
   group_by(year) |>
   summarise(CLI = sum(CLI_amount_annual, na.rm = TRUE)) |>
   left_join(
@@ -304,7 +307,7 @@ p3 <- df |>
     Share = (CLI / Total) * 100
   )
 
-p3 |> head(20) 
+p3 |> head(22) |> print(n=Inf)
 
 p3 |>
   select(-c(Total, Share)) |>

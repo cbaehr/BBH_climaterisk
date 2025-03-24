@@ -297,14 +297,14 @@ summary(df$Value)
 
 # Log scale version
 df |>
-  filter(industry %in% industry_var_levels$industry) |>
+  filter(bvdsector %in% industry_var_levels$bvdsector) |>
   mutate(
     Value = log(Value + 0.000001),
-    industry=factor(industry, levels=industry_var_levels$industry),
-    industry = fct_relabel(industry, ~str_wrap(., width = 35)),
+    bvdsector=factor(bvdsector, levels=industry_var_levels$bvdsector),
+    bvdsector = fct_relabel(bvdsector, ~str_wrap(., width = 35)),
     Exposure = factor(Exposure, levels = c("Opportunity", "Regulatory", "Physical"))
   ) |>
-  ggplot(aes(y=Value,x=industry)) +
+  ggplot(aes(y=Value,x=bvdsector)) +
   facet_wrap(vars(Exposure), nrow=1, scales = "fixed") +
   geom_boxplot(fill="darkgrey"
                ,na.rm = TRUE

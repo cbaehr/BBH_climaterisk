@@ -366,19 +366,119 @@ intersect(names(lobby_client), names(lobby_text_joined))
 # none
 
 
-lobbying <- lobby_report |>
-  left_join(
-    lobby_text_joined |>
-      select(-issue_text_clean) |>
-      rename(issue_text_clean = issue_text_clean_2),
-    by = c("report_uuid")
+
+# Merge report + client data
+lobbyview <- lobby_report |>
+  left_join(lobby_client, by = "lob_id")
+
+
+# 1) Check for multiple amendments per report
+amendments <- lobbyview |>
+  filter(is_amendment == TRUE) |>
+  group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
+  summarise(
+    n_amendments = n(),
+    amendment_amounts = paste(amount, collapse = "; "),
+    # get mean amount
+    mean_amendment_amount = mean(amount, na.rm = TRUE),
+    # Check if non-NA amounts in the group differ
+    amendment_amounts_differ = length(unique(na.omit(amount))) > 1
   ) |>
-  left_join(
-    lobby_client,
-    by = c("lob_id")
+  ungroup()
+
+## Some inspection
+table(amendments$n_amendments)
+#     1     2     3     4     5     6     7     8     9    10    12    13 
+# 74492  6748   937   167    36    11     3     3     3     1     1     1 
+
+# View(amendments |>
+#   filter(n_amendments > 1) |>
+#   select(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name, n_amendments, amounts, amounts_differ) |>
+#   arrange(lob_id, filing_year, filing_period_code))
+
+table(amendments$amendment_amounts_differ)
+# FALSE  TRUE 
+# 81487   916 
+
+# inspect amounts for multiple amendments
+amendments |>
+  filter(n_amendments > 1) |>
+  select(n_amendments, amendment_amounts, mean_amendment_amount, amendment_amounts_differ)
+
+glimpse(amendments)
+
+
+# 3) Create corrected amount column
+lobbying_corrected <- lobbyview |>
+  # filter out amendments
+  filter(is_amendment == FALSE) |>
+  # join with amendments 
+  left_join(amendments, by = c("lob_id", "registrant_id", "filing_year", "filing_period_code", "gvkey", "client_name"))
+
+glimpse(lobbying_corrected)
+
+# 4) Create corrected amount column
+lobbying_corrected <- lobbying_corrected |>
+  rename(amount_original = amount) |>
+  mutate(
+    amounts_differ = case_when(
+      !is.na(mean_amendment_amount) & (is.na(amount_original) | mean_amendment_amount != amount_original) ~ TRUE,
+      TRUE ~ FALSE
+    ),
+    amount = case_when(
+      !is.na(mean_amendment_amount) & (is.na(amount_original) | mean_amendment_amount != amount_original) ~ mean_amendment_amount,
+      TRUE ~ amount_original
+    )
   )
 
+glimpse(lobbying_corrected)
+
+# # View n_amendments > 1
+# View(lobbying_corrected |>
+#   filter(n_amendments > 1) |>
+#   distinct() |>
+#   arrange(filing_year, filing_period_code))
+
+# # look at gvkey 7186 
+# View(lobbying_corrected |>
+#   filter(gvkey == 7186) |>
+#   distinct() |>
+#   arrange(desc(amount)))
+
+
+summary(lobbying_corrected$amount)
+
+# get highest 10 amounts
+lobbying_corrected |>
+  filter(!is.na(gvkey)) |>
+  arrange(desc(amount)) |>
+  head(10)
+
+glimpse(lobbying_corrected)
+
+lobbying <- merge(lobbying_corrected, lobby_text_joined, all.x = T)
+
+# 
+# lobbying <- lobby_report |>
+#   left_join(
+#     lobby_text_joined |>
+#       select(-issue_text_clean) |>
+#       rename(issue_text_clean = issue_text_clean_2),
+#     by = c("report_uuid")
+#   ) |>
+#   left_join(
+#     lobby_client,
+#     by = c("lob_id")
+#   )
+
 glimpse(lobbying)
+
+# # duplicates?
+lobbying |>
+  count(report_uuid) |>
+  filter(n > 1) |>
+  arrange(desc(n))
+# none
 
 
 lobbying$report_quarter_code <- as.character(lobbying$report_quarter_code)
@@ -672,7 +772,6 @@ fwrite(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.csv")
 # write rdata
 write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.rds")
 
-
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 
 
@@ -689,54 +788,54 @@ write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.rd
 
 # Annual ------------------------------------------------------------------
 
-# Tokenize issue_text_clean into bigrams and count them
-lobbying_bigrams <- lobbying |>
-  unnest_tokens(bigram, issue_text_clean, token = "ngrams", n = 2) |>
-  group_by(filing_year, lob_id) |>
-  summarise(n_bigrams = n()) |>
-  ungroup()
-
-# get to firm-year level
-lobbying_firmyear <- lobbying |>
-  group_by(filing_year, lob_id) |>
-  summarise(
-    report_uuid = paste(unique(report_uuid[!is.na(report_uuid) & report_uuid != ""]), collapse = "|"),
-    issue_code = paste(unique(issue_code[!is.na(issue_code) & issue_code != ""]), collapse = "|"),
-    gov_entity = paste(unique(gov_entity[!is.na(gov_entity) & gov_entity != ""]), collapse = "|"),
-    issue_text = paste(unique(issue_text[!is.na(issue_text) & issue_text != ""]), collapse = "|"),
-    issue_text_clean = paste(unique(issue_text_clean[!is.na(issue_text_clean) & issue_text_clean != ""]), collapse = "|"),
-    registrant_id = paste(unique(registrant_id[!is.na(registrant_id) & registrant_id != ""]), collapse = "|"),
-    registrant_name = paste(unique(registrant_name[!is.na(registrant_name) & registrant_name != ""]), collapse = "|"),
-    report_quarter_code = paste(unique(report_quarter_code[!is.na(report_quarter_code) & report_quarter_code != ""]), collapse = "|"),
-    amount = sum(amount, na.rm = TRUE),
-    n_mitigation_kw = sum(n_mitigation_kw, na.rm = TRUE),
-    n_adaptation_kw = sum(n_adaptation_kw, na.rm = TRUE),
-    n_words = sum(n_words, na.rm = TRUE)
-  ) |>
-  left_join(lobbying_bigrams, by = c("filing_year", "lob_id")) |>
-  mutate(
-    prop_mitigation_kw = n_mitigation_kw / n_bigrams,
-    prop_adaptation_kw = n_adaptation_kw / n_bigrams,
-    prop_keywords = (n_mitigation_kw + n_adaptation_kw) / n_bigrams
-  ) |>
-  ungroup()
-
-glimpse(lobbying_firmyear)
-
-# sample
-lobbying_firmyear |>
-  sample_n(100) |>
-  glimpse()
-
- # sample where n_mitigation_kw or n_adaptation_kw is > 0
- lobbying_firmyear |>
-  filter(n_mitigation_kw > 0 | n_adaptation_kw > 0) |>
-  sample_n(100) |>
-  glimpse()
-
-
-###
-
-rm(list = setdiff(ls(), "lobbying_firmyear"))
+# # Tokenize issue_text_clean into bigrams and count them
+# lobbying_bigrams <- lobbying |>
+#   unnest_tokens(bigram, issue_text_clean, token = "ngrams", n = 2) |>
+#   group_by(filing_year, lob_id) |>
+#   summarise(n_bigrams = n()) |>
+#   ungroup()
+# 
+# # get to firm-year level
+# lobbying_firmyear <- lobbying |>
+#   group_by(filing_year, lob_id) |>
+#   summarise(
+#     report_uuid = paste(unique(report_uuid[!is.na(report_uuid) & report_uuid != ""]), collapse = "|"),
+#     issue_code = paste(unique(issue_code[!is.na(issue_code) & issue_code != ""]), collapse = "|"),
+#     gov_entity = paste(unique(gov_entity[!is.na(gov_entity) & gov_entity != ""]), collapse = "|"),
+#     issue_text = paste(unique(issue_text[!is.na(issue_text) & issue_text != ""]), collapse = "|"),
+#     issue_text_clean = paste(unique(issue_text_clean[!is.na(issue_text_clean) & issue_text_clean != ""]), collapse = "|"),
+#     registrant_id = paste(unique(registrant_id[!is.na(registrant_id) & registrant_id != ""]), collapse = "|"),
+#     registrant_name = paste(unique(registrant_name[!is.na(registrant_name) & registrant_name != ""]), collapse = "|"),
+#     report_quarter_code = paste(unique(report_quarter_code[!is.na(report_quarter_code) & report_quarter_code != ""]), collapse = "|"),
+#     amount = sum(amount, na.rm = TRUE),
+#     n_mitigation_kw = sum(n_mitigation_kw, na.rm = TRUE),
+#     n_adaptation_kw = sum(n_adaptation_kw, na.rm = TRUE),
+#     n_words = sum(n_words, na.rm = TRUE)
+#   ) |>
+#   left_join(lobbying_bigrams, by = c("filing_year", "lob_id")) |>
+#   mutate(
+#     prop_mitigation_kw = n_mitigation_kw / n_bigrams,
+#     prop_adaptation_kw = n_adaptation_kw / n_bigrams,
+#     prop_keywords = (n_mitigation_kw + n_adaptation_kw) / n_bigrams
+#   ) |>
+#   ungroup()
+# 
+# glimpse(lobbying_firmyear)
+# 
+# # sample
+# lobbying_firmyear |>
+#   sample_n(100) |>
+#   glimpse()
+# 
+#  # sample where n_mitigation_kw or n_adaptation_kw is > 0
+#  lobbying_firmyear |>
+#   filter(n_mitigation_kw > 0 | n_adaptation_kw > 0) |>
+#   sample_n(100) |>
+#   glimpse()
+# 
+# 
+# ###
+# 
+# rm(list = setdiff(ls(), "lobbying_firmyear"))
 
 #####
