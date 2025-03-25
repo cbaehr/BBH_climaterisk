@@ -15,7 +15,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 # df <- fread("02_processed/exposure_year.csv", colClasses = c("sic"="character"))
 # df$sic <- as.numeric(substr(df$sic, 1, 2))
 
-df_orig <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df_orig <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- df_orig
 
 # Within industry variation in exposure -----------------------------------
@@ -329,7 +329,7 @@ ggsave("results/Figures/descriptives/within_industry_variances_TOP15_boxplot_fix
 # Create balance table ----------------------------------------------------
 
 # load data
-df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 
 # get extra covars (similar code to 01d_lobbying_analysis_quarterly_trimmed.R)

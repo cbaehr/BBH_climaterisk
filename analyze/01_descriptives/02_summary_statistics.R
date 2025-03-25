@@ -13,7 +13,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 ## Load data
 #Lobbying analysis dataset
-df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 
 
@@ -96,8 +96,8 @@ df |> filter(str_detect(conm, "TOYOTA MOTOR")) |> filter(year == "2019") |>
 # #Create new variable that is ebit/assets
 # df$ebit_at <- df$ebit / df$at
 
-df <- read_rds(df, file="data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
-df <- fread("data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_NEW.parquet")
+# df <- fread("data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
 names(df)
 
 

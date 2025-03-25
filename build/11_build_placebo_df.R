@@ -216,8 +216,7 @@ lobbying <- lobbying |>
     gov_entity = ifelse(gov_entity == "", NA, gov_entity)
   )
 
-# glimpse(lobbying)
-
+glimpse(lobbying)
 
 
 # Half-year reports --------------------------------------------------------
@@ -241,12 +240,10 @@ lobbying_corrected <- lobbying |>
 # Assign 0 to NAs in the issue columns
 lobbying_corrected <- lobbying_corrected |>
   mutate(across(
-    c(ENV:MON),
+    c(TAX:BEV),
     ~ifelse(is.na(.), 0, .)
-  ))
-
-# glimpse(lobbying_corrected)
-
+  )) |>
+  select(-`NA`)
 
 # Aggregate to firm-year-quarter level -------------------------------------
 
@@ -259,10 +256,8 @@ lobbying_firmqtr <- lobbying_corrected %>%
     gov_entity = paste(unique(gov_entity[!is.na(gov_entity) & gov_entity != ""]), collapse = "|"),
     amount = sum(amount, na.rm = TRUE),
     across(
-      ENV:MON,  # Assuming these are the issue columns
+      TAX:BEV,  
       max
-    #   ,
-    #   .names = "max_{col}"
     )
   )
 
@@ -288,7 +283,7 @@ lobbying_firmqtr <- lobbying_firmqtr |>
 # Distribute amount to each issue -----------------------------------------
 
 # get issue columns names from ENV to MON
-issue_columns <- names(lobbying_firmqtr)[which(names(lobbying_firmqtr)=="ENV"):which(names(lobbying_firmqtr)=="MON")]
+issue_columns <- names(lobbying_firmqtr)[which(names(lobbying_firmqtr)=="TAX"):which(names(lobbying_firmqtr)=="BEV")]
 
 lobbying_firmqtr_dist <- lobbying_firmqtr %>%
   rowwise() %>%
@@ -376,7 +371,7 @@ df_qtr <- df_qtr |>
 
 
 # Convert issue lobbying columns to 0 if NA and some other transformations
-issue_columns <- names(df_qtr)[which(names(df_qtr)=="ENV"):which(names(df_qtr)=="MON")]
+issue_columns <- names(df_qtr)[which(names(df_qtr)=="TAX"):which(names(df_qtr)=="BEV")]
 issue_columns_amount <- paste0(issue_columns, "_amount")
 
 df_qtr <- df_qtr %>%
@@ -454,6 +449,9 @@ table(df_qtr$total_lobby_quarter, useNA = "ifany") # looks fine
 # df <- df %>%
 #   filter(!(yearqtr %in% c("2020_2", "2020_3", "2020_4", 
 #                          "2021_1", "2021_2", "2021_3", "2021_4")))
+
+df_qtr <- df_qtr |>
+  select(-c(cusip_2023_4:cusip_2001_4))
 
 arrow::write_parquet(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.parquet")
 # 

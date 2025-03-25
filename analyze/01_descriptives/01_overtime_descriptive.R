@@ -284,13 +284,16 @@ names(df)
 # Last year of exposure
 df |>
   filter(!is.na(cc_expo_ew)) |>
-  count(year)
+  count(year) |>
+  print(n=Inf)
 
 # Last year of lobbying
 df |>
   filter(!is.na(CLI_quarter)) |>
-  count(yearqtr)
+  count(yearqtr) |>
+  print(n=Inf)
 
+table(df$year, useNA = "always")
 
 p3 <- df |>
   # filter(year <= 2021) |>
@@ -307,7 +310,7 @@ p3 <- df |>
     Share = (CLI / Total) * 100
   )
 
-p3 |> head(22) |> print(n=Inf)
+p3 |> head(23) |> print(n=Inf)
 
 p3 |>
   select(-c(Total, Share)) |>

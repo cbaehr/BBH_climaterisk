@@ -18,7 +18,7 @@ if(Sys.info()["user"]=="fiona" ) {setwd("/Users/Dropbox (Princeton)/BBH/BBH1/")}
 
 ###Placebo exploration 
 #load dataset
-df <- fread("data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.csv")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.parquet")
 
 
 glimpse(df)
@@ -100,6 +100,8 @@ ggsave("results/Figures/descriptives/issue_codes_n_amount.pdf", width = 9, heigh
 # Specify columns to remove: climate issues + REL constant zero (no lobbying) +  NA
 columns_to_remove <- c("CAW", "ENV", "ENG", "FUE", "REL")
 
+names(df)
+df$
 
 # Remove specified columns
 df_placebo <- df |> select(-all_of(columns_to_remove))
@@ -337,7 +339,7 @@ tidied_results |>
 ggsave("results/figures/regressions/placebos_amount_NEW.pdf", width = 8.5, height = 11)
 
 
-move_plots_to_overleaf("./")
+# move_plots_to_overleaf("./")
 
 
 
