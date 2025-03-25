@@ -15,9 +15,9 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 # load lobbying data
 lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
 
-lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+lobby_text <- fread("data/01_raw/lobbyview_20250324/issue_text.csv")
 
-lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+lobby_issue <- fread("data/01_raw/lobbyview_20250324/issues.csv")
 
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
 
@@ -854,17 +854,18 @@ for(i in 1:length(agencies)) {
   
 }
 
+arrow::write_parquet(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills.parquet")
 
-# check
-names(exposure_orbis_lobbyview_long)
-glimpse(exposure_orbis_lobbyview_long)
-
-## write csv
-fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills.csv")
-
-# write rdata
-write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills.rds")
-
+# # check
+# names(exposure_orbis_lobbyview_long)
+# glimpse(exposure_orbis_lobbyview_long)
+# 
+# ## write csv
+# fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills.csv")
+# 
+# # write rdata
+# write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills.rds")
+# 
 
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 

@@ -18,7 +18,7 @@ pacman::p_load(data.table, tidyverse, haven)
 
 
 #Load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills_oppose.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_NEW_altclimatebills_oppose.parquet")
 df <- data.frame(df)
 
 glimpse(df)
@@ -70,23 +70,25 @@ table(df$amount_num, useNA = "ifany") # looks fine
 #   filter(!(yearqtr %in% c("2020_2", "2020_3", "2020_4", 
 #                          "2021_1", "2021_2", "2021_3", "2021_4")))
 
-# write csv
-fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.csv")
-
-names(df)
-
-df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue_text",
-                                  "report_uuid", "report_quarter_code", "registrant_id", "registrant_name",
-                                  "naics_2022_primary", "naics_2022_secondary", "naics_2017_primary",
-                                  "naics_2017_secondary", "bvdaccount", "client_name", "nace_primary",
-                                  "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
-                                  "bvdsector", "primary_naics", "amount_num")]
-
-
-write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
-
-write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata_NEW_altclimatebills_oppose.dta")
-
+arrow::write_parquet(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.parquet")
+# 
+# # write csv
+# fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.csv")
+# 
+# names(df)
+# 
+# df_dta <- df[ , !names(df) %in% c("isin_all", "gov_entity", "issue_code", "issue_text",
+#                                   "report_uuid", "report_quarter_code", "registrant_id", "registrant_name",
+#                                   "naics_2022_primary", "naics_2022_secondary", "naics_2017_primary",
+#                                   "naics_2017_secondary", "bvdaccount", "client_name", "nace_primary",
+#                                   "nace_secondary", "nace_main_section", "sic_secondary", "sic_primary",
+#                                   "bvdsector", "primary_naics", "amount_num")]
+# 
+# 
+# write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
+# 
+# write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata_NEW_altclimatebills_oppose.dta")
+# 
 
 ### End Quarterly
 

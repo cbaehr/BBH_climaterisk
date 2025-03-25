@@ -15,10 +15,13 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
 
 # lobby_text_old <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
-lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+# lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+lobby_text <- fread("data/01_raw/lobbyview_20250324/issue_text.csv")
+# glimpse(lobby_text)
 
 # lobby_issue_old <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
-lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+# lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+lobby_issue <- fread("data/01_raw/lobbyview_20250324/issues.csv")
 
 # lobby_report_old <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
@@ -764,16 +767,32 @@ df_qtr <- df_qtr |>
 names(df_qtr)
 glimpse(df_qtr)
 
-
+# reduce to columns needed
+df_qtr <- df_qtr |>
+  select(
+    -c(cusip_2023_4:cusip_2001_4)
+  )
 
 ## write csv
-fwrite(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.csv")
+# fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
+# 
+# # write rdata
+# write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 
-# write rdata
-write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.rds")
+arrow::write_parquet(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.parquet")
+
+# 
+# ## write csv
+# fwrite(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.csv")
+# 
+# # write rdata
+# write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.rds")
 
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 
+# df <- fread("data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.csv")
+# 
+# names(df)
 
 ### END
 

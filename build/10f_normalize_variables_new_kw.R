@@ -18,7 +18,7 @@ pacman::p_load(data.table, tidyverse, haven)
 
 
 #Load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_NEW_altkeywords.parquet")
 df <- data.frame(df)
 
 glimpse(df)
@@ -68,10 +68,12 @@ table(df$P_L_b4tax_usd, useNA = "ifany") # looks fine
 #   filter(!(yearqtr %in% c("2020_2", "2020_3", "2020_4", 
 #                          "2021_1", "2021_2", "2021_3", "2021_4")))
 
-# write csv
-fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.csv")
-
-write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+arrow::write_parquet(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.parquet")
+# 
+# # write csv
+# fwrite(df, file="data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.csv")
+# 
+# write_rds(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
 
 # write_dta(df_dta, path="data/03_final/lobbying_df_quarterly_REVISE_normal_stata_NEW_altclimatebills.dta")
 

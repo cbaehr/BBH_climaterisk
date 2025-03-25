@@ -19,9 +19,12 @@ lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.c
 # glimpse(lobby_text)
 
 # lobby_issue_old <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
-lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+# lobby_text <- fread("data/01_raw/lobbyview_20250324/issue_text.csv")
 
-# glimpse(lobby_issue)
+lobby_issue <- fread("data/01_raw/lobbyview_20250324/issues.csv") |>
+  mutate(general_issue_code = ifelse(general_issue_code == "", NA, general_issue_code))
+glimpse(lobby_issue)
+table(lobby_issue$general_issue_code, useNA = "ifany")
 
 # lobby_report_old <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
@@ -75,6 +78,10 @@ lobby_issuedistinct <- lobby_issue |>
 
 
 ## to wide ---------------------------------------------------------------
+
+names(lobby_issuedistinct)
+
+glimpse(lobby_issuedistinct)
 
 # assign 1 if lobbying on issue, 0 otherwise
 lobby_issuedistinct_wide <- lobby_issuedistinct |>
@@ -448,11 +455,13 @@ table(df_qtr$total_lobby_quarter, useNA = "ifany") # looks fine
 #   filter(!(yearqtr %in% c("2020_2", "2020_3", "2020_4", 
 #                          "2021_1", "2021_2", "2021_3", "2021_4")))
 
-## write csv
-fwrite(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.csv")
-
-# write rdata
-write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.rds")
+arrow::write_parquet(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.parquet")
+# 
+# ## write csv
+# fwrite(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.csv")
+# 
+# # write rdata
+# write_rds(df_qtr, "data/03_final/lobbying_df_quarterly_REVISE_NEW_placebos.rds")
 
 
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")

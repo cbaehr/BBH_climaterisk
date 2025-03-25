@@ -17,10 +17,16 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
 
 # lobby_text_old <- fread("data/01_raw/lobbyview/dataset___issue_text.csv")
-lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+# lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+lobby_text <- fread("data/01_raw/lobbyview_20250324/issue_text.csv")
+# glimpse(lobby_text)
 
 # lobby_issue_old <- fread("data/01_raw/lobbyview/dataset___issue_level.csv")
-lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+# lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+lobby_issue <- fread("data/01_raw/lobbyview_20250324/issues.csv")
+
+# latest
+# lobby_latest <- fread("data/01_raw/lobbyview_20250324/reports_is_latest.csv")
 
 # lobby_report_old <- fread("data/01_raw/lobbyview/dataset___report_level.csv")
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
@@ -41,7 +47,7 @@ lobby_report$n_quarters <- str_count(as.character(lobby_report$report_quarter_co
 inspect_report_issue <- lobby_report |>
   left_join(lobby_issue, by = "report_uuid")  
 
-glimpse(inspect_report_issue)
+# glimpse(inspect_report_issue)
 
 # look at issue_code across filing_year
 inspect_report_issue |>
@@ -886,21 +892,32 @@ for(i in 1:length(agencies)) {
 names(exposure_orbis_lobbyview_long)
 glimpse(exposure_orbis_lobbyview_long)
 
-## write csv
-fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
 
-# write rdata
-write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
+# reduce to columns needed
+exposure_orbis_lobbyview_long <- exposure_orbis_lobbyview_long |>
+  select(
+    -c(cusip_2023_4:cusip_2001_4)
+    )
+
+## write csv
+# fwrite(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.csv")
+# 
+# # write rdata
+# write_rds(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
+
+arrow::write_parquet(exposure_orbis_lobbyview_long, "data/03_final/lobbying_df_quarterly_REVISE_NEW.parquet")
 
 
 # exposure_orbis_lobbyview_long_qrt <- read_rds("data/03_final/lobbying_df_quarterly_REVISE.rds")
 
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_NEW.parquet")
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
+df |> sample_n(100) |>
+  glimpse()
 
+glimpse(df)
 names(df)
 
-names(exposure_orbis_lobbyview_long)
 vars <- c(
   "gvkey", "hqcountrycode", "op_expo_ew", "rg_expo_ew", "ph_expo_ew",
   "total_assets_usd", "n_employees", "operating_rev_usd", "P_L_b4tax_usd",

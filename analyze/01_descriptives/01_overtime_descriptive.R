@@ -15,146 +15,146 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 # load data
 # df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds")
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
-df_before <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
+# df_before <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_NEW.rds")
 
 names(df)
 
 glimpse(df)
 
-# Outliers? ----------------------------------------------------------------
+# # Outliers? ----------------------------------------------------------------
+# 
+# # other money outliers: 2009_1
+# # both outliers: 2017_2
+# # no data for CLI: 2022_1-2023_4
+# 
+# # CLI_amount_quarter == 0 & 2009_1
+# inspect_1 <- df |>
+#   filter(yearqtr == "2009_1") |>
+#   select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
+#   arrange(desc(total_lobby_quarter)) |>
+#   head(20)
+# 
+# inspect_1
+# 
+# # gvkey 7186 seems to spend a lot of money
+# df |>
+#   filter(gvkey == 7186) |>
+#   select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
+#   arrange(yearqtr)
+# 
+# # probably a mistake
+# lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
+# glimpse(lobby_report)
+# 
+# lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
+# 
+# lobbyview <- lobby_report |>
+#   left_join(lobby_client, by = "lob_id")
+# 
+# glimpse(lobbyview)
+# 
+# inspect_firm <- lobbyview |>
+#   filter(gvkey == 7186) |>
+#   tibble() |>
+#   arrange(desc(amount))
+# 
+# inspect_firm <- lobbyview |>
+#   filter(gvkey == 7186 & filing_year == 2009 & filing_period_code == "Q1" & registrant_id == 89177) |>
+#   tibble() |>
+#   arrange(filing_year, filing_period_code)
+# 
+# fwrite(inspect_firm, "results/tables/amendment_example.csv")
+# 
+# View(inspect_firm)
+# 
+# # 61ae7415-2ea1-459f-b1a8-a740351049d9 
+# # was amended and corrected by 
+# # a6235ad6-3b62-4fe1-9d1c-1f5077d3d418 (should delete the first one)
 
-# other money outliers: 2009_1
-# both outliers: 2017_2
-# no data for CLI: 2022_1-2023_4
-
-# CLI_amount_quarter == 0 & 2009_1
-inspect_1 <- df |>
-  filter(yearqtr == "2009_1") |>
-  select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
-  arrange(desc(total_lobby_quarter)) |>
-  head(20)
-
-inspect_1
-
-# gvkey 7186 seems to spend a lot of money
-df |>
-  filter(gvkey == 7186) |>
-  select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
-  arrange(yearqtr)
-
-# probably a mistake
-lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
-glimpse(lobby_report)
-
-lobby_client <- fread("data/01_raw/lobbyview_20250103/clients_codebook/clients.csv")
-
-lobbyview <- lobby_report |>
-  left_join(lobby_client, by = "lob_id")
-
-glimpse(lobbyview)
-
-inspect_firm <- lobbyview |>
-  filter(gvkey == 7186) |>
-  tibble() |>
-  arrange(desc(amount))
-
-inspect_firm <- lobbyview |>
-  filter(gvkey == 7186 & filing_year == 2009 & filing_period_code == "Q1" & registrant_id == 89177) |>
-  tibble() |>
-  arrange(filing_year, filing_period_code)
-
-fwrite(inspect_firm, "results/tables/amendment_example.csv")
-
-View(inspect_firm)
-
-# 61ae7415-2ea1-459f-b1a8-a740351049d9 
-# was amended and corrected by 
-# a6235ad6-3b62-4fe1-9d1c-1f5077d3d418 (should delete the first one)
-
-
-# 1) Check for multiple amendments per report
-names(lobbyview)
-amendment_counts <- lobbyview |>
-  filter(is_amendment == TRUE) |>
-  group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
-  summarise(
-    n_amendments = n(),
-    amendment_ids = paste(lob_id, collapse = "; ")
-  ) |>
-  arrange(desc(n_amendments)) |>
-  select(gvkey, filing_year, filing_period_code, n_amendments) |>
-  filter(!is.na(gvkey))
-
-# 2) Create corrected amount column
-lobbyview_corrected <- lobbyview |>
-  # First get the original reports and their amendments
-  group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
-  summarize(
-    # If this is an original report (not amendment), get its amount
-    original_amount = ifelse(is_amendment == FALSE, amount, NA_real_),
-    # Get the first non-NA original amount in the group
-    original_amount = first(na.omit(original_amount)),
-    # Get the most recent amendment amount if it exists and is different
-    all_amendment_amounts = paste(ifelse(is_amendment == TRUE, amount, NA_real_), collapse = "; "),
-    mean_amendment_amount = mean(ifelse(is_amendment == TRUE, amount, NA_real_), na.rm = TRUE),
-    # Create the corrected amount column
-    amount_corr = case_when(
-      !is.na(mean_amendment_amount) & (is.na(original_amount) | mean_amendment_amount != original_amount) ~ mean_amendment_amount,
-      TRUE ~ original_amount
-    )
-  ) |>
-  ungroup()
-
-View(lobbyview_corrected |>
-filter(!is.na(gvkey)) |> distinct())
-
-
-# look at gvkey 7186 
-View(lobbyview_corrected |>
-  filter(gvkey == 7186) |>
-  distinct() |>
-  arrange(filing_year, filing_period_code))
-
-
-# 2)
-inspect_2 <- df |>
-  filter(yearqtr == "2017_2") |>
-  select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
-  arrange(desc(total_lobby_quarter)) |>
-  head(20)
-
-inspect_2
-
-# 14477
-inspect_firm <- lobbyview |>
-  filter(gvkey == 14477 & filing_year == 2017) |>
-  tibble() |>
-  arrange(filing_year, filing_period_code)
-
-View(inspect_firm)
-
-
-# how many amendments?
-glimpse(lobbyview)
-amendments <- lobbyview |>
-  filter(is_amendment == T) |>
-  select(lob_id, filing_year, filing_period_code) |>
-  distinct()
-
-# get all lob_id, filing_year, filing_period_code for which there is an amendment
-
-glimpse(lobbyview)
-reports_w_amend <- amendments |>
-  left_join(lobbyview, by = c("lob_id", "filing_year", "filing_period_code")) |>
-  arrange(lob_id,filing_year, filing_period_code) |>
-  select(lob_id, filing_year, filing_period_code, 
-  registrant_name, amount, is_amendment, is_no_activity, is_self_filer,
-  gvkey, bvdid, naics, client_name
-  ) |>
-  head(50) 
-
-View(reports_w_amend)
+# 
+# # 1) Check for multiple amendments per report
+# names(lobbyview)
+# amendment_counts <- lobbyview |>
+#   filter(is_amendment == TRUE) |>
+#   group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
+#   summarise(
+#     n_amendments = n(),
+#     amendment_ids = paste(lob_id, collapse = "; ")
+#   ) |>
+#   arrange(desc(n_amendments)) |>
+#   select(gvkey, filing_year, filing_period_code, n_amendments) |>
+#   filter(!is.na(gvkey))
+# 
+# # 2) Create corrected amount column
+# lobbyview_corrected <- lobbyview |>
+#   # First get the original reports and their amendments
+#   group_by(lob_id, registrant_id, filing_year, filing_period_code, gvkey, client_name) |>
+#   summarize(
+#     # If this is an original report (not amendment), get its amount
+#     original_amount = ifelse(is_amendment == FALSE, amount, NA_real_),
+#     # Get the first non-NA original amount in the group
+#     original_amount = first(na.omit(original_amount)),
+#     # Get the most recent amendment amount if it exists and is different
+#     all_amendment_amounts = paste(ifelse(is_amendment == TRUE, amount, NA_real_), collapse = "; "),
+#     mean_amendment_amount = mean(ifelse(is_amendment == TRUE, amount, NA_real_), na.rm = TRUE),
+#     # Create the corrected amount column
+#     amount_corr = case_when(
+#       !is.na(mean_amendment_amount) & (is.na(original_amount) | mean_amendment_amount != original_amount) ~ mean_amendment_amount,
+#       TRUE ~ original_amount
+#     )
+#   ) |>
+#   ungroup()
+# 
+# View(lobbyview_corrected |>
+# filter(!is.na(gvkey)) |> distinct())
+# 
+# 
+# # look at gvkey 7186 
+# View(lobbyview_corrected |>
+#   filter(gvkey == 7186) |>
+#   distinct() |>
+#   arrange(filing_year, filing_period_code))
+# 
+# 
+# # 2)
+# inspect_2 <- df |>
+#   filter(yearqtr == "2017_2") |>
+#   select(gvkey, yearqtr, CLI_amount_quarter, total_lobby_quarter) |>
+#   arrange(desc(total_lobby_quarter)) |>
+#   head(20)
+# 
+# inspect_2
+# 
+# # 14477
+# inspect_firm <- lobbyview |>
+#   filter(gvkey == 14477 & filing_year == 2017) |>
+#   tibble() |>
+#   arrange(filing_year, filing_period_code)
+# 
+# View(inspect_firm)
+# 
+# 
+# # how many amendments?
+# glimpse(lobbyview)
+# amendments <- lobbyview |>
+#   filter(is_amendment == T) |>
+#   select(lob_id, filing_year, filing_period_code) |>
+#   distinct()
+# 
+# # get all lob_id, filing_year, filing_period_code for which there is an amendment
+# 
+# glimpse(lobbyview)
+# reports_w_amend <- amendments |>
+#   left_join(lobbyview, by = c("lob_id", "filing_year", "filing_period_code")) |>
+#   arrange(lob_id,filing_year, filing_period_code) |>
+#   select(lob_id, filing_year, filing_period_code, 
+#   registrant_name, amount, is_amendment, is_no_activity, is_self_filer,
+#   gvkey, bvdid, naics, client_name
+#   ) |>
+#   head(50) 
+# 
+# View(reports_w_amend)
 
 
 
@@ -224,7 +224,7 @@ ggsave("results/figures/descriptives/climate_lobbying_overtime_NEW.pdf", width =
 
 ## By quarter --------------------------------------------------------------
 p2 <- df |>
-  filter(year <= 2021) |>
+  # filter(year <= 2021) |>
   group_by(yearqtr) |>
   summarise(CLI = sum(CLI_amount_quarter, na.rm = TRUE) / 10^6) |>
   left_join(
@@ -293,7 +293,7 @@ df |>
 
 
 p3 <- df |>
-  filter(year <= 2021) |>
+  # filter(year <= 2021) |>
   group_by(year) |>
   summarise(CLI = sum(CLI_amount_annual, na.rm = TRUE)) |>
   left_join(
