@@ -7,7 +7,7 @@ rm(list=ls())
 
 # load packages
 pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot, janitor, 
-               mice, censReg)
+               mice, censReg, arrow)
 #miceadds
 
 # set working directory
@@ -61,7 +61,8 @@ cm <- c("op_expo_ew" = "Opportunity Exposure",
 
 process_df <- function(data) {
   # Rename fixed effects variables
-  df <- data |>
+  df <- data.frame(data)
+  df <- df |>
     mutate(
       Firm = isin,
       Year = year,
@@ -105,7 +106,8 @@ process_df <- function(data) {
 
 ## OLS -----------------------------------------------------
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- process_df(df)
 
 # noaa <- df[which(df$CLI_NOAA_quarter>0),]
@@ -114,17 +116,6 @@ df <- process_df(df)
 # length(unique(fema$lob_id))
 
 glimpse(df)
-
-# inspect
-df %>%
-  filter(isin == "BMG0450A1053" & year == 2002 & qtr == 1) %>%
-  select(isin, year, qtr, CLI_TAX_amount_quarter)
-
-df %>%
-  filter(isin == "CA0089161081" & year == 2015 & qtr == 2) %>%
-  select(isin, year, qtr, CLI_ENV_amount_quarter)
-
-summary(df$CLI_TAX_amount_quarter)
 
 df$`Industry x Quarter` <- paste(df$industry, df$yearqtr)
 
@@ -135,8 +126,8 @@ models <- list(
   "(3)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
   "(4)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
   "(5)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
-  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Firm),
-  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Firm),
+  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
   "(8)" = feols(CLI ~ op_pos_ew + rg_pos_ew + ph_pos_ew + op_neg_ew + rg_neg_ew + ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(9)" = feols(CLI ~ op_sent_ew + rg_sent_ew + ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(10)" = feols(CLI ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
@@ -168,13 +159,13 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_MODELS_
 
 ## OLS - Lagged DV -----------------------------------------------------
 models <- list(
-  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + CLI_l1, data=df, vcov = ~ Firm),
-  "(2)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1, data=df, vcov = ~ Firm),
-  "(3)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year, data=df, vcov = ~ Firm),
-  "(4)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year + Industry, data=df, vcov = ~ Firm),
-  "(5)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, data=df, vcov = ~ Firm),
-  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | Year + Firm, data=df, vcov = ~ Firm),
-  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Firm)
+  "(1)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + CLI_l1, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + CLI_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_MODELS_REVISION_NEW.RData")
 
@@ -191,8 +182,8 @@ models <- list(
   "(3)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year, data=df, vcov = ~ Year + Firm),
   "(4)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | Year + Industry, data=df, vcov = ~ Year + Firm),
   "(5)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm),
-  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Firm),
-  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Firm),
+  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm),
   "(8)" = feols(log_CLI_amount ~ op_pos_ew + rg_pos_ew + ph_pos_ew + op_neg_ew + rg_neg_ew + ph_neg_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(9)" = feols(log_CLI_amount ~ op_sent_ew + rg_sent_ew + ph_sent_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(10)" = feols(log_CLI_amount ~ op_risk_ew + rg_risk_ew + ph_risk_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, df, vcov = ~ Year + Firm),
@@ -220,20 +211,20 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_interaction_amount_
 
 ## OLS - Lagged DV - Amount -----------------------------------------------------
 models <- list(
-  "(1)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + log_CLI_amount_l1, data=df, vcov = ~ Firm),
-  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1, data=df, vcov = ~ Firm),
-  "(3)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year, data=df, vcov = ~ Firm),
-  "(4)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year + Industry, data=df, vcov = ~ Firm),
-  "(5)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, data=df, vcov = ~ Firm),
-  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | Year + Firm, data=df, vcov = ~ Firm),
-  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Firm)
+  "(1)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + log_CLI_amount_l1, data=df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1, data=df, vcov = ~ Year + Firm),
+  "(3)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year, data=df, vcov = ~ Year + Firm),
+  "(4)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | Year + Industry, data=df, vcov = ~ Year + Firm),
+  "(5)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, data=df, vcov = ~ Year + Firm),
+  "(6)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | Year + Firm, data=df, vcov = ~ Year + Firm),
+  "(7)" = feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year` + Firm, data=df, vcov = ~ Year + Firm)
 )
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_laggeddv_amount_MODELS_REVISION_NEW.RData")
 
 ## OLS - Error Correction -----------------------------------------------------
 models <- list(
-  "(1)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, df, vcov = ~ Firm),
-  "(2)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, df, vcov = ~ Firm)
+  "(1)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
+  "(2)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, df, vcov = ~ Year + Firm)
 )
 save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
@@ -315,22 +306,25 @@ models <- list(
 save(models, file="data/03_final/climate_logit_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 
 
-## Bills-based measure of climate lobbying -----------------------------------
+## Bills-based measure of climate lobbying (occurrence) -----------------------------------
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.parquet")
 df <- process_df(df)
 m1 <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.parquet")
 df <- process_df(df)
 m2 <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.parquet")
 df <- process_df(df)
 m3 <- feols(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
@@ -342,11 +336,13 @@ models <- list(
 save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_altclimatebills.RData")
 
 
-## Bills-based measure of climate lobbying -------------------------------------
+## Bills-based measure of climate lobbying (amount) -------------------------------------
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.parquet")
 
-df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df2 <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df3 <- merge(df[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")],
              df2[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")],
              by=c("isin", "yearqtr"))
@@ -359,13 +355,15 @@ m1 <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_support.parquet")
 df <- process_df(df)
 m2 <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills_oppose.parquet")
 df <- process_df(df)
 m3 <- feols(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, data=df, vcov = ~ Year + Firm)
 
@@ -382,9 +380,11 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVIS
 
 ## Keywords-based measure of climate lobbying -----------------------------------
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.parquet")
 
-df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df2 <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df2 <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df3 <- merge(df[ , c("isin", "yearqtr", "CLI_kw", "CLI_amount_kw")],
              df2[ , c("isin", "yearqtr", "CLI_quarter", "CLI_amount_quarter")])
 cor(df3$CLI_quarter, df3$CLI_kw)
@@ -439,7 +439,8 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW
 #df <- read_rds("data/03_final/lobbying_df_annual_REVISE_normal.rds")
 #df <- read_rds("data/03_final/lobbying_df_annual_")
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 df <- df %>%
   group_by(isin, year, industry, industry_year) %>%
@@ -541,7 +542,8 @@ save(out, file="data/03_final/climate_logit_yr_compare10K_MODELS_REVISION_NEW.RD
 ## Annual coalition-based pro/anti-climate lobbying analysis -------------------------------------
 
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- df[!is.na(df$industry) , ]
 df <- df %>%
   group_by(gvkey, year, industry, industry_year) %>%
@@ -709,7 +711,8 @@ compute_wald <- function(fixest_mod, var1, var2) {
   return(wald)
 }
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- process_df(df)
 df$year <- df$Year
 df$firm <- df$Firm
@@ -767,7 +770,8 @@ save(models, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW
 
 ## Tobit Model -----------------------------------------------------------------
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- process_df(df)
 
 df <- df[ , c("log_CLI_amount", "op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit",
@@ -833,7 +837,8 @@ save(tobit, file="data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW_
 ## Transition/Physical Risk ----------------------------------------------------
 
 
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- process_df(df)
 
 df$`Industry x Quarter` <- paste(df$industry, df$yearqtr)

@@ -200,7 +200,6 @@ o_q_iy_out <- process_model(o_q_iy)
 o_q_iyf <- models[[7]] #Column 7 - add Firm FE
 
 o_q_iyf_out <- process_model(o_q_iyf,
-                             IndbyYear_FE = ' ',
                              Firm_FE = '\\checkmark')
 
 ## Occ: Sentiment ---------------------------------------------------
