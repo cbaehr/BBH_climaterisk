@@ -17,19 +17,19 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 #Load data
 auto <- read_excel("data/03_final/issues_texts/auto.xlsx")
 
-#Create climate binary variable
-auto$CLI <- grepl("ENV|CAW|ENG|FUE", auto$issue_code)
+# #Create climate binary variable
+# auto$CLI <- grepl("ENV|CAW|ENG|FUE", auto$issue_code)
 
 #Filter data for climate lobbying only 
 auto <- auto %>% 
-  filter(CLI == "TRUE")
+  filter(CLI == 1)
 
-auto <- auto %>%
-  filter(
-    complete.cases(
-      op_expo_ew, rg_expo_ew, ph_expo_ew
-    )
-  )
+# auto <- auto %>%
+#   filter(
+#     complete.cases(
+#       op_expo_ew, rg_expo_ew, ph_expo_ew
+#     )
+#   )
 
 ###Create overall corpus ------
 auto_corpus <-corpus(auto$issue_text, docnames = seq_len(nrow(auto)))
@@ -45,7 +45,7 @@ phy <- docvars(auto_corpus, "ph_expo_ew")
 
 # Opportunity -----
 # Calculate the median of the document variable
-med_opp <- median(opp)
+med_opp <- median(opp, na.rm = TRUE)
 
 # Create a logical condition for grouping
 condition_opp <- opp > med_opp
@@ -76,10 +76,26 @@ dfm_opp_below <- dfm(tokens_opp_below)
 #Set opp keywords
 keywords_oppv2 <- c("alternative", "tax", "charging", "technology", "electric", "fuel", "credit", "plug", "infrastructure", "hybrid")
 
-#Calculate frequency for above/below median
-keyword_opp_above <- colSums(dfm_opp_above[, keywords_oppv2])
+# First check which keywords exist in the dfm
+available_keywords_below <- intersect(keywords_oppv2, colnames(dfm_opp_below))
+available_keywords_above <- intersect(keywords_oppv2, colnames(dfm_opp_above))
 
-keyword_opp_below <- colSums(dfm_opp_below[, keywords_oppv2])
+# Use only available keywords when calculating frequencies
+keyword_opp_below <- colSums(dfm_opp_below[, available_keywords_below])
+keyword_opp_above <- colSums(dfm_opp_above[, available_keywords_above])
+
+# Create a complete vector with zeros for missing keywords
+keyword_opp_below_complete <- numeric(length(keywords_oppv2))
+names(keyword_opp_below_complete) <- keywords_oppv2
+keyword_opp_below_complete[available_keywords_below] <- keyword_opp_below
+
+keyword_opp_above_complete <- numeric(length(keywords_oppv2))
+names(keyword_opp_above_complete) <- keywords_oppv2
+keyword_opp_above_complete[available_keywords_above] <- keyword_opp_above
+
+# Use the complete vectors for further calculations
+keyword_opp_below <- keyword_opp_below_complete
+keyword_opp_above <- keyword_opp_above_complete
 
 # Calculate total words in the corpus
 total_opp_above <- sum(dfm_opp_above)
@@ -122,7 +138,7 @@ ggsave("results/figures/text_analysis/median_opportunity.pdf", width = 8, height
 
 # Regulatory -----
 # Calculate the median of the document variable
-med_reg <- median(reg)
+med_reg <- median(reg, na.rm = TRUE)
 
 # Create a logical condition for grouping
 condition_reg <- reg > med_reg  # or < if you want the opposite comparison
@@ -153,10 +169,26 @@ dfm_reg_below <- dfm(tokens_reg_below)
 #Set reg keywords
 keywords_reg <- c("implementation", "rule", "efficiency", "cafe", "emissions", "harmonization", "standards", "regulation", "monitor", "price")
 
-#Calculate frequency for above/below median
-keyword_reg_above <- colSums(dfm_reg_above[, keywords_reg])
+# First check which keywords exist in the dfm
+available_keywords_reg_below <- intersect(keywords_reg, colnames(dfm_reg_below))
+available_keywords_reg_above <- intersect(keywords_reg, colnames(dfm_reg_above))
 
-keyword_reg_below <- colSums(dfm_reg_below[, keywords_reg])
+# Use only available keywords when calculating frequencies
+keyword_reg_below <- colSums(dfm_reg_below[, available_keywords_reg_below])
+keyword_reg_above <- colSums(dfm_reg_above[, available_keywords_reg_above])
+
+# Create a complete vector with zeros for missing keywords
+keyword_reg_below_complete <- numeric(length(keywords_reg))
+names(keyword_reg_below_complete) <- keywords_reg
+keyword_reg_below_complete[available_keywords_reg_below] <- keyword_reg_below
+
+keyword_reg_above_complete <- numeric(length(keywords_reg))
+names(keyword_reg_above_complete) <- keywords_reg
+keyword_reg_above_complete[available_keywords_reg_above] <- keyword_reg_above
+
+# Use the complete vectors for further calculations
+keyword_reg_below <- keyword_reg_below_complete
+keyword_reg_above <- keyword_reg_above_complete
 
 # Calculate total words in the corpus
 total_reg_above <- sum(dfm_reg_above)
@@ -200,7 +232,7 @@ ggsave("results/figures/text_analysis/median_regulatory.pdf", width = 8, height 
 
 # Physical  -----
 # Calculate the median of the document variable
-med_phy <- median(phy)
+med_phy <- median(phy, na.rm = TRUE)
 
 # Create a logical condition for grouping
 condition_phy <- phy > med_phy  # or < if you want the opposite comparison
@@ -229,13 +261,28 @@ dfm_phy_below <- dfm(tokens_phy_below)
 
 ##Keywords
 #Set phy keywords
-keywords_phy <- c("gas", "clean", "climate", "greenhouse", "warming", "environmental", "global", "air", "pollution", "fossil" )
+keywords_phy <- c("gas", "clean", "climate", "greenhouse", "warming", "environmental", "global", "air", "pollution", "fossil")
 
-#Calculate frequency for above/below mean
-keyword_phy_above <- colSums(dfm_phy_above[, keywords_phy])
+# First check which keywords exist in the dfm
+available_keywords_phy_below <- intersect(keywords_phy, colnames(dfm_phy_below))
+available_keywords_phy_above <- intersect(keywords_phy, colnames(dfm_phy_above))
 
-keyword_phy_below <- colSums(dfm_phy_below[, keywords_phy])
+# Use only available keywords when calculating frequencies
+keyword_phy_below <- colSums(dfm_phy_below[, available_keywords_phy_below])
+keyword_phy_above <- colSums(dfm_phy_above[, available_keywords_phy_above])
 
+# Create a complete vector with zeros for missing keywords
+keyword_phy_below_complete <- numeric(length(keywords_phy))
+names(keyword_phy_below_complete) <- keywords_phy
+keyword_phy_below_complete[available_keywords_phy_below] <- keyword_phy_below
+
+keyword_phy_above_complete <- numeric(length(keywords_phy))
+names(keyword_phy_above_complete) <- keywords_phy
+keyword_phy_above_complete[available_keywords_phy_above] <- keyword_phy_above
+
+# Use the complete vectors for further calculations
+keyword_phy_below <- keyword_phy_below_complete
+keyword_phy_above <- keyword_phy_above_complete
 
 # Calculate total words in the corpus
 total_phy_above <- sum(dfm_phy_above)
@@ -305,7 +352,7 @@ plot_df |>
   mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "gray70"), breaks = c("Above Median", "At/Below Median")) +
   labs(x = "Keywords", y = "Relative Frequency within Climate Lobbying Report", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -317,7 +364,7 @@ plot_df |>
   # x axis labels turn by 45 degrees
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-ggsave("results/figures/text_analysis/median_combined_wide.pdf", width = 8, height = 4)
+ggsave("results/figures/text_analysis/median_combined_wide.pdf", width = 8, height = 5)
 
 
 
