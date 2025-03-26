@@ -29,7 +29,7 @@ codes <- read_excel("data/01_raw/lobbyview/lobbying_issue_codes.xlsx")
 names(df)
 
 # Convert issue lobbying columns to 0 if NA and some other transformations
-issue_columns <- names(df)[which(names(df)=="ENV"):which(names(df)=="MON")]
+issue_columns <- names(df)[which(names(df)=="TAX"):which(names(df)=="BEV")]
 issue_columns_amount <- paste0(issue_columns, "_amount")
 
 
@@ -101,15 +101,16 @@ ggsave("results/Figures/descriptives/issue_codes_n_amount.pdf", width = 9, heigh
 columns_to_remove <- c("CAW", "ENV", "ENG", "FUE", "REL")
 
 names(df)
-df$
+
+table(df$REL, useNA = "ifany")
 
 # Remove specified columns
 df_placebo <- df |> select(-all_of(columns_to_remove))
 
 names(df_placebo)
 
-start_index <- which(names(df_placebo) == "FIN")
-end_index <- which(names(df_placebo) == "MON")
+start_index <- which(names(df_placebo) == "TAX")
+end_index <- which(names(df_placebo) == "BEV")
 
 # Extract column names between "AGR" and "REL" into a character vector
 dependent_vars <- names(df_placebo)[start_index:end_index]
@@ -231,8 +232,8 @@ df_placebo <- df |> select(-all_of(columns_to_remove))
 
 names(df_placebo)
 
-start_index <- which(names(df_placebo) == "FIN_amount")
-end_index <- which(names(df_placebo) == "MON_amount")
+start_index <- which(names(df_placebo) == "TAX_amount")
+end_index <- which(names(df_placebo) == "BEV_amount")
 
 # Extract column names between "AGR" and "REL" into a character vector
 dependent_vars <- names(df_placebo)[start_index:end_index]
@@ -457,12 +458,12 @@ tost_equiv_fixest <- function(
 
 ## Occurrence --------------------------------------------------------------
 
-dependent_vars <- names(results_list_occurrence)
+dependent_vars_occ <- names(results_list_occurrence)
 
 # For Occurrence
 equiv_occ <- tost_equiv_fixest(
   model_list = results_list_occurrence,
-  dv_names   = dependent_vars,
+  dv_names   = dependent_vars_occ,
   data       = df_placebo,
   treat_vars = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),  # main treatments
   alpha      = 0.05
@@ -512,11 +513,15 @@ ggsave("results/figures/regressions/placebo_equiv_tests_occurrence.pdf",
        width = 8.5, height = 11)
 
 
+
 # Similar plot for expenditure results
+
+dependent_vars_exp <- names(results_list_expenditure)
+
 # For Expenditure
 equiv_exp <- tost_equiv_fixest(
   model_list = results_list_expenditure,
-  dv_names   = dependent_vars,
+  dv_names   = dependent_vars_exp,
   data       = df_placebo,
   treat_vars = c("op_expo_ew", "rg_expo_ew", "ph_expo_ew"),  # main treatments
   alpha      = 0.05

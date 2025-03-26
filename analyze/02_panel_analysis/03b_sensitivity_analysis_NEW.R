@@ -19,7 +19,7 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df_orig <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df_orig <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 df <- df_orig
 names(df)
 
@@ -424,7 +424,7 @@ ggplot() +
                                 ),
                   show.legend = FALSE,
                   seed = 21,
-                  size = 3,
+                  size = 4,
                   #nudge_x = 0.002  # Added nudge to move labels right
                   ) +
   # Add benchmark points
@@ -436,7 +436,7 @@ ggplot() +
       shape = group
       # shape = bound_label
     ),
-    size = 3
+    size = 4
   ) +
   scale_color_manual(values = c("black", "red")) +
   # scale_shape_manual(values = c(21, 24)) +
@@ -609,7 +609,7 @@ ggplot() +
                                 ),
                   show.legend = FALSE,
                   seed = 21,
-                  size = 3,
+                  size = 4,
                   #nudge_x = 0.002  # Added nudge to move labels right
                   ) +
   # Add benchmark points
@@ -621,7 +621,7 @@ ggplot() +
       shape = group
       # shape = bound_label
     ),
-    size = 3
+    size = 4
   ) +
   scale_color_manual(values = c("black", "red")) +
   # scale_shape_manual(values = c(21, 24)) +
@@ -795,7 +795,7 @@ ggplot() +
                                 ),
                   show.legend = FALSE,
                   seed = 21,
-                  size = 3,
+                  size = 4,
                   #nudge_x = 0.002  # Added nudge to move labels right
                   ) +
   # Add benchmark points
@@ -807,7 +807,7 @@ ggplot() +
       shape = group
       # shape = bound_label
     ),
-    size = 3
+    size = 4
   ) +
   scale_color_manual(values = c("black", "red")) +
   # scale_shape_manual(values = c(21, 24)) +
@@ -980,7 +980,7 @@ ggplot() +
                                 ),
                   show.legend = FALSE,
                   seed = 21,
-                  size = 3,
+                  size = 4,
                   #nudge_x = 0.002  # Added nudge to move labels right
                   ) +
   # Add benchmark points
@@ -992,7 +992,7 @@ ggplot() +
       shape = group
       # shape = bound_label
     ),
-    size = 3
+    size = 4
   ) +
   scale_color_manual(values = c("black", "red")) +
   # scale_shape_manual(values = c(21, 24)) +
@@ -1074,7 +1074,7 @@ get_bounds_ldv <- function(model, treatment_var, lagged_var) {
     r2yxj.dx = r2yxj.dx,
     treatment = treatment_var,
     benchmark_covariates = lagged_var,
-    kd = c(0, 0.5, 1)
+    kd = c(0, 0.5, 1, 1.5, 2)
   )
   
   # Return bounds
@@ -1102,7 +1102,7 @@ bounds <- bind_rows(bounds_occurrence_op, bounds_occurrence_rg, bounds_occurrenc
 # Coefficient plot
 bounds |>
   mutate(
-    bound_label = factor(as.numeric(str_remove_all(bound_label, "[a-zA-Z_]")), levels = c(1, 0.5, 0), ordered = TRUE),
+    bound_label = factor(as.numeric(str_remove_all(bound_label, "[a-zA-Z_]")), levels = c(2, 1.5, 1, 0.5, 0), ordered = TRUE),
     dv = factor(dv, levels = c("Occurrence", "Amount")),
     treatment = factor(treatment, levels = c("Opportunity", "Regulatory", "Physical"))
     ) |>
@@ -1126,7 +1126,7 @@ ggsave("results/figures/sensitivity/sensitivity_plot_ldv.pdf", width = 7, height
 
 
 
-# move_plots_to_overleaf("./")
+move_plots_to_overleaf("./")
 
 
 

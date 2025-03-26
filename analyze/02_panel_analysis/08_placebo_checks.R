@@ -18,9 +18,9 @@ if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/
 
 
 # Load LobbyView data
-lobby_text <- fread("data/01_raw/lobbyview_20250103/issue_text_codebook/issue_text.csv")
+lobby_text <- fread("data/01_raw/lobbyview_20250324/issue_text.csv")
 
-lobby_issue <- fread("data/01_raw/lobbyview_20250103/issues_codebook/issues.csv")
+lobby_issue <- fread("data/01_raw/lobbyview_20250324/issues.csv")
 
 lobby_report <- fread("data/01_raw/lobbyview_20250103/reports_codebook/reports.csv")
 
@@ -47,7 +47,7 @@ lobby_issue$gov_entity <- sapply(lobby_issue$government_entity_ids, process_enti
 
 
 # Load final df to see which years are in the sample
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 names(df)
 
@@ -210,6 +210,10 @@ ls()
 
 # keep only lobby_text_joined and lobby_report
 rm(list = ls()[!ls() %in% c("lobby_text_joined", "lobby_report")])
+
+
+
+
 
 
 # merge
