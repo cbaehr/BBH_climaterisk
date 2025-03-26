@@ -226,6 +226,71 @@ models <- list(
   "(1)" = feols(CLI_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + CLI_l1 | `Industry x Year`, df, vcov = ~ Year + Firm),
   "(2)" = feols(log_CLI_amount_chg ~ op_expo_ew_l1 + op_expo_ew_chg + rg_expo_ew_l1 + rg_expo_ew_chg + ph_expo_ew_l1 + ph_expo_ew_chg + ebit + ebit_at + us_dummy + total_lobby_quarter + log_CLI_amount_l1 | `Industry x Year`, df, vcov = ~ Year + Firm)
 )
+
+## Opp LRM (Occurrence)
+lrm_op_occ_coef <- models$`(1`$coefficients["op_expo_ew_l1"]/abs(models$`(1`$coefficients["CLI_l1"])
+
+a <- models$`(1`$coefficients["op_expo_ew_l1"]
+b <- abs(models$`(1`$coefficients["CLI_l1"])
+var_a <- models$`(1`$se["op_expo_ew_l1"] ^ 2
+var_b <- models$`(1`$se["CLI_l1"] ^ 2
+cov_ab <- models$`(1`$cov.scaled["op_expo_ew_l1", "CLI_l1"]
+
+lrm_op_occ_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+## Reg LRM (Occurrence)
+lrm_rg_occ_coef <- models$`(1`$coefficients["rg_expo_ew_l1"]/abs(models$`(1`$coefficients["CLI_l1"])
+
+a <- models$`(1`$coefficients["rg_expo_ew_l1"]
+var_a <- models$`(1`$se["rg_expo_ew_l1"] ^ 2
+cov_ab <- models$`(1`$cov.scaled["rg_expo_ew_l1", "CLI_l1"]
+lrm_rg_occ_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+## Phy LRM (Occurrence)
+lrm_ph_occ_coef <- models$`(1`$coefficients["ph_expo_ew_l1"]/abs(models$`(1`$coefficients["CLI_l1"])
+
+a <- models$`(1`$coefficients["ph_expo_ew_l1"]
+var_a <- models$`(1`$se["ph_expo_ew_l1"] ^ 2
+cov_ab <- models$`(1`$cov.scaled["ph_expo_ew_l1", "CLI_l1"]
+lrm_ph_occ_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+## Opp LRM (Amount)
+lrm_op_amt_coef <- models$`(2`$coefficients["op_expo_ew_l1"]/abs(models$`(2`$coefficients["log_CLI_amount_l1"])
+
+a <- models$`(2`$coefficients["op_expo_ew_l1"]
+b <- abs(models$`(2`$coefficients["log_CLI_amount_l1"])
+var_a <- models$`(2`$se["op_expo_ew_l1"] ^ 2
+var_b <- models$`(2`$se["log_CLI_amount_l1"] ^ 2
+cov_ab <- models$`(2`$cov.scaled["op_expo_ew_l1", "log_CLI_amount_l1"]
+
+lrm_op_amt_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+## Reg LRM (Amount)
+lrm_rg_amt_coef <- models$`(2`$coefficients["rg_expo_ew_l1"]/abs(models$`(2`$coefficients["log_CLI_amount_l1"])
+
+a <- models$`(2`$coefficients["rg_expo_ew_l1"]
+var_a <- models$`(2`$se["rg_expo_ew_l1"] ^ 2
+cov_ab <- models$`(2`$cov.scaled["rg_expo_ew_l1", "log_CLI_amount_l1"]
+
+lrm_rg_amt_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+
+## Phy LRM (Amount)
+lrm_ph_amt_coef <- models$`(2`$coefficients["ph_expo_ew_l1"]/abs(models$`(2`$coefficients["log_CLI_amount_l1"])
+
+a <- models$`(2`$coefficients["ph_expo_ew_l1"]
+var_a <- models$`(2`$se["ph_expo_ew_l1"] ^ 2
+cov_ab <- models$`(2`$cov.scaled["ph_expo_ew_l1", "log_CLI_amount_l1"]
+
+lrm_ph_amt_se <- ((1/(b^2)) * var_a + ((a^2) / (b^4)) * var_b - 2 * (a / (b^3)) * cov_ab) ^ 0.5
+
+models$lrm <- c("lrm_op_occ_coef"=lrm_op_occ_coef, "lrm_op_occ_se"=lrm_op_occ_se, 
+                "lrm_rg_occ_coef"=lrm_rg_occ_coef, "lrm_rg_occ_se"=lrm_rg_occ_se,
+                "lrm_ph_occ_coef"=lrm_ph_occ_coef, "lrm_ph_occ_se"=lrm_ph_occ_se,
+                "lrm_op_amt_coef"=lrm_op_amt_coef, "lrm_op_amt_se"=lrm_op_amt_se, 
+                "lrm_rg_amt_coef"=lrm_rg_amt_coef, "lrm_rg_amt_se"=lrm_rg_amt_se,
+                "lrm_ph_amt_coef"=lrm_ph_amt_coef, "lrm_ph_amt_se"=lrm_ph_amt_se)
+
 save(models, file="data/03_final/climate_ols_qrt_errorcorrect_MODELS_REVISION_NEW.RData")
 
 ## OLS Occurrence - Targets --------------------------------------------------------

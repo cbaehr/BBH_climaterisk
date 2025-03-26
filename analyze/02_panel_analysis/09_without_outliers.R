@@ -4,7 +4,7 @@
 rm(list=ls())
 
 # load packages
-pacman::p_load(data.table, tidyverse, fixest, modelsummary)
+pacman::p_load(data.table, tidyverse, fixest, modelsummary, arrow, dplyr)
 
 # prevent scientific notation
 options(scipen = 999)
@@ -15,7 +15,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/Dropbox (Princeton)/BBH/BBH1/")}
 
 # Load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+#df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
+df <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 # Rename fixed effects variables for consistency
 df <- df |>
@@ -72,7 +73,7 @@ abs_z_op_expo_ew > 4
 inspect_outliers <- df |>
   # calculate z-scores and absolute z-scores
   filter(!(Firm %in% df_no_iv$Firm) & (abs(op_expo_ew) > 4 | abs(rg_expo_ew) > 4 | abs(ph_expo_ew) > 4)) |>
-  select(gvkey, yearqtr, op_expo_ew, rg_expo_ew, ph_expo_ew)
+  dplyr::select(gvkey, yearqtr, op_expo_ew, rg_expo_ew, ph_expo_ew)
 
 View(inspect_outliers)
 
@@ -100,7 +101,7 @@ inspect_outliers <- df |>
     abs_z_CLI_amount_quarter = abs(scale_CLI_amount_quarter)) |>
   filter(abs_z_CLI_amount_quarter > 4) |>
   mutate(log_CLI_amount_quarter = log(CLI_amount_quarter + 1)) |>
-  select(gvkey, yearqtr, CLI_amount_quarter, log_CLI_amount_quarter, scale_CLI_amount_quarter, abs_z_CLI_amount_quarter)
+  dplyr::select(gvkey, yearqtr, CLI_amount_quarter, log_CLI_amount_quarter, scale_CLI_amount_quarter, abs_z_CLI_amount_quarter)
 
 View(inspect_outliers)
 

@@ -588,7 +588,12 @@ o_q_iy_ec_estimates <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"], o_q_iy_ec$se["
                                o_q_iy_ec$coefficients["rg_expo_ew_chg"], o_q_iy_ec$se["rg_expo_ew_chg"],
                                o_q_iy_ec$coefficients["ph_expo_ew_l1"], o_q_iy_ec$se["ph_expo_ew_l1"],
                                o_q_iy_ec$coefficients["ph_expo_ew_chg"], o_q_iy_ec$se["ph_expo_ew_chg"],
-                               o_q_iy_ec$coefficients["CLI_l1"], o_q_iy_ec$se["CLI_l1"])
+                               o_q_iy_ec$coefficients["CLI_l1"], o_q_iy_ec$se["CLI_l1"],
+                         models$lrm["lrm_op_occ_coef.op_expo_ew_l1"], models$lrm["lrm_op_occ_se.CLI_l1"], 
+                         models$lrm["lrm_rg_occ_coef.rg_expo_ew_l1"], models$lrm["lrm_rg_occ_se.CLI_l1"],
+                         models$lrm["lrm_ph_occ_coef.ph_expo_ew_l1"], models$lrm["lrm_ph_occ_se.CLI_l1"]
+                         )
+
 o_q_iy_ec_estimates <- round(o_q_iy_ec_estimates * 100, 3)
 
 t <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"] / o_q_iy_ec$se["op_expo_ew_l1"],
@@ -597,13 +602,17 @@ t <- c(o_q_iy_ec$coefficients["op_expo_ew_l1"] / o_q_iy_ec$se["op_expo_ew_l1"],
        o_q_iy_ec$coefficients["rg_expo_ew_chg"] / o_q_iy_ec$se["rg_expo_ew_chg"],
        o_q_iy_ec$coefficients["ph_expo_ew_l1"] / o_q_iy_ec$se["ph_expo_ew_l1"],
        o_q_iy_ec$coefficients["ph_expo_ew_chg"] / o_q_iy_ec$se["ph_expo_ew_chg"],
-       o_q_iy_ec$coefficients["CLI_l1"] / o_q_iy_ec$se["CLI_l1"])
+       o_q_iy_ec$coefficients["CLI_l1"] / o_q_iy_ec$se["CLI_l1"],
+       models$lrm["lrm_op_occ_coef.op_expo_ew_l1"] / models$lrm["lrm_op_occ_se.CLI_l1"], 
+       models$lrm["lrm_rg_occ_coef.rg_expo_ew_l1"] / models$lrm["lrm_rg_occ_se.CLI_l1"],
+       models$lrm["lrm_ph_occ_coef.ph_expo_ew_l1"] / models$lrm["lrm_ph_occ_se.CLI_l1"])
 
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 
 o_q_iy_ec_stars <- data.frame(term=c("op_expo_ew_l1"="Opp_{t-1}", "rg_expo_ew_l1"="Reg_{t-1}", "ph_expo_ew_l1"="Phy_{t-1}",
                                      "op_expo_ew_chg"="Opp \\Delta", "rg_expo_ew_chg"="Reg \\Delta", "ph_expo_ew_chg"="Phy \\Delta",
-                                     "CLI_l1" = "Lagged DV"), 
+                                     "CLI_l1" = "Lagged DV", "lrm_op_occ_coef.op_expo_ew_l1"="Opp_{LRM}",
+                                     "lrm_rg_occ_coef.rg_expo_ew_l1"="Reg_{LRM}", "lrm_ph_occ_coef.ph_expo_ew_l1"="Phy_{LRM}"), 
                               estimate=paste0(o_q_iy_ec_estimates[seq(1, length(o_q_iy_ec_estimates), 2)], strs), 
                               std.error=o_q_iy_ec_estimates[seq(2, length(o_q_iy_ec_estimates), 2)])
 
@@ -1119,7 +1128,10 @@ o_q_iy_amt_ec_estimates <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"], o_q_iy
                                    o_q_iy_amt_ec$coefficients["rg_expo_ew_chg"], o_q_iy_amt_ec$se["rg_expo_ew_chg"],
                                    o_q_iy_amt_ec$coefficients["ph_expo_ew_l1"], o_q_iy_amt_ec$se["ph_expo_ew_l1"],
                                    o_q_iy_amt_ec$coefficients["ph_expo_ew_chg"], o_q_iy_amt_ec$se["ph_expo_ew_chg"],
-                                   o_q_iy_amt_ec$coefficients["log_CLI_amount_l1"], o_q_iy_amt_ec$se["log_CLI_amount_l1"])
+                                   o_q_iy_amt_ec$coefficients["log_CLI_amount_l1"], o_q_iy_amt_ec$se["log_CLI_amount_l1"],
+                             models$lrm["lrm_op_amt_coef.op_expo_ew_l1"], models$lrm["lrm_op_amt_se.log_CLI_amount_l1"], 
+                             models$lrm["lrm_rg_amt_coef.rg_expo_ew_l1"], models$lrm["lrm_rg_amt_se.log_CLI_amount_l1"],
+                             models$lrm["lrm_ph_amt_coef.ph_expo_ew_l1"], models$lrm["lrm_ph_amt_se.log_CLI_amount_l1"])
 o_q_iy_amt_ec_estimates <- round(o_q_iy_amt_ec_estimates * 100, 3)
 
 t <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"] / o_q_iy_amt_ec$se["op_expo_ew_l1"],
@@ -1128,13 +1140,17 @@ t <- c(o_q_iy_amt_ec$coefficients["op_expo_ew_l1"] / o_q_iy_amt_ec$se["op_expo_e
        o_q_iy_amt_ec$coefficients["rg_expo_ew_chg"] / o_q_iy_amt_ec$se["rg_expo_ew_chg"],
        o_q_iy_amt_ec$coefficients["ph_expo_ew_l1"] / o_q_iy_amt_ec$se["ph_expo_ew_l1"],
        o_q_iy_amt_ec$coefficients["ph_expo_ew_chg"] / o_q_iy_amt_ec$se["ph_expo_ew_chg"],
-       o_q_iy_amt_ec$coefficients["log_CLI_amount_l1"] / o_q_iy_amt_ec$se["log_CLI_amount_l1"])
+       o_q_iy_amt_ec$coefficients["log_CLI_amount_l1"] / o_q_iy_amt_ec$se["log_CLI_amount_l1"],
+       models$lrm["lrm_op_amt_coef.op_expo_ew_l1"] / models$lrm["lrm_op_amt_se.log_CLI_amount_l1"], 
+       models$lrm["lrm_rg_amt_coef.rg_expo_ew_l1"] / models$lrm["lrm_rg_amt_se.log_CLI_amount_l1"],
+       models$lrm["lrm_ph_amt_coef.ph_expo_ew_l1"] / models$lrm["lrm_ph_amt_se.log_CLI_amount_l1"])
 
 strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
 
 o_q_iy_amt_ec_stars <- data.frame(term=c("op_expo_ew_l1"="Opp_{t-1}", "rg_expo_ew_l1"="Reg_{t-1}", "ph_expo_ew_l1"="Phy_{t-1}",
                                          "op_expo_ew_chg"="Opp \\Delta", "rg_expo_ew_chg"="Reg \\Delta", "ph_expo_ew_chg"="Phy \\Delta",
-                                         "log_CLI_amount_l1" = "Lagged DV"), 
+                                         "log_CLI_amount_l1" = "Lagged DV", "lrm_op_amt_coef.op_expo_ew_l1"="Opp_{LRM}",
+                                         "lrm_rg_amt_coef.rg_expo_ew_l1"="Reg_{LRM}", "lrm_ph_amt_coef.ph_expo_ew_l1"="Phy_{LRM}"), 
                               estimate=paste0(o_q_iy_amt_ec_estimates[seq(1, length(o_q_iy_amt_ec_estimates), 2)], strs), 
                               std.error=o_q_iy_amt_ec_estimates[seq(2, length(o_q_iy_amt_ec_estimates), 2)])
 
