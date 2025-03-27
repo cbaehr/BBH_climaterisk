@@ -20,37 +20,50 @@ df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW
 # Number of firms & years -------------------------------------------------
 
 ## Number of firms
-df |> distinct(gvkey) |> count() # 11552
+df |> distinct(isin) |> count() # 11705
 
-df |> filter(!is.na(op_expo_ew)) |> distinct(gvkey) |> count() # 11552
+df |> filter(!is.na(op_expo_ew)) |> distinct(isin) |> count() # 11705
 
-df |> filter(!is.na(op_expo_ew) & !is.na(CLI_quarter)) |> distinct(gvkey) |> count() # 11552
+df |> filter(!is.na(op_expo_ew) & !is.na(CLI_quarter)) |> distinct(isin) |> count() # 11705
 
 # Number of firms with lobbying data \& exposure data with headquarter in US
 df |>
   filter(!is.na(op_expo_ew) & !is.na(CLI_quarter) & us_dummy == 1) |>
-  distinct(gvkey) |>
-  count() # 6146
+  distinct(isin) |>
+  count() # 6202
 
 df |>
   filter(!is.na(op_expo_ew) & !is.na(CLI_quarter) & us_dummy == 0) |>
-  distinct(gvkey) |>
-  count() # 5407
+  distinct(isin) |>
+  count() # 5503
 
-6146/11552 # 53.2%
-5407/11552 # 46.8%
+6202/11705 # 53.0%
+5503/11705 # 47.0%
 
 ## Years analyzed
 df |> 
   filter(!is.na(op_expo_ew)) |>
   distinct(year) |>
-  pull() # 2000-2023
+  pull() # 2001-2023
 
 df |> 
   filter(!is.na(CLI_quarter)) |>
   distinct(year) |>
   pull()
 
+
+# how many firms ever lobby FEMA and NOAA?
+names(df)
+
+df |>
+filter(CLI_FEMA_quarter == 1) |>
+distinct(isin) |>
+count() # 45
+
+df |>
+filter(CLI_NOAA_quarter == 1) |>
+distinct(isin) |>
+count() # 29
 
 # Table 2: Auto Stats -----------------------------------------------------
 
@@ -249,5 +262,79 @@ datasummary((Industry = industry) ~ ph_expo_ew*(Mean + SD + Min + Max + N),
                        title = 'Physical Exposure by Industry',
                        fmt = 3, 
                    output = 'latex')
+
+
+# Get correlations between different outcome variables
+
+rm(list=ls())
+
+df_issue <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
+df_kw <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.parquet")
+df_bills <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altclimatebills.parquet")
+
+# nrows
+nrow(df_issue)
+nrow(df_kw)
+nrow(df_bills)
+# same number of rows
+
+names(df_issue)
+names(df_kw)
+names(df_bills)
+
+summary(df_issue$CLI_amount_quarter)
+summary(df_kw$CLI_amount_kw)
+summary(df_bills$log_CLI_amount)
+
+# select relevant variables
+df_issue_red <- df_issue |>
+  select(year, qtr, isin, `Issue (Occurrence)` = CLI, `Issue (Amount)` = CLI_amount_quarter)
+
+df_kw_red <- df_kw |>
+  select(year, qtr, isin, 
+  `Keyword (Occurrence)` = CLI_kw, `Keyword (Amount)` = CLI_amount_kw,
+  `Keyword Mitigation (Amount)` = CLI_mitigation, `Keyword Mitigation (Occurrence)` = CLI_amount_mitigation,
+  `Keyword Adaptation (Amount)` = CLI_adaptation, `Keyword Adaptation (Occurrence)` = CLI_amount_adaptation
+  )
+
+df_bills_red <- df_bills |>
+  select(year, qtr, isin, `Bill (Occurrence)` = CLI_quarter, `Bill (Amount)` = CLI_amount_quarter)
+
+# merge
+df_merged <- df_issue_red |>
+  haschaR::left_join_check_obs(df_kw_red, by = c("year", "qtr", "isin")) |>
+  haschaR::left_join_check_obs(df_bills_red, by = c("year", "qtr", "isin"))
+
+glimpse(df_merged)
+
+df_merged |>
+  filter(`Issue (Occurrence)` > 0) |>
+  select(-year, -qtr, -isin) |>
+  glimpse()
+
+# three colors from viridis
+viridis::viridis(3)
+
+# correlation matrix
+df_merged |>
+  select(-year, -qtr, -isin) |>
+  cor() |>
+  ggcorrplot::ggcorrplot(
+    hc.order = FALSE,
+    type = "lower", 
+    lab = TRUE,
+    ggtheme = haschaR::theme_hanno(),
+    # colors = c("#440154FF", "#21908CFF", "#FDE725FF")
+  )
+
+
+ggsave("results/figures/descriptives/correlation_matrix_outcomes.pdf", width = 7.5, height = 7.5)
+
+
+
+
+
+
+
 
 # END
