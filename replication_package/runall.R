@@ -1,8 +1,17 @@
+
 rm(list = ls())
 
-setwd("/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/")
+if(Sys.info()["user"]=="vincentheddesheimer" ) {
+  setwd("~/GitHub/BBH_climaterisk/replication_package/")
+  results_path <- "~/Dropbox (Princeton)/BBH/BBH1"
+}
+if(Sys.info()["user"]=="christianbaehr" ) {
+  setwd("/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/")
+  results_path <- "/Users/christianbaehr/Dropbox/BBH/BBH1/"
+}
 
-results_path <- "/Users/christianbaehr/Dropbox/BBH/BBH1/"
+
+
 
 ## Create necessary folder structure -------------------------------------------
 
@@ -52,9 +61,10 @@ if(!dir.exists(paste0(results_path, "results/figures/text_analysis"))) {
 
 #list.files("build/")
 #source("build/01_build_isin_list.R")
-source("build/02_build_orbis.R")
-source("build/03c_join_sautner_orbis_quarterly_new.R")
-source("build/04c_merge_w_lobbyview_NEW.R")
+#source("build/02_build_orbis.R")
+#source("build/03c_join_sautner_orbis_quarterly_new.R")
+#source("build/04c_merge_w_lobbyview_NEW.R")
+
 source("build/04d_keyword_climate_measure.R")
 source("build/05b_normalize_variables_new.R")
 source("build/06_data_quality_checks.R")

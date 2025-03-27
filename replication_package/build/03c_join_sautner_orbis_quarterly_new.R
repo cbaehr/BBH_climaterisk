@@ -953,6 +953,6 @@ vars <- c(
   "total_assets_usd", "n_employees", "operating_rev_usd", "P_L_b4tax_usd"
 )
 
-haschaR::check_missings_plot(exposure_orbis_lobby_long, vars, "year")
+#haschaR::check_missings_plot(exposure_orbis_lobby_long, vars, "year")
 
 ## looks good

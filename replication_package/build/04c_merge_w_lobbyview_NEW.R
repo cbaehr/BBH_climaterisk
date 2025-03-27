@@ -924,7 +924,7 @@ vars <- c(
   "CLI_quarter", "CLI_amount_quarter", "total_lobby_quarter"
 )
 
-haschaR::check_missings_plot(df, vars, "year")
+#haschaR::check_missings_plot(df, vars, "year")
 
 # calculate mean CLI_quarter and CLI_amount_quarter for each year
 df |>
