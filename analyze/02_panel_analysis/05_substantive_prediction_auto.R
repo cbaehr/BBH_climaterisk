@@ -54,13 +54,17 @@ process_df <- function(data) {
 
 ### Define the Prediction Function ---------------------------------------------
 
-predict.values <- function(model, expo, type="occurrence") {
+predict.values <- function(model, expo, type="occurrence", spenders_only=F) {
   
   for(i in yearqtrs) {
       if(i==yearqtrs[1]) {out <- c(); out_pct <- c()}
       
       yr <- as.numeric(substr(i, 1, 4))
       iy <- df[which(df$Industry.x.Year == sprintf("Transport Manufacturing %s", yr) & df$yearqtr==i) , ]
+      if(spenders_only) {
+        #iy <- iy[which(iy$Firm %in% spender_firms) , ]
+        iy <- iy[which(iy$CLI_amount_quarter > 0) , ]
+      }
       
       if(expo=="op_expo_ew") {
         op <- mean(iy$op_expo_ew, na.rm=T)
@@ -114,11 +118,23 @@ df <- data.frame(df)
 
 yearqtrs <- unique(df$yearqtr)
 
+
+## Define the Set of Spender Firms
+
+spenders <- df %>%
+  group_by(Firm) %>%
+  summarize(climate_spend = sum(CLI_amount_quarter, na.rm=T))
+  
+spender_firms <- spenders$Firm[which(spenders$climate_spend>0)]
+
+
+
+
+## Opportunity - predicted change in lobbying occurrence -----------------------
+
 #load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION.RData")
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 mod5 <- models[[5]]
-
-## Opportunity - predicted change in lobbying occurrence -----------------------
 
 out <- predict.values(mod5, expo="op_expo_ew")
 
@@ -177,6 +193,35 @@ Pct_inc <- paste0(round(mean(out$out_pct, na.rm=T), 3)*100)
 sprintf("Average lobbying expenditure on climate issues increases by %s percent", Pct_inc)
 
 
+## Opportunity - predicted change in lobbying expenditure (spenders only) ------
+
+out <- predict.values(mod5, expo="op_expo_ew", type="amount", spenders_only = T)
+
+P_inc <- paste0("$", round(mean(out$out, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s", P_inc)
+Pct_inc <- paste0(round(mean(out$out_pct, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s percent", Pct_inc)
+
+## 
+
+out <- predict.values(mod5, expo="rg_expo_ew", type="amount", spenders_only = T)
+
+P_inc <- paste0("$", round(mean(out$out, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s", P_inc)
+Pct_inc <- paste0(round(mean(out$out_pct, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s percent", Pct_inc)
+
+##
+
+out <- predict.values(mod5, expo="ph_expo_ew", type="amount", spenders_only = T)
+
+P_inc <- paste0("$", round(mean(out$out, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s", P_inc)
+Pct_inc <- paste0(round(mean(out$out_pct, na.rm=T), 3)*100)
+sprintf("Average lobbying expenditure on climate issues increases by %s percent", Pct_inc)
+
+
+
 ## Toyota and Ford Example -----------------------------------------------------
 
 toyo <- df[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr=="2018_1") , ]
@@ -191,24 +236,8 @@ mod5 <- models[[5]]
 
 toyo_pred <- predict(object = mod5, newdata = toyo_modeldata, type = "response")
 
-
-
-
-
-
-
-
-
-
-
-
-
 load("data/03_final/climate_ols_qrt_bycomponent_amount_MODELS_REVISION_NEW.RData")
 mod5 <- models[[5]]
-
-
-
-
 
 
 

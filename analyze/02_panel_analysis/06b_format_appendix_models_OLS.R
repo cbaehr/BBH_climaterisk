@@ -680,6 +680,79 @@ o_q_iy_li_diagnostics <- c(`Num. Obs.` = o_q_iy_li_N,
 o_q_iy_li_out <- list("Estimates" = o_q_iy_li_estimates,
                         "Diagnostics" = o_q_iy_li_diagnostics)
 
+## Occ: PanelR Model -----------------------------------------------------------
+
+load("data/03_final/panelR_occurrence_results.RData")
+
+model_clust$within_table[ , c(1:2)]
+model_clust$between_table[ , c(1:2)]
+
+o_q_iy_pnlr_estimates <- c(model_clust$within_table["op_expo_ew", 1], model_clust$within_table["op_expo_ew", 2],
+                           model_clust$within_table["rg_expo_ew", 1], model_clust$within_table["rg_expo_ew", 2],
+                           model_clust$within_table["ph_expo_ew", 1], model_clust$within_table["ph_expo_ew", 2],
+                           model_clust$between_table["imean(op_expo_ew)", 1], model_clust$between_table["imean(op_expo_ew)", 2],
+                           model_clust$between_table["imean(rg_expo_ew)", 1], model_clust$between_table["imean(rg_expo_ew)", 2],
+                           model_clust$between_table["imean(ph_expo_ew)", 1], model_clust$between_table["imean(ph_expo_ew)", 2])
+
+o_q_iy_pnlr_estimates <- round(o_q_iy_pnlr_estimates * 100, 3)
+
+t <- c(model_clust$within_table["op_expo_ew", 1] / model_clust$within_table["op_expo_ew", 2],
+       model_clust$within_table["rg_expo_ew", 1] / model_clust$within_table["rg_expo_ew", 2],
+       model_clust$within_table["ph_expo_ew", 1] / model_clust$within_table["ph_expo_ew", 2],
+       model_clust$between_table["imean(op_expo_ew)", 1] / model_clust$between_table["imean(op_expo_ew)", 2],
+       model_clust$between_table["imean(rg_expo_ew)", 1] / model_clust$between_table["imean(rg_expo_ew)", 2],
+       model_clust$between_table["imean(ph_expo_ew)", 1] / model_clust$between_table["imean(ph_expo_ew)", 2])
+
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+
+o_q_iy_pnlr_stars <- data.frame(term=c("op_expo_ew"="Opp_{WTHN}", "rg_expo_ew"="Reg_{WTHN}", "ph_expo_ew"="Phy_{WTHN}",
+                                     "imean(op_expo_ew)"="Opp_{BTWN}", "imean(rg_expo_ew)"="Reg_{BTWN}", "imean(ph_expo_ew)"="Phy_{BTWN}"), 
+                              estimate=paste0(o_q_iy_pnlr_estimates[seq(1, length(o_q_iy_pnlr_estimates), 2)], strs), 
+                              std.error=o_q_iy_pnlr_estimates[seq(2, length(o_q_iy_pnlr_estimates), 2)])
+
+o_q_iy_pnlr_N <- unname(model_clust$n)
+
+o_q_iy_pnlr_R <- round(unname(model_clust$mod_info_list$pR2_total), 3) #adjusted R2
+
+
+o_q_iy_pnlr_diagnostics <- c(`Num. Obs.` = o_q_iy_pnlr_N,
+                           `Adjusted R-Squared` =  o_q_iy_pnlr_R,
+                           `Year FE` = ' ',
+                           `Industry x Year FE` = ' ',
+                           `Industry x Qtr FE` = ' ',
+                           `Firm FE` = 'Random',
+                           `Firm Controls` = '\\checkmark',
+                           `Lagged DV` = ' ',
+                           `Climate Measure` = 'Exposure',
+                           `Estimation` = 'GLS',
+                           `Panel` = 'Firm-Qtr',
+                           `Wald Stat (Opp - Reg = 0)` = ' ',
+                           `Wald Stat (Opp - Phy = 0)` = ' ',
+                           `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_pnlr_out <- list("Estimates" = o_q_iy_pnlr_estimates,
+                      "Diagnostics" = o_q_iy_pnlr_diagnostics)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Amount --------------------------------------------------
 
@@ -1218,6 +1291,77 @@ o_q_iy_li_amt_diagnostics <- c(`Num. Obs.` = o_q_iy_li_amt_N,
 o_q_iy_li_amt_out <- list("Estimates" = o_q_iy_li_amt_estimates,
                       "Diagnostics" = o_q_iy_li_amt_diagnostics)
 
+
+
+
+## Amt: PanelR Model -----------------------------------------------------------
+
+load("data/03_final/panelR_amount_results.RData")
+
+model_clust$within_table[ , c(1:2)]
+model_clust$between_table[ , c(1:2)]
+
+o_q_iy_pnlr_amt_estimates <- c(model_clust$within_table["op_expo_ew", 1], model_clust$within_table["op_expo_ew", 2],
+                           model_clust$within_table["rg_expo_ew", 1], model_clust$within_table["rg_expo_ew", 2],
+                           model_clust$within_table["ph_expo_ew", 1], model_clust$within_table["ph_expo_ew", 2],
+                           model_clust$between_table["imean(op_expo_ew)", 1], model_clust$between_table["imean(op_expo_ew)", 2],
+                           model_clust$between_table["imean(rg_expo_ew)", 1], model_clust$between_table["imean(rg_expo_ew)", 2],
+                           model_clust$between_table["imean(ph_expo_ew)", 1], model_clust$between_table["imean(ph_expo_ew)", 2])
+
+o_q_iy_pnlr_amt_estimates <- round(o_q_iy_pnlr_amt_estimates * 100, 3)
+
+t <- c(model_clust$within_table["op_expo_ew", 1] / model_clust$within_table["op_expo_ew", 2],
+       model_clust$within_table["rg_expo_ew", 1] / model_clust$within_table["rg_expo_ew", 2],
+       model_clust$within_table["ph_expo_ew", 1] / model_clust$within_table["ph_expo_ew", 2],
+       model_clust$between_table["imean(op_expo_ew)", 1] / model_clust$between_table["imean(op_expo_ew)", 2],
+       model_clust$between_table["imean(rg_expo_ew)", 1] / model_clust$between_table["imean(rg_expo_ew)", 2],
+       model_clust$between_table["imean(ph_expo_ew)", 1] / model_clust$between_table["imean(ph_expo_ew)", 2])
+
+strs <- ifelse(abs(t)>=2.576, "***", ifelse(abs(t)>=1.96, "**", ifelse(abs(t)>=1.645, "*", "")))
+
+o_q_iy_pnlr_amt_stars <- data.frame(term=c("op_expo_ew"="Opp_{WTHN}", "rg_expo_ew"="Reg_{WTHN}", "ph_expo_ew"="Phy_{WTHN}",
+                                       "imean(op_expo_ew)"="Opp_{BTWN}", "imean(rg_expo_ew)"="Reg_{BTWN}", "imean(ph_expo_ew)"="Phy_{BTWN}"), 
+                                estimate=paste0(o_q_iy_pnlr_amt_estimates[seq(1, length(o_q_iy_pnlr_amt_estimates), 2)], strs), 
+                                std.error=o_q_iy_pnlr_amt_estimates[seq(2, length(o_q_iy_pnlr_amt_estimates), 2)])
+
+o_q_iy_pnlr_amt_N <- unname(model_clust$n)
+
+o_q_iy_pnlr_amt_R <- round(unname(model_clust$mod_info_list$pR2_total), 3) #adjusted R2
+
+
+o_q_iy_pnlr_amt_diagnostics <- c(`Num. Obs.` = o_q_iy_pnlr_amt_N,
+                             `Adjusted R-Squared` =  o_q_iy_pnlr_amt_R,
+                             `Year FE` = ' ',
+                             `Industry x Year FE` = ' ',
+                             `Industry x Qtr FE` = ' ',
+                             `Firm FE` = 'Random',
+                             `Firm Controls` = '\\checkmark',
+                             `Lagged DV` = ' ',
+                             `Climate Measure` = 'Exposure',
+                             `Estimation` = 'GLS',
+                             `Panel` = 'Firm-Qtr',
+                             `Wald Stat (Opp - Reg = 0)` = ' ',
+                             `Wald Stat (Opp - Phy = 0)` = ' ',
+                             `Wald Stat (Reg - Phy = 0)` = ' ')
+
+o_q_iy_pnlr_amt_out <- list("Estimates" = o_q_iy_pnlr_amt_estimates,
+                      "Diagnostics" = o_q_iy_pnlr_amt_diagnostics)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Complete Results for Main Models --------------------------------------------
 
 mod_list <- list(
@@ -1314,6 +1458,9 @@ class(o_q_iy_ec_stars) <- "modelsummary_list"
 o_q_iy_li_stars <- list(tidy=o_q_iy_li_stars)
 class(o_q_iy_li_stars) <- "modelsummary_list"
 
+o_q_iy_pnlr_stars <- list(tidy=o_q_iy_pnlr_stars)
+class(o_q_iy_pnlr_stars) <- "modelsummary_list"
+
 mod_list <- list(#"Main" = stars(o_q_iy_out$Estimates),
                  #"EPA" = stars(o_q_iy_epa_out$Estimates),
                  #"DOE" = stars(o_q_iy_doe_out$Estimates),
@@ -1327,6 +1474,7 @@ mod_list <- list(#"Main" = stars(o_q_iy_out$Estimates),
                  "Impute" = stars(o_q_iy_impt_out$Estimates),
                  "Lag DV" = stars(o_q_iy_ldv_out$Estimates, ldv=T),
                  "Err Cor" = o_q_iy_ec_stars,
+                 "Btwn-Wthn" =o_q_iy_pnlr_stars,
                  "Intr." = stars(o_q_iy_intr_out$Estimates),
                  "Sent" = stars(o_q_iy_sent_out$Estimates),
                  "Risk" = stars(o_q_iy_risk_out$Estimates),
@@ -1347,12 +1495,15 @@ auxiliary <- data.frame(#o_q_iy_out$Diagnostics,
                         o_q_iy_impt_out$Diagnostics,
                         o_q_iy_ldv_out$Diagnostics,
                         o_q_iy_ec_out$Diagnostics,
+                        o_q_iy_pnlr_out$Diagnostics,
                         o_q_iy_intr_out$Diagnostics,
                         o_q_iy_sent_out$Diagnostics,
                         o_q_iy_risk_out$Diagnostics,
                         o_a_iy_ovrl_out$Diagnostics,
                         o_a_iy_tenk_out$Diagnostics,
                         o_q_iy_li_out$Diagnostics)
+
+auxiliary <- auxiliary[rownames(auxiliary)!="Year FE" , ]
 
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
@@ -1405,6 +1556,9 @@ class(o_q_iy_amt_ec_stars) <- "modelsummary_list"
 o_q_iy_li_amt_stars <- list(tidy=o_q_iy_li_amt_stars)
 class(o_q_iy_li_amt_stars) <- "modelsummary_list"
 
+o_q_iy_pnlr_amt_stars <- list(tidy=o_q_iy_pnlr_amt_stars)
+class(o_q_iy_pnlr_amt_stars) <- "modelsummary_list"
+
 mod_list <- list(#"Main" = stars(o_q_iy_amt_out$Estimates),
                  #"EPA" = stars(o_q_iy_amt_epa_out$Estimates),
                  #"DOE" = stars(o_q_iy_amt_doe_out$Estimates),
@@ -1418,6 +1572,7 @@ mod_list <- list(#"Main" = stars(o_q_iy_amt_out$Estimates),
                  "Impute" = stars(o_q_iy_amt_impt_out$Estimates),
                  "Lag DV" = stars(o_q_iy_amt_ldv_out$Estimates, ldv=T),
                  "Err Cor" = o_q_iy_amt_ec_stars,
+                 "Btwn-Wthn" = o_q_iy_pnlr_amt_stars,
                  "Intr." = stars(o_q_iy_amt_intr_out$Estimates),
                  "Sent" = stars(o_q_iy_amt_sent_out$Estimates),
                  "Risk" = stars(o_q_iy_amt_risk_out$Estimates),
@@ -1438,12 +1593,15 @@ auxiliary <- data.frame(#o_q_iy_amt_out$Diagnostics,
                         o_q_iy_amt_impt_out$Diagnostics,
                         o_q_iy_amt_ldv_out$Diagnostics,
                         o_q_iy_amt_ec_out$Diagnostics,
+                        o_q_iy_pnlr_amt_out$Diagnostics,
                         o_q_iy_amt_intr_out$Diagnostics,
                         o_q_iy_amt_sent_out$Diagnostics,
                         o_q_iy_amt_risk_out$Diagnostics,
                         o_a_iy_amt_ovrl_out$Diagnostics,
                         o_a_iy_amt_tenk_out$Diagnostics,
                         o_q_iy_li_amt_out$Diagnostics)
+
+auxiliary <- auxiliary[rownames(auxiliary)!="Year FE" , ]
 
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
@@ -1516,6 +1674,8 @@ auxiliary <- data.frame(o_q_iy_bills_out$Diagnostics,
                         o_y_iy_coal_joinpro_out$Diagnostics,
                         o_y_iy_coal_joinanti_out$Diagnostics)
 
+auxiliary <- auxiliary[!rownames(auxiliary) %in% c("Year FE", "Industry x Qtr FE", "Firm FE", "Lagged DV") , ]
+
 model_names <- names(mod_list)
 auxiliary <- rbind(auxiliary, "Model"=model_names)
 
@@ -1574,6 +1734,8 @@ auxiliary <- data.frame(o_q_iy_caw_out$Diagnostics,
                         o_q_iy_amt_eng_out$Diagnostics,
                         o_q_iy_amt_env_out$Diagnostics,
                         o_q_iy_amt_fue_out$Diagnostics)
+
+auxiliary <- auxiliary[!rownames(auxiliary) %in% c("Year FE", "Industry x Qtr FE", "Firm FE", "Lagged DV") , ]
 
 
 model_names <- names(mod_list)
@@ -1675,5 +1837,40 @@ wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
 p_value <- 1 - pchisq(wald_stat, df = 1)
 cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
 
+## Wald Tests Across Models ----------------------------------------------------
+
+
+
+load("data/03_final/panelR_occurrence_results.RData")
+
+within <- data.frame(model_clust$within_table)
+between <- data.frame(model_clust$between_table)
+
+# Extract coefficients and standard errors
+beta1 <- within["op_expo_ew" , "Est."]
+beta2 <- between["imean(op_expo_ew)" , "Est."]
+se1 <- within["op_expo_ew" , "S.E."]
+se2 <- between["imean(op_expo_ew)" , "S.E."]
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
+
+
+
+load("data/03_final/panelR_amount_results.RData")
+
+within <- data.frame(model_clust$within_table)
+between <- data.frame(model_clust$between_table)
+
+# Extract coefficients and standard errors
+beta1 <- within["op_expo_ew" , "Est."]
+beta2 <- between["imean(op_expo_ew)" , "Est."]
+se1 <- within["op_expo_ew" , "S.E."]
+se2 <- between["imean(op_expo_ew)" , "S.E."]
+# Calculate the Wald statistic
+wald_stat <- (beta1 - beta2)^2 / (se1^2 + se2^2)
+p_value <- 1 - pchisq(wald_stat, df = 1)
+cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
 
 

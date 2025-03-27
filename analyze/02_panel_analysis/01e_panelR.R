@@ -119,12 +119,26 @@ df$yearqtr_fac <- factor(df$yearqtr, levels = uniquequarters, ordered=T)
 
 df_panel <- panel_data(df, id = Firm, wave = yearqtr_fac)
 
-
-#model <- wbm(lwage ~ lag(union) + wks | blk | blk * wks + (lag(union) | id), data = wages)
-
-model <- wbm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | `Industry x Year`, 
+model <- wbm(CLI ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | us_dummy, 
              data=df_panel, model = "w-b")
-summary(model, vcov = "CR2")  # Cluster-robust SEs using CR2
+model_clust <- summary(model, vcov = "CR2")  # Cluster-robust SEs using CR2
+
+model_clust$n <- model@summ_atts$n
+model_clust$within_table
+save(model_clust, file="data/03_final/panelR_occurrence_results.RData")
+
+
+model <- wbm(log_CLI_amount ~ op_expo_ew + rg_expo_ew + ph_expo_ew + ebit + ebit_at + us_dummy + total_lobby_quarter | us_dummy, 
+             data=df_panel, model = "w-b")
+model_clust <- summary(model, vcov = "CR2")  # Cluster-robust SEs using CR2
+
+model_clust$n <- model@summ_atts$n
+model_clust$within_table
+save(model_clust, file="data/03_final/panelR_amount_results.RData")
+
+
+
+
 
 
 
