@@ -76,7 +76,7 @@ arrow::write_parquet(df, "data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.
 
 # Inspect missingness
 
-df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
+# df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
 
 names(df)
 

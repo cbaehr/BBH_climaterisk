@@ -602,14 +602,14 @@ lobbying_firm_qtr_corrected |>
   filter(n > 1) |>
   arrange(desc(n))
 
-# check
-View(lobbying_firm_qtr_corrected |>
-  filter(lob_id == "04a4fa83-3de2-5dba-94a4-facc0ce4ee27" & filing_year == 2007 & report_quarter_code == "4") 
-)
-
-View(lobbying_firmqtr |>
-  filter(lob_id == "04a4fa83-3de2-5dba-94a4-facc0ce4ee27" & filing_year == 2007) 
-)
+# # check
+# View(lobbying_firm_qtr_corrected |>
+#   filter(lob_id == "04a4fa83-3de2-5dba-94a4-facc0ce4ee27" & filing_year == 2007 & report_quarter_code == "4") 
+# )
+# 
+# View(lobbying_firmqtr |>
+#   filter(lob_id == "04a4fa83-3de2-5dba-94a4-facc0ce4ee27" & filing_year == 2007) 
+# )
 
 
 # Some duplicates come from the fact that firms submit half-yearly reports and additional

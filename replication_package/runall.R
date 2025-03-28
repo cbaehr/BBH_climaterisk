@@ -74,7 +74,6 @@ source_gh <- function(script, github_path=github) {
   
   source_gh("build/04d_keyword_climate_measure.R")
   source_gh("build/05b_normalize_variables_new.R")
-  source_gh("build/07_case_study_data_creation.R")
   source_gh("build/08_merge_w_coalitions.R")
   source_gh("build/10_merge_w_direction.R")
   source_gh("build/10b_merge_w_direction_support.R")
@@ -84,5 +83,6 @@ source_gh <- function(script, github_path=github) {
   source_gh("build/10e_normalize_variables_new_w_direction_support.R")
   source_gh("build/10f_normalize_variables_new_kw.R")
   source_gh("build/11_build_placebo_df.R")
+  source_gh("build/12_case_study_data_creation.R")
   source_gh("build/xx_retrieve_firms_insong.R")
 
