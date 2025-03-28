@@ -1,8 +1,6 @@
 ### Firms & Lobbying
 ### Data transformation: With issue texts only for reports that include CLIMATE issues
 
-rm(list=ls())
-
 # load packages
 pacman::p_load(data.table, tidyverse, haven, openxlsx)
 

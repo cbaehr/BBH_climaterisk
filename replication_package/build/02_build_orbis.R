@@ -1,4 +1,3 @@
-rm(list=ls())
 setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/data/01_raw/")
 pacman::p_load(readxl)
 

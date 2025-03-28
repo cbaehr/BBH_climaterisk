@@ -13,6 +13,7 @@ if(Sys.info()["user"]=="christianbaehr" ) {
 }
 
 source_gh <- function(script, github_path=github) {
+  rm(list = setdiff(ls(), c("script", "github_path", "source_gh", "github", "results_path")))
   setwd(github_path)
   source(script)
 }

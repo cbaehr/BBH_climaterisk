@@ -1,8 +1,6 @@
 ### Firms & Lobbying
 ### Data normalization
 
-rm(list=ls())
-
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("C:/Users/fiona/Dropbox (Princeton)/BBH/BBH1")}
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}

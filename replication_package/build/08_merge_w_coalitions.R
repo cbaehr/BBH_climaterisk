@@ -1,8 +1,6 @@
 ### Firms & Lobbying
 ### Get Directionality with Coalition data
 
-rm(list=ls())
-
 # load packages
 pacman::p_load(data.table, tidyverse, janitor, kableExtra)
 

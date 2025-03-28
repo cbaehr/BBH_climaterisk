@@ -1,8 +1,5 @@
 ### Build new climate measure based on keywords
 
-
-rm(list=ls())
-
 # load packages
 pacman::p_load(data.table, tidyverse, haven, tidytext, stopwords)
 

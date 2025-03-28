@@ -5,8 +5,6 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 pacman::p_load(fastLink, tidyverse, data.table)
 
-rm(list = ls())
-
 ## load annual exposure data 
 ### [this is the updated data!!!] ###
 

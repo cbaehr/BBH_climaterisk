@@ -1,6 +1,4 @@
 
-rm(list=ls())
-
 # Load packages
 pacman::p_load(tidyverse, data.table, modelsummary)
 options(scipen=999)
