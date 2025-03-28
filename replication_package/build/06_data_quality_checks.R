@@ -8,7 +8,7 @@ options(scipen=999)
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
 
-df <- read.csv("data/03_final/lobbying_df_annual_REVISE_normal.csv", stringsAsFactors = F)
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal.parquet")
 
 df$ph_expo_ew <- as.numeric(df$ph_expo_ew)
 df$op_expo_ew <- as.numeric(df$op_expo_ew)
