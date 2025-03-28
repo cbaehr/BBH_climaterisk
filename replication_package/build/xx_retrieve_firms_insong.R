@@ -1,6 +1,6 @@
 # Script to retrieve firms that were exposed to climate and lobbied on specific bills
 
-rm(list=ls())
+# rm(list=ls())
 
 # load packages
 pacman::p_load(tidyverse)
@@ -12,8 +12,8 @@ if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH
 
 
 # load data
-df <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.rds")
-df_kw <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.rds")
+df <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet")
+df_kw <- arrow::read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW_altkeywords.parquet")
 
 # Filter: Firms that were exposed to climate
 firms_exposed <- df %>%

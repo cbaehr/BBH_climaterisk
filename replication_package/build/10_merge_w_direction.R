@@ -269,7 +269,7 @@ lobbying_firmyear <- lobbying_firmyear[appears, ]
 
 ###
 
-rm(list = setdiff(ls(), "lobbying_firmyear"))
+# rm(list = setdiff(ls(), "lobbying_firmyear"))
 
 #####
 
@@ -652,7 +652,7 @@ lobbying_firmyear$total_lobby_q4 <- total_lobby_q4
 
 #####
 
-rm(list = setdiff(ls(), c("lobbying_firmyear", "issues", "agencies")))
+# rm(list = setdiff(ls(), c("lobbying_firmyear", "issues", "agencies")))
 
 #####
 

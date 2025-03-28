@@ -4,7 +4,7 @@ rm(list = ls())
 if(Sys.info()["user"]=="vincentheddesheimer" ) {
   #setwd("~/Documents/GitHub/BBH_climaterisk/replication_package/")
   github <- "~/Documents/GitHub/BBH_climaterisk/replication_package/"
-  results_path <- "~/Dropbox (Princeton)/BBH/BBH1"
+  results_path <- "~/Dropbox (Princeton)/BBH/BBH1/"
 }
 if(Sys.info()["user"]=="christianbaehr" ) {
   #setwd("/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/")
@@ -71,11 +71,10 @@ source_gh <- function(script, github_path=github) {
   #source_gh("build/03c_join_sautner_orbis_quarterly_new.R")
   #source_gh("build/04c_merge_w_lobbyview_NEW.R")
   #source_gh("build/06_data_quality_checks.R")
-  
+# source_gh("build/08_merge_w_coalitions.R")
   
   source_gh("build/04d_keyword_climate_measure.R")
   source_gh("build/05b_normalize_variables_new.R")
-  source_gh("build/08_merge_w_coalitions.R")
   source_gh("build/10_merge_w_direction.R")
   source_gh("build/10b_merge_w_direction_support.R")
   source_gh("build/10b_normalize_variables_new_w_direction.R")

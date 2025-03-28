@@ -2,7 +2,7 @@
 ### Data transformation: With issue texts only for reports that include CLIMATE issues
 
 # load packages
-pacman::p_load(data.table, tidyverse, haven, openxlsx)
+pacman::p_load(data.table, tidyverse, haven, openxlsx, haschaR)
 
 # set working directory
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1")}
@@ -38,7 +38,7 @@ names(auto)
 
 # Reduce
 auto <- auto |>
-  select(gvkey, conm, year, registrant_name, issue_text, CLI, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
+  select(gvkey, conm, year, registrant_name, issue_text, CLI_quarter, op_expo_ew, rg_expo_ew, ph_expo_ew) |>
   filter(!is.na(issue_text) & issue_text != "") |>
   unique()
 

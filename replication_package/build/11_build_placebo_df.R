@@ -318,7 +318,7 @@ lobbying_firmqtr_dist <- lobbying_firmqtr %>%
 
 # Merge w/ orbis - exposure data ------------------------------------------
 
-rm(list = setdiff(ls(), c("lobbying_firmqtr_dist")))
+# rm(list = setdiff(ls(), c("lobbying_firmqtr_dist")))
 
 # Load exposure & orbis
 exposure_orbis_lobby_long <- fread("data/02_processed/exposure_orbis_client_quarter_long_REVISE_NEW.csv")
