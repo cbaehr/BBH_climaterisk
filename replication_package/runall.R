@@ -2,15 +2,20 @@
 rm(list = ls())
 
 if(Sys.info()["user"]=="vincentheddesheimer" ) {
-  setwd("~/Documents/GitHub/BBH_climaterisk/replication_package/")
+  #setwd("~/Documents/GitHub/BBH_climaterisk/replication_package/")
+  github <- "~/Documents/GitHub/BBH_climaterisk/replication_package/"
   results_path <- "~/Dropbox (Princeton)/BBH/BBH1"
 }
 if(Sys.info()["user"]=="christianbaehr" ) {
-  setwd("/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/")
+  #setwd("/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/")
+  github <- "/Users/christianbaehr/Documents/GitHub/BBH_climaterisk/replication_package/"
   results_path <- "/Users/christianbaehr/Dropbox/BBH/BBH1/"
 }
 
-
+source_gh <- function(script, github_path=github) {
+  setwd(github_path)
+  source(script)
+}
 
 
   ## Create necessary folder structure -------------------------------------------
@@ -60,24 +65,24 @@ if(Sys.info()["user"]=="christianbaehr" ) {
   
   
   #list.files("build/")
-  #source("build/01_build_isin_list.R")
-  #source("build/02_build_orbis.R")
-  #source("build/03c_join_sautner_orbis_quarterly_new.R")
-  #source("build/04c_merge_w_lobbyview_NEW.R")
-  # source("build/06_data_quality_checks.R")
+  #source_gh("build/01_build_isin_list.R")
+  #source_gh("build/02_build_orbis.R")
+  #source_gh("build/03c_join_sautner_orbis_quarterly_new.R")
+  #source_gh("build/04c_merge_w_lobbyview_NEW.R")
+  #source_gh("build/06_data_quality_checks.R")
   
   
-  source("build/04d_keyword_climate_measure.R")
-  source("build/05b_normalize_variables_new.R")
-  source("build/07_case_study_data_creation.R")
-  source("build/08_merge_w_coalitions.R")
-  source("build/10_merge_w_direction.R")
-  source("build/10b_merge_w_direction_support.R")
-  source("build/10b_normalize_variables_new_w_direction.R")
-  source("build/10c_merge_w_direction_oppose.R")
-  source("build/10d_normalize_variables_new_w_direction.R")
-  source("build/10e_normalize_variables_new_w_direction_support.R")
-  source("build/10f_normalize_variables_new_kw.R")
-  source("build/11_build_placebo_df.R")
-  source("build/xx_retrieve_firms_insong.R")
+  source_gh("build/04d_keyword_climate_measure.R")
+  source_gh("build/05b_normalize_variables_new.R")
+  source_gh("build/07_case_study_data_creation.R")
+  source_gh("build/08_merge_w_coalitions.R")
+  source_gh("build/10_merge_w_direction.R")
+  source_gh("build/10b_merge_w_direction_support.R")
+  source_gh("build/10b_normalize_variables_new_w_direction.R")
+  source_gh("build/10c_merge_w_direction_oppose.R")
+  source_gh("build/10d_normalize_variables_new_w_direction.R")
+  source_gh("build/10e_normalize_variables_new_w_direction_support.R")
+  source_gh("build/10f_normalize_variables_new_kw.R")
+  source_gh("build/11_build_placebo_df.R")
+  source_gh("build/xx_retrieve_firms_insong.R")
 
