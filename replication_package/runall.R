@@ -23,6 +23,9 @@ source_gh <- function(script, github_path=github) {
 
 if(!"haschaR" %in% rownames(installed.packages())) {
   devtools::install_github("hhilbig/haschaR")
+} 
+if(!"equivtest" %in% rownames(installed.packages())) {
+  devtools::install_github("ekhartman/equivtest")
 }
 
 
@@ -107,14 +110,16 @@ if(!dir.exists(paste0(results_path, "results/figures/text_analysis"))) {
 
 ## Analysis --------------------------------------------------------------------
 
-source_gh("analyze/02_panel_analysis/01d_lobbying_analysis_quarterly_trimmed.R")
-source_gh("analyze/02_panel_analysis/07_coefficient_plots.R")
+#source_gh("analyze/02_panel_analysis/01d_lobbying_analysis_quarterly_trimmed.R")
+#source_gh("analyze/02_panel_analysis/07_coefficient_plots.R")
+#source_gh("analyze/02_panel_analysis/01e_panelR.R")
+
+#source_gh("analyze/02_panel_analysis/02c_placebo_NEW.R") #move_plots... issue
+#source_gh("analyze/02_panel_analysis/03b_sensitivity_analysis_NEW.R") #move_plots... issue
+#source_gh("analyze/02_panel_analysis/09_without_outliers.R")
 source_gh("analyze/02_panel_analysis/06b_format_appendix_models_OLS.R")
 source_gh("analyze/02_panel_analysis/05_substantive_prediction_auto.R")
-source_gh("analyze/02_panel_analysis/01e_panelR.R")
-source_gh("analyze/02_panel_analysis/02c_placebo_NEW.R")
-source_gh("analyze/02_panel_analysis/03b_sensitivity_analysis_NEW.R")
-source_gh("analyze/02_panel_analysis/09_without_outliers.R")
+
 
 
 

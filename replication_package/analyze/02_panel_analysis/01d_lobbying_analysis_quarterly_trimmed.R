@@ -567,7 +567,7 @@ tenk_cy <- tenk_main %>%
   group_by(ticker, year) %>%
   summarize(tenk_exposure = sum(as.numeric(relevance_score.x), na.rm=T))
 
-ticker <- readxl::read_xlsx("data/01_raw/orbis/bbh_orbis_tickersymbols.xlsx", sheet="Results")
+ticker <- readxl::read_xlsx("data/01_raw/orbis_02132025/bbh_orbis_tickersymbols.xlsx", sheet="Results")
 
 df_ticker <- merge(df, ticker, by.x="Firm", by.y="ISIN number") #224,446 of 227,847 obs. have a matching ticker
 

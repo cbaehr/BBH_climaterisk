@@ -3,8 +3,6 @@
 
 ### Quarterly
 
-rm(list=ls())
-
 # load packages
 pacman::p_load(tidyverse, dplyr, ggplot2, broom)
 

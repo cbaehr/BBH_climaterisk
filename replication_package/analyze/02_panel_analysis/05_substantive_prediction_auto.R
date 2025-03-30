@@ -1,5 +1,4 @@
 
-rm(list=ls())
 options(scipen = 999)
 
 # load packages

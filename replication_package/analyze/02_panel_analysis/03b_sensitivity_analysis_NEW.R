@@ -1,8 +1,6 @@
 ### Firms & Lobbying
 ### Sensitivity Analysis
 
-rm(list=ls())
-
 # no scientific notation
 options(scipen = 999)
 

@@ -1,8 +1,6 @@
 ### Firms & Climate Lobbying
 ### Analysis without outliers
 
-rm(list=ls())
-
 # load packages
 pacman::p_load(data.table, tidyverse, fixest, modelsummary, arrow, dplyr)
 

@@ -4,8 +4,6 @@
 
 ### Quarterly
 
-rm(list=ls())
-
 # load packages
 pacman::p_load(tidyverse, fixest, modelsummary, kableExtra, corrplot, janitor, 
                mice, censReg, arrow, panelr, clubSandwich)

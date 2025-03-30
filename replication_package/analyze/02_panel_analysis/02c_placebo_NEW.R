@@ -1,9 +1,6 @@
 ### Firms & Climate Lobbying
 ### Placebo checks
 
-
-rm(list=ls())
-
 # load packages
 pacman::p_load(data.table, tidyverse, haschaR, broom, fixest, readxl, kableExtra, equivtest)
 

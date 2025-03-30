@@ -1,5 +1,4 @@
 
-rm(list = ls())
 options("modelsummary_format_numeric_latex" = "plain")
 #devtools::install_version("modelsummary", version = "1.2", repos = "http://cran.us.r-project.org")
 pacman::p_load(tidyverse, modelsummary, fixest)
