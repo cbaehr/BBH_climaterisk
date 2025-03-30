@@ -2,7 +2,7 @@
 ### Analysis
 
 # Load packages
-pacman::p_load(tidyverse, data.table, modelsummary)
+pacman::p_load(tidyverse, data.table, modelsummary, viridis, ggcorrplot)
 
 # set working directory
 if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
@@ -284,7 +284,7 @@ summary(df_bills$log_CLI_amount)
 
 # select relevant variables
 df_issue_red <- df_issue |>
-  select(year, qtr, isin, `Issue (Occurrence)` = CLI, `Issue (Amount)` = CLI_amount_quarter)
+  select(year, qtr, isin, `Issue (Occurrence)` = CLI_quarter, `Issue (Amount)` = CLI_amount_quarter)
 
 df_kw_red <- df_kw |>
   select(year, qtr, isin, 

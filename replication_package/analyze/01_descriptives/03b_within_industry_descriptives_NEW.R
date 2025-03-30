@@ -337,7 +337,7 @@ df$subs_iso3c <- gsub("NA", "", df$subs_iso3c)
 df$subs_iso3c[which(nchar(df$subs_iso3c)==3)] <- gsub("\\|", "", df$subs_iso3c[which(nchar(df$subs_iso3c)==3)])
 df$subs_iso3c[which(df$subs_iso3c=="")] <- NA
 
-df$country_iso_code[which(df$Firm=="NL00150002Q7")] <- "DE"
+df$country_iso_code[which(df$isin=="NL00150002Q7")] <- "DE"
 
 df$multinational <- 0
 df$multinational[which(df$subs_iso3c != df$country_iso_code)] <- 1
@@ -519,7 +519,7 @@ move_plots_to_overleaf("./")
 
 
 df |>
-  select(`Climate Occurrence` = CLI_quarter, `Climate Expenditure` = CLI_amount_quarter, `Opportunity` = op_expo_ew, `Regulatory` = rg_expo_ew, `Physical` = ph_expo_ew, `EBIT` = ebit, `EBIT/Assets` = ebit_at, `Total Lobbying` = total_lobby_quarter, `Number of Employees` = n_employees, `CSO Exists` = cso_exists, `CDP Report` = cdp_report, `Multinational` = multinational, `US Headquarters` = us_dummy) |>
+  select(`Climate Occurrence` = CLI_quarter, `Climate Expenditure` = CLI_amount_quarter, `Opportunity` = op_expo_ew, `Regulatory` = rg_expo_ew, `Physical` = ph_expo_ew, `EBIT` = ebit, `EBIT/Assets` = ebit_at, `Total Lobbying` = total_lobby_quarter, `Number of Employees` = n_employees, `CSO Exists` = cso_exists.x, `CDP Report` = cdp_report.x, `Multinational` = multinational, `US Headquarters` = us_dummy) |>
   cor(use = "complete.obs") |>
   corrplot::corrplot(method = 'square', addCoef.col = 'black',
   type = "upper")

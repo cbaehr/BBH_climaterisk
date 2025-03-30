@@ -4,12 +4,26 @@
 # Clear environment and load packages
 pacman::p_load(tidyverse, fixest, haschaR)
 
+
+# set working directory
+if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="christianbaehr" ) {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
+if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
+
+
 # Load both datasets
-df_q <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds") %>%
+#df_q <- read_rds("data/03_final/lobbying_df_quarterly_REVISE_normal.rds") %>%
+df_q <- read_parquet("data/03_final/lobbying_df_quarterly_REVISE_normal_NEW.parquet") %>%
   mutate(t = as.numeric(factor(yearqtr, levels = sort(unique(yearqtr)))))
 
-df_y <- read_rds("data/03_final/lobbying_df_annual_REVISE_normal.rds") %>%
-  mutate(t = as.numeric(factor(year)))
+# df_y <- read_rds("data/03_final/lobbying_df_annual_REVISE_normal.rds") %>%
+#   mutate(t = as.numeric(factor(year)))
+
+df_y <- df_q %>%
+  group_by(isin, year, conm, industry, nace_core_4digit) %>%
+  summarize(op_expo_ew = mean(op_expo_ew, na.rm=T),
+            rg_expo_ew = mean(rg_expo_ew, na.rm=T),
+            ph_expo_ew = mean(ph_expo_ew, na.rm=T))
 
 # Filter for utilities in both datasets
 df_utilities_q <- df_q %>%

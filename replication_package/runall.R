@@ -99,15 +99,22 @@ if(!dir.exists(paste0(results_path, "results/figures/text_analysis"))) {
 ## Descriptives ----------------------------------------------------------------
 
 #source_gh("analyze/01_descriptives/01_overtime_descriptive.R")
-source_gh("analyze/01_descriptives/02_summary_statistics.R")
-source_gh("analyze/01_descriptives/03b_within_industry_descriptives_NEW.R")
-source_gh("analyze/01_descriptives/04_auto.R")
-source_gh("analyze/01_descriptives/05_utilities.R")
+#source_gh("analyze/01_descriptives/02_summary_statistics.R")
+#source_gh("analyze/01_descriptives/03b_within_industry_descriptives_NEW.R")
+#source_gh("analyze/01_descriptives/04_auto.R")
+#source_gh("analyze/01_descriptives/05_utilities.R")
 
 
 ## Analysis --------------------------------------------------------------------
 
-source_gh("analyze/02_panelanalysis/")
+source_gh("analyze/02_panel_analysis/01d_lobbying_analysis_quarterly_trimmed.R")
+source_gh("analyze/02_panel_analysis/07_coefficient_plots.R")
+source_gh("analyze/02_panel_analysis/06b_format_appendix_models_OLS.R")
+source_gh("analyze/02_panel_analysis/05_substantive_prediction_auto.R")
+source_gh("analyze/02_panel_analysis/01e_panelR.R")
+source_gh("analyze/02_panel_analysis/02c_placebo_NEW.R")
+source_gh("analyze/02_panel_analysis/03b_sensitivity_analysis_NEW.R")
+source_gh("analyze/02_panel_analysis/09_without_outliers.R")
 
 
 
