@@ -566,7 +566,7 @@ equiv_exp %>%
 ggsave("results/figures/regressions/placebo_equiv_tests_expenditure.pdf", 
        width = 8.5, height = 11)
 
-move_plots_to_overleaf("./")
+#move_plots_to_overleaf("./")
 
 # Issue codes table -------------------------------------------------------
 

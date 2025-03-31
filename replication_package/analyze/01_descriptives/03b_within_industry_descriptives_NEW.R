@@ -512,14 +512,14 @@ b_plot_levels %>%
 ggsave("results/figures/descriptives/balance_plot.pdf", width = 7, height = 6)
 
 
-move_plots_to_overleaf("./")
+#move_plots_to_overleaf("./")
 
 
 # Correlation plot --------------------------------------------------------
 
 
 df |>
-  select(`Climate Occurrence` = CLI_quarter, `Climate Expenditure` = CLI_amount_quarter, `Opportunity` = op_expo_ew, `Regulatory` = rg_expo_ew, `Physical` = ph_expo_ew, `EBIT` = ebit, `EBIT/Assets` = ebit_at, `Total Lobbying` = total_lobby_quarter, `Number of Employees` = n_employees, `CSO Exists` = cso_exists.x, `CDP Report` = cdp_report.x, `Multinational` = multinational, `US Headquarters` = us_dummy) |>
+  select(`Climate Occurrence` = CLI_quarter, `Climate Expenditure` = CLI_amount_quarter, `Opportunity` = op_expo_ew, `Regulatory` = rg_expo_ew, `Physical` = ph_expo_ew, `EBIT` = ebit, `EBIT/Assets` = ebit_at, `Total Lobbying` = total_lobby_quarter, `Number of Employees` = n_employees, `CSO Exists` = cso_exists, `CDP Report` = cdp_report, `Multinational` = multinational, `US Headquarters` = us_dummy) |>
   cor(use = "complete.obs") |>
   corrplot::corrplot(method = 'square', addCoef.col = 'black',
   type = "upper")
