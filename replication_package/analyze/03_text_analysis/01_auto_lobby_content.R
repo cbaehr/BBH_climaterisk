@@ -11,6 +11,7 @@ pacman::p_load(tidyverse, readxl, quanteda, quanteda.textstats, stm, wordcloud, 
 # Set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox (Princeton)/BBH/BBH1/")}
 if(Sys.info()["user"]=="vincentheddesheimer" ) {setwd("~/Dropbox (Princeton)/BBH/BBH1/")}
+if(Sys.info()["user"]=="christianbaehr") {setwd("/Users/christianbaehr/Dropbox/BBH/BBH1/")}
 
 ####Data preparation -----
 
@@ -22,7 +23,7 @@ auto <- read_excel("data/03_final/issues_texts/auto.xlsx")
 
 #Filter data for climate lobbying only 
 auto <- auto %>% 
-  filter(CLI == 1)
+  filter(CLI_quarter == 1)
 
 # auto <- auto %>%
 #   filter(
