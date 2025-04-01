@@ -1375,15 +1375,26 @@ mod_list <- list(
   "DOE Amt" = o_q_iy_amt_doe
 )
 
+mod_list$`Ind-Yr FE Occ`$coefficients
+mod_list$`Ind-Yr FE Occ`$se
+
+mod_list$`EPA Occ`$coefficients
+mod_list$`EPA Occ`$se
+
 scaleby100 <- function(x) {
-  #x$coefficients <- x$coefficients * 100
+  x$coefficients <- x$coefficients * 100
   x$coeftable[,1] <- x$coeftable[,1] * 100
   x$coeftable[,2] <- x$coeftable[,2] * 100
-  #x$se <- x$se * 100
+  x$se <- x$se * 100
   return(x)
 }
 
 mod_list <- lapply(mod_list, FUN = function(x) scaleby100(x))
+
+# for(i in 1:length(mod_list)) {
+#   mod_list[[i]]$coeftable[,1] <- mod_list[[i]]$coeftable[,1] * 100
+#   mod_list[[i]]$coeftable[,2] <- mod_list[[i]]$coeftable[,2] * 100
+# }
 
 wald1 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "rg_expo_ew"), 3)))
 wald2 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "ph_expo_ew"), 3)))
