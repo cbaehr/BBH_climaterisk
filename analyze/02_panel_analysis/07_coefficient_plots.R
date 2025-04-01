@@ -31,6 +31,8 @@ m1_df <- m1_df %>%
 m1_df$term <- factor(m1_df$term, levels = rev(m1_df$term))
 m1_df$model <- "Occurrence"
 m1_df$fes <- "Industry-by-Year FE"
+m1_df$estimate <- m1_df$estimate * 100
+m1_df$std.error <- m1_df$std.error * 100
 
 m3_df <- broom::tidy(m3, conf.int = T)
 m3_df <- m3_df %>%
@@ -39,6 +41,8 @@ m3_df <- m3_df %>%
 m3_df$term <- factor(m3_df$term, levels = rev(m3_df$term))
 m3_df$model <- "Occurrence"
 m3_df$fes <- "Year FE"
+m3_df$estimate <- m3_df$estimate * 100
+m3_df$std.error <- m3_df$std.error * 100
 
 m2_df <- broom::tidy(m2, conf.int = T)
 m2_df <- m2_df %>%
@@ -47,6 +51,8 @@ m2_df <- m2_df %>%
 m2_df$term <- factor(m2_df$term, levels = rev(m2_df$term))
 m2_df$model <- "Amount"
 m2_df$fes <- "Industry-by-Year FE"
+m2_df$estimate <- m2_df$estimate * 100
+m2_df$std.error <- m2_df$std.error * 100
 
 m4_df <- broom::tidy(m4, conf.int = T)
 m4_df <- m4_df %>%
@@ -55,7 +61,8 @@ m4_df <- m4_df %>%
 m4_df$term <- factor(m4_df$term, levels = rev(m4_df$term))
 m4_df$model <- "Amount"
 m4_df$fes <- "Year FE"
-
+m4_df$estimate <- m4_df$estimate * 100
+m4_df$std.error <- m4_df$std.error * 100
 
 mods_df <- rbind(m3_df, m1_df, m4_df, m2_df)
 mods_df$model <- factor(mods_df$model, levels = c("Occurrence", "Amount"))
@@ -107,6 +114,8 @@ m1_df <- m1_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m1_df$agency <- "EPA"
 m1_df$model <- "Occurrence"
+m1_df$estimate <- m1_df$estimate * 100
+m1_df$std.error <- m1_df$std.error * 100
 
 m2 <- models$DOE
 m2_df <- broom::tidy(m2, conf.int = T)
@@ -115,6 +124,8 @@ m2_df <- m2_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m2_df$agency <- "DOE"
 m2_df$model <- "Occurrence"
+m2_df$estimate <- m2_df$estimate * 100
+m2_df$std.error <- m2_df$std.error * 100
 
 # m3 <- models$CONG
 # m3_df <- broom::tidy(m3, conf.int = T)
@@ -132,6 +143,8 @@ m4_df <- m4_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m4_df$agency <- "EPA"
 m4_df$model <- "Amount"
+m4_df$estimate <- m4_df$estimate * 100
+m4_df$std.error <- m4_df$std.error * 100
 
 m5 <- models$DOE
 m5_df <- broom::tidy(m5, conf.int = T)
@@ -140,6 +153,8 @@ m5_df <- m5_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m5_df$agency <- "DOE"
 m5_df$model <- "Amount"
+m5_df$estimate <- m5_df$estimate * 100
+m5_df$std.error <- m5_df$std.error * 100
 
 # m6 <- models$CONG
 # m6_df <- broom::tidy(m6, conf.int = T)
