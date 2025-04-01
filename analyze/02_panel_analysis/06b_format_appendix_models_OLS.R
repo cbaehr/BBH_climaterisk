@@ -2,7 +2,7 @@
 rm(list = ls())
 options("modelsummary_format_numeric_latex" = "plain")
 #devtools::install_version("modelsummary", version = "1.2", repos = "http://cran.us.r-project.org")
-pacman::p_load(tidyverse, modelsummary, fixest)
+pacman::p_load(tidyverse, modelsummary, fixest, lmtest)
 
 # set working directory
 if(Sys.info()["user"]=="fiona" ) {setwd("/Users/fiona/Dropbox/BBH/BBH1/")}
@@ -1375,11 +1375,9 @@ mod_list <- list(
   "DOE Amt" = o_q_iy_amt_doe
 )
 
-mod_list$`Ind-Yr FE Occ`$coefficients
-mod_list$`Ind-Yr FE Occ`$se
-
-mod_list$`EPA Occ`$coefficients
-mod_list$`EPA Occ`$se
+wald1 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "rg_expo_ew"), 3)))
+wald2 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "ph_expo_ew"), 3)))
+wald3 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "rg_expo_ew", "ph_expo_ew"), 3)))
 
 scaleby100 <- function(x) {
   x$coefficients <- x$coefficients * 100
@@ -1395,10 +1393,6 @@ mod_list <- lapply(mod_list, FUN = function(x) scaleby100(x))
 #   mod_list[[i]]$coeftable[,1] <- mod_list[[i]]$coeftable[,1] * 100
 #   mod_list[[i]]$coeftable[,2] <- mod_list[[i]]$coeftable[,2] * 100
 # }
-
-wald1 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "rg_expo_ew"), 3)))
-wald2 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "op_expo_ew", "ph_expo_ew"), 3)))
-wald3 <- unlist(lapply(mod_list, FUN = function(x) round(compute_wald(x, "rg_expo_ew", "ph_expo_ew"), 3)))
 
 n <- unlist(lapply(mod_list, FUN = function(x) x$nobs))
 r2 <- unlist(lapply(mod_list, FUN = function(x) round(r2(x, type="ar2"), 3)))
@@ -1791,8 +1785,9 @@ modelsummary(mod_list
 
 ## Wald Tests Across Models ----------------------------------------------------
 
+## Target models (Oppo.)
+
 # Assuming model1 and model2 are the models to compare
-library(lmtest)
 
 load("data/03_final/climate_ols_qrt_bycomponent_target_MODELS_REVISION_NEW.RData")
 
@@ -1822,6 +1817,7 @@ p_value <- 1 - pchisq(wald_stat, df = 1)
 cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
 
 
+## Amount (Oppo.)
 
 load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
 
@@ -1850,7 +1846,7 @@ cat("Wald Test Statistic:", wald_stat, "\nP-value:", p_value)
 
 ## Wald Tests Across Models ----------------------------------------------------
 
-
+## PanelR
 
 load("data/03_final/panelR_occurrence_results.RData")
 
