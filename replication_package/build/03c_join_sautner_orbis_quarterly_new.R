@@ -10,6 +10,11 @@ pacman::p_load(fastLink, tidyverse, data.table)
 
 exposureq <- read.csv("01_raw/exposure/firmquarter_score_2023Q4_Version_2024_Aug.csv", stringsAsFactors = F)
 glimpse(exposureq)
+
+exposureq <- fread("~/Dropbox (Princeton)/BBH/BBH1/data/01_raw/exposure/firmquarter_score_2023Q4_Version_2024_Aug.csv")
+
+
+
 ## drop firms without a one-to-one mapping from gvkey to isin
 #exposureq <- exposureq[which( !((duplicated(exposureq[, c("gvkey", "year")]) | duplicated(exposureq[, c("gvkey", "year")], fromLast=T)) & !is.na(exposureq$gvkey)) ), ]
 
