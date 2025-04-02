@@ -1783,7 +1783,7 @@ modelsummary(mod_list
 
 
 
-## Wald Tests Across Models ----------------------------------------------------
+## Wald Tests Within Models ----------------------------------------------------
 
 ## Target models (Oppo.)
 
