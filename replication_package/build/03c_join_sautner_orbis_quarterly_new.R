@@ -13,6 +13,20 @@ glimpse(exposureq)
 
 exposureq <- fread("~/Dropbox (Princeton)/BBH/BBH1/data/01_raw/exposure/firmquarter_score_2023Q4_Version_2024_Aug.csv")
 
+# Get first and last year-quarter
+exposureq |>
+  arrange(year, quarter) |>
+  slice(1) |>
+  mutate(first_yearqtr = paste0(year, "_", quarter)) |>
+  pull(first_yearqtr) |>
+  print()
+
+exposureq |>
+  arrange(desc(year), desc(quarter)) |>
+  slice(1) |>
+  mutate(last_yearqtr = paste0(year, "_", quarter)) |>
+  pull(last_yearqtr) |>
+  print()
 
 
 ## drop firms without a one-to-one mapping from gvkey to isin
