@@ -122,6 +122,8 @@ m2_no_both <- feols(log(CLI_amount_quarter + 1) ~ op_expo_ew + rg_expo_ew + ph_e
                     `Industry x Year`, 
                     vcov = ~ Year + Firm,
                     data = df_no_both)
+
+
 # Create model lists for summary
 models <- list(
   "Main (Occ)" = m1_base,
@@ -132,6 +134,7 @@ models <- list(
   "No DV Outliers (Amt)" = m2_no_dv,
   "No Outliers (Amt)" = m2_no_both
 )
+
 
 # Specify covariate names
 cm <- c("op_expo_ew" = "Opportunity",
@@ -160,6 +163,17 @@ stats <- adjusted_r2_df |>
       "Firm Controls", "\\checkmark", "\\checkmark", "\\checkmark", "\\checkmark", "\\checkmark", "\\checkmark", "\\checkmark"
     )
   )
+
+scaleby100 <- function(x) {
+  x$coefficients <- x$coefficients * 100
+  x$coeftable[,1] <- x$coeftable[,1] * 100
+  x$coeftable[,2] <- x$coeftable[,2] * 100
+  x$se <- x$se * 100
+  return(x)
+}
+
+models <- lapply(models, FUN = function(x) scaleby100(x))
+
 
 # Generate summary tables
 modelsummary(
