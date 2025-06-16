@@ -580,9 +580,19 @@ cortest <- cor(df_ticker[ , c("cc_expo_ew", "op_expo_ew", "rg_expo_ew", "ph_expo
 colnames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
 rownames(cortest) <- c("Overall", "Opportunity", "Regulatory", "Physical", "10-K Exposure")
 
-pdf("results/figures/descriptives/corrplot_expo_tenk.pdf", width=5, height=5)
-corrplot::corrplot(cortest)
-dev.off()
+#pdf("results/figures/descriptives/corrplot_expo_tenk.pdf", width=5, height=5)
+#corrplot::corrplot(cortest)
+#dev.off()
+
+cortest %>%
+  cor() %>%
+  ggcorrplot::ggcorrplot(
+    hc.order = FALSE,
+    type = "lower", 
+    lab = TRUE,
+    ggtheme = haschaR::theme_hanno()# colors = c("#440154FF", "#21908CFF", "#FDE725FF")
+  )
+ggsave("results/figures/descriptives/corrplot_expo_tenk.pdf", width = 7.5, height = 7.5)
 
 df_ticker <- df_ticker %>%
   mutate(cc_expo_ew = scale(cc_expo_ew),
