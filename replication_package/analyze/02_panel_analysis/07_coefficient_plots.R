@@ -28,7 +28,7 @@ m1_df <- m1_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m1_df$term <- factor(m1_df$term, levels = rev(m1_df$term))
 m1_df$model <- "Occurrence"
-m1_df$fes <- "Industry-by-Year Fixed Effects"
+m1_df$fes <- "Industry-by-year fixed effects"
 
 m3_df <- broom::tidy(m3, conf.int = T)
 m3_df <- m3_df %>%
@@ -36,7 +36,7 @@ m3_df <- m3_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m3_df$term <- factor(m3_df$term, levels = rev(m3_df$term))
 m3_df$model <- "Occurrence"
-m3_df$fes <- "Year Fixed Effects"
+m3_df$fes <- "Year fixed effects"
 
 m2_df <- broom::tidy(m2, conf.int = T)
 m2_df <- m2_df %>%
@@ -44,7 +44,7 @@ m2_df <- m2_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m2_df$term <- factor(m2_df$term, levels = rev(m2_df$term))
 m2_df$model <- "Amount"
-m2_df$fes <- "Industry-by-Year Fixed Effects"
+m2_df$fes <- "Industry-by-year fixed effects"
 
 m4_df <- broom::tidy(m4, conf.int = T)
 m4_df <- m4_df %>%
@@ -52,7 +52,7 @@ m4_df <- m4_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m4_df$term <- factor(m4_df$term, levels = rev(m4_df$term))
 m4_df$model <- "Amount"
-m4_df$fes <- "Year Fixed Effects"
+m4_df$fes <- "Year fixed effects"
 
 
 mods_df <- rbind(m3_df, m1_df, m4_df, m2_df)
@@ -69,7 +69,7 @@ mods_df <- mods_df %>%
 
 
 # Create the coefficient plot
-ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year Fixed Effects", "Industry-by-Year Fixed Effects"))), 
+ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year fixed effects", "Industry-by-year fixed effects"))), 
        aes(y = estimate, x = term, color=fes)) +
   facet_wrap(~model, scales="free_x") +
   geom_errorbar(aes(ymin = conf.low95, ymax = conf.high95), 
@@ -78,8 +78,8 @@ ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year Fixed Effects", "Indu
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("Industry-by-Year Fixed Effects" = "black", "Year Fixed Effects" = "gray70"),
-                     breaks = c("Industry-by-Year Fixed Effects", "Year Fixed Effects")) +
+  scale_color_manual(values = c("Industry-by-year fixed effects" = "black", "Year fixed effects" = "gray70"),
+                     breaks = c("Industry-by-year fixed effects", "Year fixed effects")) +
   labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(

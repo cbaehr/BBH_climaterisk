@@ -116,8 +116,8 @@ plot_opp_df <- reshape2::melt(opp_df, id.vars = "keywords")
 # Order by the ratio of the above median to below median
 plot_opp_df <- plot_opp_df |>
   mutate(
-    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
-    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    variable = ifelse(variable == "above", "Above median", "At/below median"),
+    variable = factor(variable, levels=c("At/below median", "Above median")),
     keywords = reorder(keywords, value),
     exposure = "Opportunity"
     )
@@ -126,7 +126,7 @@ plot_opp_df <- plot_opp_df |>
 plot_opp_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above median", "At/below median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -209,8 +209,8 @@ plot_reg_df <- reshape2::melt(reg_df, id.vars = "keywords")
 # Order by the ratio of the above median to below median
 plot_reg_df <- plot_reg_df |>
   mutate(
-    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
-    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    variable = ifelse(variable == "above", "Above median", "At/below median"),
+    variable = factor(variable, levels=c("At/below median", "Above median")),
     keywords = reorder(keywords, value),
     exposure = "Regulatory"
   )
@@ -219,7 +219,7 @@ plot_reg_df <- plot_reg_df |>
 plot_reg_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above median", "At/below median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -303,8 +303,8 @@ plot_phy_df <- reshape2::melt(phy_df, id.vars = "keywords")
 # Order by the ratio of the above median to below median
 plot_phy_df <- plot_phy_df |>
   mutate(
-    variable = ifelse(variable == "above", "Above Median", "At/Below Median"),
-    variable = factor(variable, levels=c("At/Below Median", "Above Median")),
+    variable = ifelse(variable == "above", "Above median", "At/below median"),
+    variable = factor(variable, levels=c("At/below median", "Above median")),
     keywords = reorder(keywords, value),
     exposure = "Physical"
   )
@@ -313,7 +313,7 @@ plot_phy_df <- plot_phy_df |>
 plot_phy_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above median", "At/below median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -336,7 +336,7 @@ plot_df |>
   mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above median", "At/below median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -353,8 +353,8 @@ plot_df |>
   mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "gray70"), breaks = c("Above Median", "At/Below Median")) +
-  labs(x = "Keywords", y = "Relative Frequency within Climate Lobbying Report", fill = "") +
+  scale_fill_manual(values = c("black", "gray70"), breaks = c("Above median", "At/below median")) +
+  labs(x = "Keywords", y = "Relative frequency within climate lobbying report", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
@@ -362,7 +362,6 @@ plot_df |>
         legend.position = "bottom") +
   facet_wrap(~exposure, ncol = 3, scales = "free") +
   coord_flip() +
-  # x axis labels turn by 45 degrees
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 ggsave("results/figures/text_analysis/median_combined_wide.pdf", width = 8, height = 5)
