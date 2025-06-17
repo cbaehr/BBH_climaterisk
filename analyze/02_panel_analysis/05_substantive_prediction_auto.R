@@ -231,55 +231,55 @@ ford <- df[which(df$conm=="FORD MOTOR COMPANY" & df$yearqtr=="2019_4") , ]
 load("data/03_final/climate_ols_qrt_bycomponent_MODELS_REVISION_NEW.RData")
 mod5 <- models[[5]]
 
-ford_vs_toyota <- function(model) {
-  
-  for(i in unique(df$yearqtr)) {
-    if(i==yearqtrs[1]) {out_op <- out_rg <- out_ph <- c(); out_op_pct <- out_rg_pct <- out_ph_pct <- c()}
-    ford_modeldata <- df[which(df$conm=="FORD MOTOR COMPANY" & df$yearqtr==i) , 
-                           c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at",
-                                "us_dummy", "total_lobby_quarter", "Industry.x.Year")]
-    names(ford_modeldata)[8] <- "Industry x Year"
-    
-    ford_pred <- predict(object = model, newdata = ford_modeldata, type = "response")
-    
-    toyo_modeldata_op <- toyo_modeldata_rg <- toyo_modeldata_ph <- ford_modeldata
-    toyo_modeldata_op$op_expo_ew <- df$op_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
-    toyo_modeldata_rg$rg_expo_ew <- df$rg_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
-    toyo_modeldata_ph$ph_expo_ew <- df$ph_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
-    
-    toyo_pred_op <- predict(object = mod5, newdata = toyo_modeldata_op, type = "response")
-    toyo_pred_rg <- predict(object = mod5, newdata = toyo_modeldata_rg, type = "response")
-    toyo_pred_ph <- predict(object = mod5, newdata = toyo_modeldata_ph, type = "response")
-    
-    out_op <- c(out_op, toyo_pred_op - ford_pred)
-    out_rg <- c(out_rg, toyo_pred_rg - ford_pred)
-    out_ph <- c(out_ph, toyo_pred_ph - ford_pred)
-    
-    out_op_pct <- c(out_op_pct, ((toyo_pred_op - ford_pred) / ford_pred))
-    out_rg_pct <- c(out_rg_pct, ((toyo_pred_rg - ford_pred) / ford_pred))
-    out_ph_pct <- c(out_ph_pct, ((toyo_pred_ph - ford_pred) / ford_pred))
-  }
-  return(list(pp_op=out_op, pp_rg=out_rg, pp_ph=out_ph, pct_op=out_op, pct_rg=out_rg, pct_ph=out_ph))
-}
-
-
-out <- ford_vs_toyota(mod5)
-
-mean(out$pp_op, na.rm=T)
-mean(out$pp_rg, na.rm=T)
-mean(out$pp_ph, na.rm=T)
-
-test <- read.csv("data/01_raw/exposure/firmquarter_score_2023Q4_Version_2024_Aug.csv", stringsAsFactors = F)
-
-View(test[which(test$isin=="US3453708600"), ])
-
-test$op_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
-test$rg_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
-test$ph_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
-
-test$op_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
-test$rg_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
-test$ph_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
+# ford_vs_toyota <- function(model) {
+#   
+#   for(i in unique(df$yearqtr)) {
+#     if(i==yearqtrs[1]) {out_op <- out_rg <- out_ph <- c(); out_op_pct <- out_rg_pct <- out_ph_pct <- c()}
+#     ford_modeldata <- df[which(df$conm=="FORD MOTOR COMPANY" & df$yearqtr==i) , 
+#                            c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at",
+#                                 "us_dummy", "total_lobby_quarter", "Industry.x.Year")]
+#     names(ford_modeldata)[8] <- "Industry x Year"
+#     
+#     ford_pred <- predict(object = model, newdata = ford_modeldata, type = "response")
+#     
+#     toyo_modeldata_op <- toyo_modeldata_rg <- toyo_modeldata_ph <- ford_modeldata
+#     toyo_modeldata_op$op_expo_ew <- df$op_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
+#     toyo_modeldata_rg$rg_expo_ew <- df$rg_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
+#     toyo_modeldata_ph$ph_expo_ew <- df$ph_expo_ew[which(df$conm=="TOYOTA MOTOR CORPORATION" & df$yearqtr==i)]
+#     
+#     toyo_pred_op <- predict(object = mod5, newdata = toyo_modeldata_op, type = "response")
+#     toyo_pred_rg <- predict(object = mod5, newdata = toyo_modeldata_rg, type = "response")
+#     toyo_pred_ph <- predict(object = mod5, newdata = toyo_modeldata_ph, type = "response")
+#     
+#     out_op <- c(out_op, toyo_pred_op - ford_pred)
+#     out_rg <- c(out_rg, toyo_pred_rg - ford_pred)
+#     out_ph <- c(out_ph, toyo_pred_ph - ford_pred)
+#     
+#     out_op_pct <- c(out_op_pct, ((toyo_pred_op - ford_pred) / ford_pred))
+#     out_rg_pct <- c(out_rg_pct, ((toyo_pred_rg - ford_pred) / ford_pred))
+#     out_ph_pct <- c(out_ph_pct, ((toyo_pred_ph - ford_pred) / ford_pred))
+#   }
+#   return(list(pp_op=out_op, pp_rg=out_rg, pp_ph=out_ph, pct_op=out_op, pct_rg=out_rg, pct_ph=out_ph))
+# }
+# 
+# 
+# out <- ford_vs_toyota(mod5)
+# 
+# mean(out$pp_op, na.rm=T)
+# mean(out$pp_rg, na.rm=T)
+# mean(out$pp_ph, na.rm=T)
+# 
+# test <- read.csv("data/01_raw/exposure/firmquarter_score_2023Q4_Version_2024_Aug.csv", stringsAsFactors = F)
+# 
+# View(test[which(test$isin=="US3453708600"), ])
+# 
+# test$op_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
+# test$rg_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
+# test$ph_expo_ew[which(test$isin=="US3453708600" & test$year==2019 & test$quarter=="4")]
+# 
+# test$op_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
+# test$rg_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
+# test$ph_expo_ew[which(test$isin=="JP3633400001" & test$year==2019 & test$quarter=="4")]
 
 
 
@@ -306,6 +306,9 @@ sprintf("Assigning Toyota's opportunity exposure to Ford in 2019Q4 results in a 
 ford_modeldata <- ford[ , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at",
                             "us_dummy", "total_lobby_quarter", "Industry.x.Year")]
 names(ford_modeldata)[8] <- "Industry x Year"
+
+ford_pred <- predict(object = mod5, newdata = ford_modeldata, type = "response")
+
 ford_modeldata$rg_expo_ew <- toyo$rg_expo_ew
 
 toyo_pred <- predict(object = mod5, newdata = ford_modeldata, type = "response")
@@ -322,6 +325,9 @@ sprintf("Assigning Toyota's regulatory exposure to Ford in 2019Q4 results in a %
 ford_modeldata <- ford[ , c("op_expo_ew", "rg_expo_ew", "ph_expo_ew", "ebit", "ebit_at",
                             "us_dummy", "total_lobby_quarter", "Industry.x.Year")]
 names(ford_modeldata)[8] <- "Industry x Year"
+
+ford_pred <- predict(object = mod5, newdata = ford_modeldata, type = "response")
+
 ford_modeldata$ph_expo_ew <- toyo$ph_expo_ew
 
 toyo_pred <- predict(object = mod5, newdata = ford_modeldata, type = "response")
