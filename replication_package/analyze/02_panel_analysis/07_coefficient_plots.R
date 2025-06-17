@@ -28,7 +28,7 @@ m1_df <- m1_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m1_df$term <- factor(m1_df$term, levels = rev(m1_df$term))
 m1_df$model <- "Occurrence"
-m1_df$fes <- "Industry-by-Year FE"
+m1_df$fes <- "Industry-by-Year Fixed Effects"
 
 m3_df <- broom::tidy(m3, conf.int = T)
 m3_df <- m3_df %>%
@@ -36,7 +36,7 @@ m3_df <- m3_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m3_df$term <- factor(m3_df$term, levels = rev(m3_df$term))
 m3_df$model <- "Occurrence"
-m3_df$fes <- "Year FE"
+m3_df$fes <- "Year Fixed Effects"
 
 m2_df <- broom::tidy(m2, conf.int = T)
 m2_df <- m2_df %>%
@@ -44,7 +44,7 @@ m2_df <- m2_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m2_df$term <- factor(m2_df$term, levels = rev(m2_df$term))
 m2_df$model <- "Amount"
-m2_df$fes <- "Industry-by-Year FE"
+m2_df$fes <- "Industry-by-Year Fixed Effects"
 
 m4_df <- broom::tidy(m4, conf.int = T)
 m4_df <- m4_df %>%
@@ -52,7 +52,7 @@ m4_df <- m4_df %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
 m4_df$term <- factor(m4_df$term, levels = rev(m4_df$term))
 m4_df$model <- "Amount"
-m4_df$fes <- "Year FE"
+m4_df$fes <- "Year Fixed Effects"
 
 
 mods_df <- rbind(m3_df, m1_df, m4_df, m2_df)
@@ -69,7 +69,7 @@ mods_df <- mods_df %>%
 
 
 # Create the coefficient plot
-ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year FE", "Industry-by-Year FE"))), 
+ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year Fixed Effects", "Industry-by-Year Fixed Effects"))), 
        aes(y = estimate, x = term, color=fes)) +
   facet_wrap(~model, scales="free_x") +
   geom_errorbar(aes(ymin = conf.low95, ymax = conf.high95), 
@@ -78,8 +78,8 @@ ggplot(mods_df %>% mutate(fes = factor(fes, levels=c("Year FE", "Industry-by-Yea
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("Industry-by-Year FE" = "black", "Year FE" = "gray70"),
-                     breaks = c("Industry-by-Year FE", "Year FE")) +
+  scale_color_manual(values = c("Industry-by-Year Fixed Effects" = "black", "Year Fixed Effects" = "gray70"),
+                     breaks = c("Industry-by-Year Fixed Effects", "Year Fixed Effects")) +
   labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(
@@ -103,7 +103,7 @@ m1_df <- broom::tidy(m1, conf.int = T)
 m1_df <- m1_df %>%
   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m1_df$agency <- "EPA"
+m1_df$agency <- "Environmental Protection Agency"
 m1_df$model <- "Occurrence"
 
 m2 <- models$DOE
@@ -111,7 +111,7 @@ m2_df <- broom::tidy(m2, conf.int = T)
 m2_df <- m2_df %>%
   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m2_df$agency <- "DOE"
+m2_df$agency <- "Department of Energy"
 m2_df$model <- "Occurrence"
 
 # m3 <- models$CONG
@@ -123,12 +123,12 @@ m2_df$model <- "Occurrence"
 # m3_df$model <- "Occurrence"
 
 load("data/03_final/climate_ols_qrt_bycomponent_target_amount_MODELS_REVISION_NEW.RData")
-m4 <- models$EPA
+m4 <- models$EPA    
 m4_df <- broom::tidy(m4, conf.int = T)
 m4_df <- m4_df %>%
   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m4_df$agency <- "EPA"
+m4_df$agency <- "Environmental Protection Agency"
 m4_df$model <- "Amount"
 
 m5 <- models$DOE
@@ -136,7 +136,7 @@ m5_df <- broom::tidy(m5, conf.int = T)
 m5_df <- m5_df %>%
   filter(term %in% c("op_expo_ew", "rg_expo_ew", "ph_expo_ew")) %>%
   mutate(term = c("Opportunity", "Regulatory", "Physical"))
-m5_df$agency <- "DOE"
+m5_df$agency <- "Department of Energy"
 m5_df$model <- "Amount"
 
 # m6 <- models$CONG
@@ -168,9 +168,9 @@ ggplot(mods_df, aes(y = estimate, x = term, color=agency)) +
                 position = position_dodge(width = 0.4), width = 0, linewidth = 1) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red", linewidth = .25, alpha = 0.75) +
   geom_point(position = position_dodge(width = 0.4), shape = 21, fill = "white", size = 2) +
-  scale_color_manual(values = c("EPA" = "black", "DOE" = "gray70"),
-                     labels = c("EPA"="EPA", "DOE"="DOE"),
-                     breaks = c("EPA", "DOE")) +
+  scale_color_manual(values = c("Environmental Protection Agency" = "black", "Department of Energy" = "gray70"),
+                     labels = c("Environmental Protection Agency"="Environmental Protection Agency", "Department of Energy"="Department of Energy"),
+                     breaks = c("Environmental Protection Agency", "Department of Energy")) +
   labs(y = "Coefficient", x="Exposure") +
   theme_bw() +
   theme(
@@ -182,6 +182,7 @@ ggplot(mods_df, aes(y = estimate, x = term, color=agency)) +
     axis.title.y = element_blank()
   ) + 
   coord_flip()
+
 ggsave("results/figures/regressions/coefplot_byexposure_qrt_target_REVISE.pdf", width = 7, height = 3.5)
 
 

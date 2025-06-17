@@ -126,7 +126,7 @@ plot_opp_df <- plot_opp_df |>
 plot_opp_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -219,7 +219,7 @@ plot_reg_df <- plot_reg_df |>
 plot_reg_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -313,7 +313,7 @@ plot_phy_df <- plot_phy_df |>
 plot_phy_df |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -336,7 +336,7 @@ plot_df |>
   mutate(exposure = factor(exposure, levels = c("Opportunity", "Regulatory", "Physical"))) |>
   ggplot(aes(x = keywords, y = value, fill = variable)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("black", "darkgrey"), breaks = c("Above Median", "At/Below Median")) +
+  scale_fill_manual(values = c("black", "grey70"), breaks = c("Above Median", "At/Below Median")) +
   labs(x = "Keywords", y = "Ratio", fill = "") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
