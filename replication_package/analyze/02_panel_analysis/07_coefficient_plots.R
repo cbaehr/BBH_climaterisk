@@ -179,7 +179,8 @@ ggplot(mods_df, aes(y = estimate, x = term, color=agency)) +
     text = element_text(size = 15),
     legend.position = "bottom",
     legend.title = element_blank(),
-    axis.title.y = element_blank()
+    axis.title.y = element_blank(),
+    plot.margin = margin(5, 15, 5, 5) # Add right margin to prevent label cutoff
   ) + 
   coord_flip()
 
